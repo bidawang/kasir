@@ -3,7 +3,7 @@
 @section('title', 'Tambah Transaksi')
 
 @section('content')
-<div class="row">
+<div class="container">
     <div class="col-12 col-lg-8 mx-auto">
         <h1 class="mb-4">Tambah Transaksi Baru</h1>
 
@@ -21,118 +21,38 @@
             <form action="{{ route('transaksi.store') }}" method="POST">
                 @csrf
 
-
                 {{-- Bagian detail jumlah uang --}}
                 <div class="mb-3">
                     <label class="form-label d-block">Detail Jumlah Uang</label>
                     <p class="small text-secondary mb-2">Masukkan jumlah lembar untuk setiap nominal.</p>
                     <div id="denominations-container">
+                        @foreach ([100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100] as $nominal)
                         <div class="row g-2 mb-2 align-items-center">
                             <div class="col-5">
                                 <div class="input-group">
                                     <span class="input-group-text">Rp</span>
-                                    <input type="text" class="form-control nominal" value="100.000" disabled>
+                                    <input type="text" class="form-control nominal"
+                                        value="{{ number_format($nominal, 0, ',', '.') }}" disabled>
                                 </div>
                             </div>
                             <div class="col-7">
                                 <div class="input-group">
-                                    <input type="number" class="form-control quantity" data-nominal="100000" value="0" min="0">
+                                    <input type="number" class="form-control quantity"
+                                        data-nominal="{{ $nominal }}" value="0" min="0">
                                     <span class="input-group-text">lembar</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="row g-2 mb-2 align-items-center">
-                            <div class="col-5">
-                                <div class="input-group">
-                                    <span class="input-group-text">Rp</span>
-                                    <input type="text" class="form-control nominal" value="50.000" disabled>
-                                </div>
-                            </div>
-                            <div class="col-7">
-                                <div class="input-group">
-                                    <input type="number" class="form-control quantity" data-nominal="50000" value="0" min="0">
-                                    <span class="input-group-text">lembar</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row g-2 mb-2 align-items-center">
-                            <div class="col-5">
-                                <div class="input-group">
-                                    <span class="input-group-text">Rp</span>
-                                    <input type="text" class="form-control nominal" value="20.000" disabled>
-                                </div>
-                            </div>
-                            <div class="col-7">
-                                <div class="input-group">
-                                    <input type="number" class="form-control quantity" data-nominal="20000" value="0" min="0">
-                                    <span class="input-group-text">lembar</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row g-2 mb-2 align-items-center">
-                            <div class="col-5">
-                                <div class="input-group">
-                                    <span class="input-group-text">Rp</span>
-                                    <input type="text" class="form-control nominal" value="10.000" disabled>
-                                </div>
-                            </div>
-                            <div class="col-7">
-                                <div class="input-group">
-                                    <input type="number" class="form-control quantity" data-nominal="10000" value="0" min="0">
-                                    <span class="input-group-text">lembar</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row g-2 mb-2 align-items-center">
-                            <div class="col-5">
-                                <div class="input-group">
-                                    <span class="input-group-text">Rp</span>
-                                    <input type="text" class="form-control nominal" value="5.000" disabled>
-                                </div>
-                            </div>
-                            <div class="col-7">
-                                <div class="input-group">
-                                    <input type="number" class="form-control quantity" data-nominal="5000" value="0" min="0">
-                                    <span class="input-group-text">lembar</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row g-2 mb-2 align-items-center">
-                            <div class="col-5">
-                                <div class="input-group">
-                                    <span class="input-group-text">Rp</span>
-                                    <input type="text" class="form-control nominal" value="2.000" disabled>
-                                </div>
-                            </div>
-                            <div class="col-7">
-                                <div class="input-group">
-                                    <input type="number" class="form-control quantity" data-nominal="2000" value="0" min="0">
-                                    <span class="input-group-text">lembar</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row g-2 mb-2 align-items-center">
-                            <div class="col-5">
-                                <div class="input-group">
-                                    <span class="input-group-text">Rp</span>
-                                    <input type="text" class="form-control nominal" value="1.000" disabled>
-                                </div>
-                            </div>
-                            <div class="col-7">
-                                <div class="input-group">
-                                    <input type="number" class="form-control quantity" data-nominal="1000" value="0" min="0">
-                                    <span class="input-group-text">lembar</span>
-                                </div>
-                            </div>
-                        </div>
+                        @endforeach
                     </div>
                     <div class="mt-3">
                         <h4 class="fw-bold">Total: <span id="total_display">Rp 0</span></h4>
                     </div>
                 </div>
 
-                {{-- Hidden input untuk total yang akan dikirim ke controller --}}
+                {{-- Hidden input --}}
                 <input type="hidden" name="total" id="total_transaksi" required>
+                <input type="hidden" name="denominations_json" id="denominations_json">
 
                 <div class="mb-3">
                     <label for="jenis" class="form-label">Jenis Transaksi</label>
@@ -141,9 +61,27 @@
                         <option value="keluar">Pengeluaran</option>
                     </select>
                 </div>
+
+                <div class="mb-3">
+                    <label for="id_kas" class="form-label">Kas</label>
+                    <select class="form-select" id="id_kas" name="id_kas" required>
+                        <option value="">-- Pilih Kas --</option>
+                        @foreach ($kasList as $kas)
+                        <option value="{{ $kas->id }}">
+                            {{ $kas->jenis_kas }} (Saldo: Rp {{ number_format($kas->saldo, 0, ',', '.') }})
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="biaya_admin" class="form-label">Biaya Admin</label>
+                    <input type="number" class="form-control" id="biaya_admin" name="biaya_admin" value="0" min="0">
+                </div>
+
+
                 <div class="mb-3">
                     <label for="keterangan" class="form-label">Keterangan</label>
-                    <input type="text" class="form-control" id="keterangan" name="keterangan" required>
+                    <input type="text" class="form-control" id="keterangan" name="keterangan">
                 </div>
 
                 <button type="submit" class="btn btn-success">Simpan Transaksi</button>
@@ -158,17 +96,26 @@
         const container = document.getElementById('denominations-container');
         const totalDisplay = document.getElementById('total_display');
         const totalInput = document.getElementById('total_transaksi');
+        const denomInput = document.getElementById('denominations_json');
 
         function calculateTotal() {
             let total = 0;
+            let denominations = [];
             const quantityInputs = container.querySelectorAll('.quantity');
             quantityInputs.forEach(input => {
                 const nominal = parseInt(input.dataset.nominal);
                 const quantity = parseInt(input.value) || 0;
+                if (quantity > 0) {
+                    denominations.push({
+                        pecahan: nominal,
+                        jumlah: quantity
+                    });
+                }
                 total += nominal * quantity;
             });
             totalDisplay.innerText = 'Rp ' + total.toLocaleString('id-ID');
             totalInput.value = total;
+            denomInput.value = JSON.stringify(denominations);
         }
 
         container.addEventListener('input', calculateTotal);

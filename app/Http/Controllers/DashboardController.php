@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Kasir;
+use App\Models\Kas;
 use App\Models\Transaksi;
 use Illuminate\Http\Request;
 
@@ -13,10 +14,13 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        // Ambil data kasir pertama (asumsi hanya ada satu warung)
         $kasir = Kasir::with('kas')->first();
 
-        // Ambil transaksi hari ini
+        // Kas dengan id = 3 + detailKas
+        $kasId3 = Kas::with('detailKas')->find(3);
+
+        $saldoPerJenis = Kas::where('id_warung', $kasir->id ?? null)->get();
+
         $pemasukanHariIni = Transaksi::where('jenis', 'masuk')
             ->whereDate('created_at', today())
             ->sum('total');
@@ -25,9 +29,18 @@ class DashboardController extends Controller
             ->whereDate('created_at', today())
             ->sum('total');
 
-        // Ambil 5 transaksi terbaru
         $recentTransactions = Transaksi::with('kas')->latest()->take(5)->get();
 
-        return view('dashboard', compact('kasir', 'pemasukanHariIni', 'pengeluaranHariIni', 'recentTransactions'));
+        $totalSaldo = Kas::sum('saldo');
+
+        return view('dashboard', compact(
+            'kasir',
+            'totalSaldo',
+            'saldoPerJenis',
+            'pemasukanHariIni',
+            'pengeluaranHariIni',
+            'recentTransactions',
+            'kasId3'
+        ));
     }
 }

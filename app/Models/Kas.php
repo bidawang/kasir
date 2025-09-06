@@ -14,6 +14,7 @@ class Kas extends Model
 
     protected $fillable = [
         'id_warung',
+        'jenis_kas', // Menambahkan kolom baru
         'saldo',
     ];
 

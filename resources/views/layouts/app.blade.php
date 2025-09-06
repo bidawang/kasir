@@ -1,4 +1,5 @@
 <!doctype html>
+
 <html lang="id" data-bs-theme="light">
 
 <head>
@@ -12,6 +13,13 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
         }
@@ -28,11 +36,19 @@
         }
 
         .bottom-nav {
-            position: sticky;
+            position: fixed;
             bottom: 0;
+            left: 0;
+            right: 0;
             z-index: 1030;
             background: var(--bs-body-bg);
             border-top: 1px solid rgba(0, 0, 0, .08);
+        }
+
+        /* Beri padding bawah agar konten tidak tertutup bottom nav */
+        main.container {
+            padding-bottom: 60px;
+            /* Sesuaikan dengan tinggi bottom nav */
         }
 
         /* CSS untuk menu aktif */
@@ -48,6 +64,7 @@
     </style>
 
     @stack('styles')
+
 </head>
 
 <body>
@@ -58,19 +75,44 @@
             <span class="navbar-brand mb-0 h1">
                 <i class="bi bi-cash-stack me-1"></i> BRILINK
             </span>
-            <div class="d-flex gap-3">
+            <div class="d-flex gap-3 align-items-center">
+                @if(Auth::user()->role === 'kasir')
                 <a href="{{ route('dashboard') }}" class="btn btn-sm text-decoration-none text-secondary @if(request()->routeIs('dashboard')) active @endif">
-                    <i class="bi bi-house me-1"></i> Beranda
+                    <i class="bi bi-speedometer2 me-1"></i> Beranda
                 </a>
                 <a href="{{ route('transaksi.index') }}" class="btn btn-sm text-decoration-none text-secondary @if(request()->routeIs('transaksi.*')) active @endif">
-                    <i class="bi bi-list-ul me-1"></i> Riwayat
-                </a>
-                <a href="{{ route('laporan.index') }}" class="btn btn-sm text-decoration-none text-secondary @if(request()->routeIs('laporan.index')) active @endif">
-                    <i class="bi bi-bar-chart me-1"></i> Laporan
+                    <i class="bi bi-clock-history me-1"></i> Riwayat
                 </a>
                 <a href="{{ route('transaksi.create') }}" class="btn btn-sm btn-success">
                     <i class="bi bi-plus-lg me-1"></i> Tambah Transaksi
                 </a>
+                @elseif(Auth::user()->role === 'admin')
+                <a href="{{ route('kas.show', 3) }}" class="btn btn-sm text-decoration-none text-secondary @if(request()->routeIs('kas.show')) active @endif">
+                    <i class="bi bi-wallet2 me-1"></i> Kas BRILINK
+                </a>
+                <a href="{{ route('kas.index') }}" class="btn btn-sm text-decoration-none text-secondary @if(request()->routeIs('kas.index')) active @endif">
+                    <i class="bi bi-ui-checks-grid me-1"></i> Jenis Kas
+                </a>
+                <a href="{{ route('dashboard') }}" class="btn btn-sm text-decoration-none text-secondary @if(request()->routeIs('dashboard')) active @endif">
+                    <i class="bi bi-speedometer2 me-1"></i> Beranda
+                </a>
+                <a href="{{ route('transaksi.index') }}" class="btn btn-sm text-decoration-none text-secondary @if(request()->routeIs('transaksi.*')) active @endif">
+                    <i class="bi bi-clock-history me-1"></i> Riwayat
+                </a>
+                <a href="{{ route('laporan.index') }}" class="btn btn-sm text-decoration-none text-secondary @if(request()->routeIs('laporan.index')) active @endif">
+                    <i class="bi bi-bar-chart-line me-1"></i> Laporan
+                </a>
+                <a href="{{ route('transaksi.create') }}" class="btn btn-sm btn-success">
+                    <i class="bi bi-plus-lg me-1"></i> Tambah Transaksi
+                </a>
+                @endif
+                {{-- Tombol Logout untuk Desktop --}}
+                <form action="{{ route('logout') }}" method="POST" class="d-inline">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-box-arrow-right me-1"></i> Logout
+                    </button>
+                </form>
             </div>
         </div>
     </nav>
@@ -81,9 +123,11 @@
             <span class="navbar-brand mb-0 h1">
                 <i class="bi bi-cash-stack me-1"></i> BRILINK
             </span>
+            @if(Auth::user()->role === 'kasir' || Auth::user()->role === 'admin')
             <a href="{{ route('transaksi.create') }}" class="btn btn-sm btn-success">
                 <i class="bi bi-plus-lg"></i> Transaksi
             </a>
+            @endif
         </div>
     </nav>
 
@@ -96,21 +140,51 @@
     <nav class="bottom-nav d-lg-none">
         <div class="container-fluid">
             <div class="d-flex justify-content-around py-2">
+                @if(Auth::user()->role === 'kasir')
                 <a href="{{ route('dashboard') }}" class="text-center text-decoration-none text-body-emphasis @if(request()->routeIs('dashboard')) active @endif">
-                    <i class="bi bi-house fs-5 d-block"></i>
+                    <i class="bi bi-speedometer2 fs-5 d-block"></i>
                     <small>Beranda</small>
                 </a>
                 <a href="{{ route('transaksi.index') }}" class="text-center text-decoration-none text-body-emphasis @if(request()->routeIs('transaksi.index')) active @endif">
-                    <i class="bi bi-list-ul fs-5 d-block"></i>
+                    <i class="bi bi-clock-history fs-5 d-block"></i>
+                    <small>Riwayat</small>
+                </a>
+                @elseif(Auth::user()->role === 'admin')
+                <a href="{{ route('kas.show', 3) }}" class="text-center text-decoration-none text-body-emphasis @if(request()->routeIs('kas.show')) active @endif">
+                    <i class="bi bi-wallet2 fs-5 d-block"></i>
+                    <small>Kas BRILINK</small>
+                </a>
+                <a href="{{ route('kas.index') }}" class="text-center text-decoration-none text-body-emphasis @if(request()->routeIs('kas.index')) active @endif">
+                    <i class="bi bi-ui-checks-grid fs-5 d-block"></i>
+                    <small>Jenis Kas</small>
+                </a>
+                <a href="{{ route('dashboard') }}" class="text-center text-decoration-none text-body-emphasis @if(request()->routeIs('dashboard')) active @endif">
+                    <i class="bi bi-speedometer2 fs-5 d-block"></i>
+                    <small>Beranda</small>
+                </a>
+                <a href="{{ route('transaksi.index') }}" class="text-center text-decoration-none text-body-emphasis @if(request()->routeIs('transaksi.index')) active @endif">
+                    <i class="bi bi-clock-history fs-5 d-block"></i>
                     <small>Riwayat</small>
                 </a>
                 <a href="{{ route('laporan.index') }}" class="text-center text-decoration-none text-body-emphasis @if(request()->routeIs('laporan.index')) active @endif">
-                    <i class="bi bi-bar-chart fs-5 d-block"></i>
+                    <i class="bi bi-bar-chart-line fs-5 d-block"></i>
                     <small>Laporan</small>
+                </a>
+                @endif
+                {{-- Tombol Keluar untuk Mobile --}}
+                <a href="#" class="text-center text-decoration-none text-body-emphasis" onclick="event.preventDefault(); document.getElementById('logout-form-mobile').submit();">
+                    <i class="bi bi-box-arrow-right fs-5 d-block"></i>
+                    <small>Keluar</small>
                 </a>
             </div>
         </div>
     </nav>
+
+    {{-- Hidden form untuk logout di mobile --}}
+    <form id="logout-form-mobile" action="{{ route('logout') }}" method="POST" style="display: none;">
+        @csrf
+    </form>
+
 
     {{-- Footer --}}
     <footer class="border-top mt-4">
@@ -121,6 +195,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     @stack('scripts')
+
 </body>
 
 </html>

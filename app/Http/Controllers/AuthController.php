@@ -27,19 +27,31 @@ class AuthController extends Controller
             'email' => 'required|email',
             'password' => 'required',
         ]);
-        
-        // Tambahkan syarat status aktif ke dalam kredensial
+
+        // Tambahkan syarat status aktif
         $credentials['status'] = 'aktif';
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
+
+            $user = Auth::user();
+
+            // Redirect sesuai role
+            if ($user->role === 'kasir') {
+                return redirect()->route('dashboard');
+            } elseif ($user->role === 'admin') {
+                return redirect()->route('kas.index'); // misal ke kas
+            }
+
+            // Default fallback (kalau role tidak dikenali)
             return redirect()->intended('/');
         }
 
         throw ValidationException::withMessages([
-            'email' => 'Email atau password salah.',
+            'email' => 'Email atau password salah atau akun tidak aktif.',
         ]);
     }
+
 
     /**
      * Menampilkan formulir pendaftaran.

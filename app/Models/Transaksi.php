@@ -15,9 +15,8 @@ class Transaksi extends Model
     protected $fillable = [
         'id_kas_warung',
         'total',
-        'metode_pembayaran',
         'keterangan',
-        'tanggal',
+        'biaya_admin',
         'jenis',
     ];
 
@@ -29,5 +28,15 @@ class Transaksi extends Model
     public function detailTransaksi()
     {
         return $this->hasMany(DetailTransaksi::class, 'id_transaksi_kas');
+    }
+
+    public function details()
+    {
+        return $this->hasMany(DetailTransaksi::class, 'id_transaksi_kas');
+    }
+
+    public function jenisTransaksi()
+    {
+        return $this->belongsTo(JenisKas::class, 'id_jenis_kas');
     }
 }
