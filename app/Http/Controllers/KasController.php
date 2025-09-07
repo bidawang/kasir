@@ -82,13 +82,11 @@ class KasController extends Controller
     {
         // Ambil kas
         $kas = Kas::findOrFail($id);
-
         // Jika id=3, tampilkan detail pecahan
         if ($id == 3) {
             $detailKas = DetailKas::where('id_kas_warung', 3)->orderByDesc('pecahan')->get();
             return view('kas.show', compact('kas', 'detailKas'));
         }
-
         // Kas lain tampil default
         return view('kas.show', compact('kas'));
     }
