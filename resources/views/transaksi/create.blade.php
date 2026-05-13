@@ -3,271 +3,364 @@
 @section('title', 'Tambah Transaksi')
 
 @section('content')
-<div class="container">
-    <div class="col-12 col-lg-8 mx-auto">
-        <h1 class="mb-4">Tambah Transaksi Baru</h1>
+    <div class="container-fluid py-3" x-data="transactionApp()">
+        <div class="col-12 col-lg-8 mx-auto p-0">
+            <h2 class="h4 fw-bold mb-3 px-2">Tambah Transaksi Baru</h2>
 
-        @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul>
-                @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-        @endif
+            @if ($errors->any() || session('error'))
+                <div class="px-2 mb-3">
+                    <div class="alert alert-danger border-0 shadow-sm rounded-4 d-flex align-items-center" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+                        <div>
+                            <ul class="mb-0 small ps-3">
+                                @if (session('error'))
+                                    <li>{{ session('error') }}</li>
+                                @endif
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
+            @endif
 
-        <div class="app-card p-4">
-            <form action="{{ route('transaksi.store') }}" method="POST">
-                @csrf
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-3 p-md-4">
+                    <form action="{{ route('transaksi.store') }}" method="POST">
+                        @csrf
 
-                {{-- Bagian detail jumlah uang --}}
-                <div class="mb-3">
-                    <label class="form-label d-block">Detail Jumlah Uang</label>
-                    <p class="small text-secondary mb-2">Masukkan jumlah lembar untuk setiap nominal.</p>
-                    <div id="denominations-container">
-                        @foreach ([100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100] as $nominal)
-                        <div class="row g-2 mb-2 align-items-center">
-                            <div class="col-5">
-                                <div class="input-group">
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Jenis Transaksi</label>
+                            <select class="form-select form-select-lg border-2" x-model="jenis" name="jenis" required>
+                                <option value="masuk">Setor Tunai (Masuk)</option>
+                                <option value="keluar">Tarik Tunai (Keluar)</option>
+                            </select>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <label class="form-label small text-uppercase fw-bold text-secondary">Kas Asal</label>
+                                @if (isset($kasId3))
+                                    <div class="p-3 bg-light rounded-3 border">
+                                        <span class="d-block fw-bold">{{ $kasId3->jenis_kas }}</span>
+                                        <small class="text-muted">Saldo: Rp
+                                            {{ number_format($kasId3->saldo, 0, ',', '.') }}</small>
+                                    </div>
+                                    <input type="hidden" name="id_kas" value="{{ $kasId3->id }}">
+                                @endif
+                            </div>
+                            <div class="col-12">
+                                <label for="id_kas_tujuan"
+                                    class="form-label small text-uppercase fw-bold text-secondary">Kas Tujuan</label>
+                                <select class="form-select border-2" name="id_kas_tujuan" required>
+                                    <option value="">-- Pilih Kas Tujuan --</option>
+                                    @foreach ($kasList as $kas)
+                                        @if (!isset($kasId3) || $kas->id != $kasId3->id)
+                                            <option value="{{ $kas->id }}">{{ $kas->jenis_kas }}</option>
+                                        @endif
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <hr class="my-4 opacity-50">
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Catat Detail Duit Keluar atau Masuk</label>
+                            <div class="bg-light p-3 rounded-3 mb-3">
+                                <template x-for="(item, index) in denominations" :key="index">
+                                    <div class="row g-2 mb-2 align-items-center">
+                                        <div class="col-5">
+                                            <span class="fw-bold" x-text="'Rp ' + formatIDR(item.pecahan)"></span>
+                                        </div>
+                                        <div class="col-7">
+                                            <div class="input-group">
+                                                <input type="number" class="form-control" x-model.number="item.jumlah"
+                                                    min="0">
+                                                <span class="input-group-text px-2 small">lbr</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center bg-dark text-white p-3 rounded-3">
+                                <span>TOTAL UANG:</span>
+                                <h4 class="mb-0 fw-bold" x-text="'Rp ' + formatIDR(totalUang)"></h4>
+                            </div>
+                        </div>
+
+                        <div class="card border-primary mb-4 bg-light-primary">
+                            <div class="card-body">
+                                <label class="form-label fw-bold text-primary">Biaya Admin</label>
+                                <div class="input-group mb-3">
                                     <span class="input-group-text">Rp</span>
-                                    <input type="text" class="form-control nominal"
-                                        value="{{ number_format($nominal, 0, ',', '.') }}" disabled>
+                                    <input type="number" class="form-control form-control-lg" name="biaya_admin"
+                                        x-model.number="biayaAdmin" min="0">
                                 </div>
-                            </div>
-                            <div class="col-7">
-                                <div class="input-group">
-                                    <input type="number" class="form-control quantity"
-                                        data-nominal="{{ $nominal }}" value="0" min="0">
-                                    <span class="input-group-text">lembar</span>
+
+                                <div class="mb-3">
+
+                                    {{-- Jika tarik tunai --}}
+                                    <template x-if="jenis === 'keluar'">
+                                        <div
+                                            class="alert alert-warning border-0 rounded-4 py-2 px-3 mb-0 d-flex align-items-center">
+                                            <i class="bi bi-info-circle-fill me-2"></i>
+
+                                            <div class="small fw-semibold">
+                                                Biaya admin otomatis dipotong dari total uang pada transaksi tarik tunai.
+                                            </div>
+
+                                            {{-- auto ON --}}
+                                            <input type="hidden" x-model="adminPotongTotal">
+                                        </div>
+                                    </template>
+
+                                    {{-- Jika setor tunai --}}
+                                    <template x-if="jenis === 'masuk'">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="adminPotong"
+                                                x-model="adminPotongTotal">
+
+                                            <label class="form-check-label" for="adminPotong">
+                                                Potong dari total uang
+                                            </label>
+                                        </div>
+                                    </template>
+
                                 </div>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                    <div class="mt-3">
-                        <h4 class="fw-bold">Total: <span id="total_display">Rp 0</span></h4>
-                    </div>
-                </div>
 
-                {{-- Hidden input --}}
-                <input type="hidden" name="total" id="total_transaksi" required>
-                <input type="hidden" name="denominations_json" id="denominations_json">
-                <input type="hidden" name="change_denominations_json" id="change_denominations_json">
-
-                <div class="mb-3">
-                    <label for="jenis" class="form-label">Jenis Transaksi</label>
-                    <select class="form-select" id="jenis" name="jenis" required>
-                        <option value="keluar">Pengeluaran</option>
-                        <option value="masuk">Pemasukan</option>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label for="id_kas" class="form-label">Kas Asal</label>
-                    <select class="form-select" id="id_kas" name="id_kas" required>
-                        <option value="">-- Pilih Kas --</option>
-                        @foreach ($kasList as $kas)
-                        <option value="{{ $kas->id }}">
-                            {{ $kas->jenis_kas }} (Saldo: Rp {{ number_format($kas->saldo, 0, ',', '.') }})
-                        </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Bagian transfer baru --}}
-                <div id="transfer-section" class="mb-3">
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="is_transfer" name="is_transfer" value="1">
-                        <label class="form-check-label" for="is_transfer">
-                            Transaksi ini adalah transfer
-                        </label>
-                    </div>
-                    <div id="kas-tujuan-container" style="display: none;">
-                        <label for="id_kas_tujuan" class="form-label">Kas Tujuan</label>
-                        <select class="form-select" id="id_kas_tujuan" name="id_kas_tujuan">
-                            <option value="">-- Pilih Kas Tujuan --</option>
-                            @foreach ($kasList as $kas)
-                            @if ($kas->id != 3) {{-- Pilihan Kas Utama (ID 3) tidak ditampilkan sebagai tujuan --}}
-                            <option value="{{ $kas->id }}">
-                                {{ $kas->jenis_kas }}
-                            </option>
-                            @endif
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label for="biaya_admin" class="form-label">Biaya Admin</label>
-                    <input type="number" class="form-control" id="biaya_admin" name="biaya_admin" value="0" min="0">
-                </div>
-
-                {{-- Bagian kembalian --}}
-                <div id="change-section" class="mb-3" style="display: none;">
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="has_change" name="has_change">
-                        <label class="form-check-label" for="has_change">
-                            Ada Kembalian
-                        </label>
-                    </div>
-                    <div id="change-denominations-container" style="display: none;">
-                        <label class="form-label d-block">Detail Uang Kembalian</label>
-                        <p class="small text-secondary mb-2">Masukkan jumlah lembar untuk setiap nominal yang digunakan untuk kembalian.</p>
-                        @if($kasId3 && $kasId3->detailKas->count())
-                        @foreach($kasId3->detailKas as $detail)
-                        @if($detail->jumlah > 0)
-                        <div class="row g-2 mb-2 align-items-center">
-                            <div class="col-5">
-                                <div class="input-group">
-                                    <span class="input-group-text">Rp</span>
-                                    <input type="text" class="form-control nominal"
-                                        value="{{ number_format($detail->pecahan, 0, ',', '.') }}" disabled>
-                                </div>
-                            </div>
-                            <div class="col-7">
-                                <div class="input-group">
-                                    <span class="input-group-text available-quantity">Tersedia: {{ $detail->jumlah }}</span>
-                                    <input type="number" class="form-control change-quantity"
-                                        data-nominal="{{ $detail->pecahan }}" value="0" min="0" max="{{ $detail->jumlah }}">
-                                    <span class="input-group-text">lembar</span>
+                                <div x-show="jenis === 'masuk' && !adminPotongTotal && biayaAdmin > 0" x-transition>
+                                    <p class="small text-danger fw-bold mb-2">Detail Uang Fisik Admin:</p>
+                                    <template x-for="(item, index) in adminDenominations" :key="'adm-' + index">
+                                        <div class="row g-2 mb-2 align-items-center" x-show="item.pecahan <= biayaAdmin">
+                                            <div class="col-5">
+                                                <small x-text="'Rp ' + formatIDR(item.pecahan)"></small>
+                                            </div>
+                                            <div class="col-7">
+                                                <input type="number" class="form-control form-control-sm"
+                                                    x-model.number="item.jumlah" min="0">
+                                            </div>
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
                         </div>
-                        @endif
-                        @endforeach
-                        @else
-                        <p class="text-muted small">Belum ada detail pecahan untuk kas kembalian.</p>
-                        @endif
-                        <div class="mt-3">
-                            <h4 class="fw-bold">Total Kembalian: <span id="change_total_display">Rp 0</span></h4>
-                            <input type="hidden" name="change_total" id="change_total_input" value="0">
+
+                        <div x-show="jenis === 'masuk'" class="mb-4" x-transition>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="has_change" x-model="hasChange">
+                                <label class="form-check-label fw-bold" for="has_change">Ada Kembalian</label>
+                            </div>
+
+                            <div x-show="hasChange" class="p-3 border rounded-3 bg-white shadow-sm">
+                                <template x-for="(item, index) in changeDenominations" :key="'chg-' + index">
+                                    <div class="row g-2 mb-2 align-items-center" x-show="item.stok > 0">
+                                        <div class="col-5 text-truncate">
+                                            <small class="fw-bold" x-text="'Rp ' + formatIDR(item.pecahan)"></small>
+                                        </div>
+                                        <div class="col-7">
+                                            <div class="input-group input-group-sm">
+                                                <input type="number" class="form-control" x-model.number="item.jumlah"
+                                                    :max="item.stok" min="0">
+                                                <span class="input-group-text small" x-text="'Sisa:' + item.stok"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                                <div class="mt-2 text-end fw-bold text-danger">
+                                    Kembalian: <span x-text="'Rp ' + formatIDR(totalKembalian)"></span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                <div class="mb-3">
-                    <label for="keterangan" class="form-label">Keterangan</label>
-                    <input type="text" class="form-control" id="keterangan" name="keterangan">
-                </div>
+                        <input type="hidden" name="total" :value="grandTotal">
+                        <input type="hidden" name="denominations_json"
+                            :value="JSON.stringify(denominations.filter(d => d.jumlah > 0))">
+                        <input type="hidden" name="change_denominations_json"
+                            :value="JSON.stringify(changeDenominations.filter(d => d.jumlah > 0))">
+                        <input type="hidden" name="admin_denominations_json"
+                            :value="JSON.stringify(adminDenominations.filter(d => d.jumlah > 0))">
 
-                <button type="submit" class="btn btn-success">Simpan Transaksi</button>
-                <a href="{{ route('transaksi.index') }}" class="btn btn-secondary">Batal</a>
-            </form>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Keterangan</label>
+                            <textarea class="form-control" name="keterangan" rows="2" placeholder="Catatan transaksi..."></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg rounded-pill fw-bold">Simpan
+                                Transaksi</button>
+                            <a href="{{ route('transaksi.index') }}" class="btn btn-light btn-lg rounded-pill">Batal</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const jenisSelect = document.getElementById('jenis');
-        const changeSection = document.getElementById('change-section');
-        const hasChangeCheckbox = document.getElementById('has_change');
-        const changeDenominationsContainer = document.getElementById('change-denominations-container');
-        const changeTotalDisplay = document.getElementById('change_total_display');
-        const changeTotalInput = document.getElementById('change_total_input');
-        const changeDenomInput = document.getElementById('change_denominations_json');
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script>
+        function transactionApp() {
+            return {
+                init() {
 
-        const denominationsContainer = document.getElementById('denominations-container');
-        const totalDisplay = document.getElementById('total_display');
-        const totalInput = document.getElementById('total_transaksi');
-        const denomInput = document.getElementById('denominations_json');
+                    this.$watch('jenis', (value) => {
 
-        // Elemen-elemen baru untuk transfer
-        const transferSection = document.getElementById('transfer-section');
-        const isTransferCheckbox = document.getElementById('is_transfer');
-        const kasTujuanContainer = document.getElementById('kas-tujuan-container');
+                        if (value === 'keluar') {
+                            this.adminPotongTotal = true;
+                        }
 
-        // Function to calculate total transaction amount
-        function calculateTotal() {
-            let total = 0;
-            let denominations = [];
-            const quantityInputs = denominationsContainer.querySelectorAll('.quantity');
-            quantityInputs.forEach(input => {
-                const nominal = parseInt(input.dataset.nominal);
-                const quantity = parseInt(input.value) || 0;
-                if (quantity > 0) {
-                    denominations.push({
-                        pecahan: nominal,
-                        jumlah: quantity
                     });
+
+                },
+
+                jenis: 'masuk',
+                biayaAdmin: 0,
+                adminPotongTotal: true,
+                hasChange: false,
+
+                // Inisialisasi Denominasi (Bisa di-passing dari Backend)
+                denominations: [{
+                        pecahan: 100000,
+                        jumlah: 0
+                    },
+                    {
+                        pecahan: 50000,
+                        jumlah: 0
+                    },
+                    {
+                        pecahan: 20000,
+                        jumlah: 0
+                    },
+                    {
+                        pecahan: 10000,
+                        jumlah: 0
+                    },
+                    {
+                        pecahan: 5000,
+                        jumlah: 0
+                    },
+                    {
+                        pecahan: 2000,
+                        jumlah: 0
+                    },
+                    {
+                        pecahan: 1000,
+                        jumlah: 0
+                    },
+                    {
+                        pecahan: 500,
+                        jumlah: 0
+                    },
+                    {
+                        pecahan: 200,
+                        jumlah: 0
+                    },
+                    {
+                        pecahan: 100,
+                        jumlah: 0
+                    },
+                ],
+
+                // Denominasi untuk Biaya Admin (jika uang terpisah)
+                adminDenominations: [{
+                        pecahan: 100000,
+                        jumlah: 0
+                    },
+                    {
+                        pecahan: 50000,
+                        jumlah: 0
+                    },
+                    {
+                        pecahan: 20000,
+                        jumlah: 0
+                    },
+                    {
+                        pecahan: 10000,
+                        jumlah: 0
+                    },
+                    {
+                        pecahan: 5000,
+                        jumlah: 0
+                    },
+                    {
+                        pecahan: 2000,
+                        jumlah: 0
+                    },
+                    {
+                        pecahan: 1000,
+                        jumlah: 0
+                    },
+                    {
+                        pecahan: 500,
+                        jumlah: 0
+                    },
+                    {
+                        pecahan: 200,
+                        jumlah: 0
+                    },
+                    {
+                        pecahan: 100,
+                        jumlah: 0
+                    },
+                ],
+
+                // Data Kembalian (Diambil dari stok Kas ID 3)
+                // @php asumsikan $kasId3->detailKas di-map ke object JS
+                changeDenominations: [
+                    @if (isset($kasId3))
+                        @foreach ($kasId3->detailKas as $detail)
+                            {
+                                pecahan: {{ $detail->pecahan }},
+                                jumlah: 0,
+                                stok: {{ $detail->jumlah }}
+                            },
+                        @endforeach
+                    @endif
+                ],
+
+                get totalUang() {
+                    return this.denominations.reduce((sum, item) => sum + (item.pecahan * (item.jumlah || 0)), 0);
+                },
+
+                get totalKembalian() {
+                    if (!this.hasChange) return 0;
+                    return this.changeDenominations.reduce((sum, item) => sum + (item.pecahan * (item.jumlah || 0)), 0);
+                },
+
+                get grandTotal() {
+                    let base = this.totalUang;
+                    // Jika potong admin, total transaksi dikurangi admin
+                    if (this.adminPotongTotal) {
+                        return base - this.biayaAdmin - this.totalKembalian;
+                    }
+                    // Jika uang admin terpisah, total transaksi adalah total uang fisik utama (biaya admin dicatat terpisah di backend)
+                    return base - this.totalKembalian;
+                },
+
+                formatIDR(val) {
+                    return new Intl.NumberFormat('id-ID').format(val);
                 }
-                total += nominal * quantity;
-            });
-            totalDisplay.innerText = 'Rp ' + total.toLocaleString('id-ID');
-            totalInput.value = total;
-            denomInput.value = JSON.stringify(denominations);
+            }
+        }
+    </script>
+
+    <style>
+        .bg-light-primary {
+            background-color: #f0f7ff;
         }
 
-        // Function to calculate total change amount
-        function calculateChangeTotal() {
-            let changeTotal = 0;
-            let changeDenominations = [];
-            const changeQuantityInputs = changeDenominationsContainer.querySelectorAll('.change-quantity');
-            changeQuantityInputs.forEach(input => {
-                const nominal = parseInt(input.dataset.nominal);
-                const quantity = parseInt(input.value) || 0;
-                if (quantity > 0) {
-                    changeDenominations.push({
-                        pecahan: nominal,
-                        jumlah: quantity
-                    });
-                }
-                changeTotal += nominal * quantity;
-            });
-            changeTotalDisplay.innerText = 'Rp ' + changeTotal.toLocaleString('id-ID');
-            changeTotalInput.value = changeTotal;
-            changeDenomInput.value = JSON.stringify(changeDenominations);
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
         }
 
-        // Event listener untuk perubahan jenis transaksi (masuk/keluar)
-        jenisSelect.addEventListener('change', function() {
-            if (this.value === 'masuk') {
-                changeSection.style.display = 'block';
-                transferSection.style.display = 'none'; // Sembunyikan transfer untuk transaksi masuk
-                isTransferCheckbox.checked = false;
-                kasTujuanContainer.style.display = 'none';
-            } else { // 'keluar'
-                changeSection.style.display = 'none';
-                hasChangeCheckbox.checked = false;
-                changeDenominationsContainer.style.display = 'none';
-                changeTotalInput.value = 0;
-                changeTotalDisplay.innerText = 'Rp 0';
-                changeDenomInput.value = '[]';
-
-                transferSection.style.display = 'block'; // Tampilkan transfer untuk transaksi keluar
-            }
-        });
-
-        // Event listener untuk checkbox "Ada Kembalian"
-        hasChangeCheckbox.addEventListener('change', function() {
-            if (this.checked) {
-                changeDenominationsContainer.style.display = 'block';
-            } else {
-                changeDenominationsContainer.style.display = 'none';
-                // Reset change fields
-                const changeQuantityInputs = changeDenominationsContainer.querySelectorAll('.change-quantity');
-                changeQuantityInputs.forEach(input => input.value = 0);
-                calculateChangeTotal();
-            }
-        });
-
-        // Event listener untuk checkbox "Transfer"
-        isTransferCheckbox.addEventListener('change', function() {
-            if (this.checked) {
-                kasTujuanContainer.style.display = 'block';
-            } else {
-                kasTujuanContainer.style.display = 'none';
-            }
-        });
-
-        // Event listeners for quantity inputs
-        denominationsContainer.addEventListener('input', calculateTotal);
-        changeDenominationsContainer.addEventListener('input', calculateChangeTotal);
-
-        // Initial calculation on page load
-        calculateTotal();
-        calculateChangeTotal();
-    });
-</script>
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
 @endsection

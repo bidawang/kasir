@@ -44,6 +44,23 @@
 </head>
 <body>
     <div class="container auth-container">
+        @if ($errors->any())
+    <div class="alert alert-danger">
+        <strong>Terjadi kesalahan:</strong>
+        <ul class="mb-0 mt-2">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+@if (session('success'))
+    <div class="alert alert-success">
+        {{ session('success') }}
+    </div>
+@endif
+
         <div class="app-card">
             <!-- Header -->
             <div class="text-center mb-4">
@@ -52,41 +69,44 @@
             </div>
 
             <!-- Form Register -->
-            <form method="POST" action="#">
-                <div class="mb-3">
-                    <label for="nama" class="form-label">Nama</label>
-                    <input type="text" class="form-control" id="nama" name="nama" required autofocus>
-                </div>
+            <form method="POST" action="{{ route('register') }}">
+    @csrf
 
-                <div class="mb-3">
-                    <label for="email" class="form-label">Alamat Email</label>
-                    <input type="email" class="form-control" id="email" name="email" required>
-                </div>
+    <div class="mb-3">
+        <label for="nama" class="form-label">Nama</label>
+        <input type="text" class="form-control" id="nama" name="nama" required autofocus>
+    </div>
 
-                <div class="mb-3 position-relative">
-                    <label for="password" class="form-label">Kata Sandi</label>
-                    <div class="input-group">
-                        <input type="password" class="form-control" id="password" name="password" required>
-                        <span class="input-group-text toggle-password" data-target="password">
-                            <i class="bi bi-eye"></i>
-                        </span>
-                    </div>
-                </div>
+    <div class="mb-3">
+        <label for="email" class="form-label">Alamat Email</label>
+        <input type="email" class="form-control" id="email" name="email" required>
+    </div>
 
-                <div class="mb-3 position-relative">
-                    <label for="password_confirmation" class="form-label">Konfirmasi Kata Sandi</label>
-                    <div class="input-group">
-                        <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required>
-                        <span class="input-group-text toggle-password" data-target="password_confirmation">
-                            <i class="bi bi-eye"></i>
-                        </span>
-                    </div>
-                </div>
+    <div class="mb-3 position-relative">
+        <label for="password" class="form-label">Kata Sandi</label>
+        <div class="input-group">
+            <input type="password" class="form-control" id="password" name="password" required>
+            <span class="input-group-text toggle-password" data-target="password">
+                <i class="bi bi-eye"></i>
+            </span>
+        </div>
+    </div>
 
-                <div class="d-grid mb-3">
-                    <button type="submit" class="btn btn-primary">Daftar</button>
-                </div>
-            </form>
+    <div class="mb-3 position-relative">
+        <label for="password_confirmation" class="form-label">Konfirmasi Kata Sandi</label>
+        <div class="input-group">
+            <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required>
+            <span class="input-group-text toggle-password" data-target="password_confirmation">
+                <i class="bi bi-eye"></i>
+            </span>
+        </div>
+    </div>
+
+    <div class="d-grid mb-3">
+        <button type="submit" class="btn btn-primary">Daftar</button>
+    </div>
+</form>
+
 
             <!-- Link login -->
             <div class="text-center small">

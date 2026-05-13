@@ -24,13 +24,12 @@ Route::middleware(['auth'])->group(function () {
 
     // === Khusus Role Kasir ===
     Route::middleware(['role:kasir'])->group(function () {
-        Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
         Route::resource('transaksi', TransaksiController::class);
     });
 
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     // === Khusus Role Admin ===
     Route::middleware(['role:admin'])->group(function () {
-        Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
         Route::resource('transaksi', TransaksiController::class);
         Route::resource('kas', KasController::class);
         Route::post('/kas/{id}/update-detail', [KasController::class, 'updateDetailKas'])->name('kas.updateDetail');

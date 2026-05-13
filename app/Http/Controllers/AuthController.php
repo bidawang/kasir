@@ -27,7 +27,7 @@ class AuthController extends Controller
             'email' => 'required|email',
             'password' => 'required',
         ]);
-
+        // dd($credentials);
         // Tambahkan syarat status aktif
         $credentials['status'] = 'aktif';
 
@@ -38,6 +38,7 @@ class AuthController extends Controller
 
             // Redirect sesuai role
             if ($user->role === 'kasir') {
+                // dd('berhasil login sebagai kasir');
                 return redirect()->route('dashboard');
             } elseif ($user->role === 'admin') {
                 return redirect()->route('kas.index'); // misal ke kas
@@ -66,20 +67,34 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
+        // Validasi input
         $request->validate([
             'nama' => 'required|string|max:255',
             'email' => 'required|email|unique:user,email',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required|string|confirmed',
+        ], [
+            'nama.required' => 'Nama wajib diisi.',
+            'nama.max' => 'Nama maksimal 255 karakter.',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email sudah digunakan. Gunakan email lain.',
+            'password.required' => 'Password wajib diisi.',
+            'password.min' => 'Password minimal 8 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
         ]);
 
+        // Simpan ke database
         User::create([
             'nama' => $request->nama,
             'email' => $request->email,
+            'role' => 'kasir', // default
             'password' => Hash::make($request->password),
         ]);
 
+        // Redirect
         return redirect()->route('login')->with('success', 'Pendaftaran berhasil! Silakan masuk.');
     }
+
 
     /**
      * Melakukan logout pengguna.

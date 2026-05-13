@@ -52,159 +52,129 @@ class TransaksiController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'jenis'                  => 'required|in:masuk,keluar',
-            'id_kas'                 => 'required|exists:kas,id',
-            'total'                  => 'required|numeric|min:0',
-            'biaya_admin'            => 'nullable|numeric|min:0',
-            'keterangan'             => 'nullable|string|max:255',
-            'denominations_json'     => 'required|string',
-            'change_denominations_json' => 'nullable|string', // Validasi untuk data kembalian
+            'jenis'                     => 'required|in:masuk,keluar',
+            'id_kas'                    => 'required|exists:kas,id', // Laci Fisik
+            'id_kas_tujuan'             => 'required|exists:kas,id', // Akun Digital (Bank)
+            'total'                     => 'required|numeric|min:0',
+            'biaya_admin'               => 'nullable|numeric|min:0',
+            'denominations_json'        => 'required|string',
+            'change_denominations_json' => 'nullable|string',
+            'admin_denominations_json'  => 'nullable|string',
         ]);
 
+        // Decode data JSON pecahan
         $denominations = json_decode($request->denominations_json, true) ?? [];
         $changeDenominations = json_decode($request->change_denominations_json, true) ?? [];
+        $adminDenominations = json_decode($request->admin_denominations_json, true) ?? [];
+
         $biayaAdmin = $request->biaya_admin ?? 0;
-
-        // Hitung total kembalian
-        $changeTotal = 0;
-        foreach ($changeDenominations as $changeDenom) {
-            $changeTotal += ($changeDenom['pecahan'] * $changeDenom['jumlah']);
-        }
-
-        // Hitung total transaksi bersih (total dikurangi biaya admin)
-        $totalBersih = $request->total - $biayaAdmin;
-        if ($totalBersih < 0) {
-            return back()->withErrors(['msg' => 'Total tidak boleh lebih kecil dari biaya admin!']);
-        }
+        $changeTotal = collect($changeDenominations)->sum(fn($d) => $d['pecahan'] * $d['jumlah']);
+        $adminFisikTotal = collect($adminDenominations)->sum(fn($d) => $d['pecahan'] * $d['jumlah']);
 
         DB::beginTransaction();
         try {
-            $kas = Kas::findOrFail($request->id_kas);
-            $saldoUtama = Kas::findOrFail(3);
+            $kasAsal = Kas::findOrFail($request->id_kas);     // Laci Fisik
+            $kasTujuan = Kas::findOrFail($request->id_kas_tujuan); // Saldo Digital (Bank)
 
-            // Validasi saldo jika jenis = keluar
-            if ($request->jenis === 'keluar' && $kas->saldo < $totalBersih) {
-                return back()->withErrors(['msg' => 'Saldo kas tidak mencukupi untuk transaksi ini!']);
+            // 1. Validasi Saldo Fisik di Laci jika TARIK TUNAI
+            if ($request->jenis === 'keluar' && $kasAsal->saldo < $request->total) {
+                throw new \Exception("Uang tunai di {$kasAsal->jenis_kas} tidak cukup untuk ditarik!");
             }
 
-            // Validasi stok pecahan di kas utama untuk kembalian
-            if ($request->jenis === 'masuk' && !empty($changeDenominations)) {
-                foreach ($changeDenominations as $changeDenom) {
-                    if (!empty($changeDenom['pecahan']) && $changeDenom['jumlah'] > 0) {
-                        $changeDetailKas = DetailKas::where('id_kas_warung', 3)
-                            ->where('pecahan', $changeDenom['pecahan'])
-                            ->first();
-
-                        if (!$changeDetailKas || $changeDetailKas->jumlah < $changeDenom['jumlah']) {
-                            DB::rollBack();
-                            return back()->withErrors(['msg' => "Jumlah pecahan untuk kembalian Rp {$changeDenom['pecahan']} tidak mencukupi di kas utama!"]);
-                        }
-                    }
-                }
-            }
-
-            // Simpan transaksi utama
+            // 2. Simpan Transaksi Utama
             $transaksi = Transaksi::create([
                 'jenis'         => $request->jenis,
                 'id_kas_warung' => $request->id_kas,
-                'total'         => $totalBersih,
+                'total'         => $request->total,
                 'biaya_admin'   => $biayaAdmin,
                 'keterangan'    => $request->keterangan,
             ]);
 
-            // Simpan detail pecahan & update detail_kas.
-            // Tidak perlu update detail_kas di kas utama jika pengeluaran bukan dari kas utama.
+            // 3. Update Detail Pecahan & Stok Fisik di Laci (Kas Asal)
             foreach ($denominations as $denom) {
-                if (!empty($denom['pecahan']) && $denom['jumlah'] > 0) {
-                    // Simpan detail transaksi
-                    DetailTransaksi::create([
-                        'id_transaksi_kas' => $transaksi->id,
-                        'pecahan'          => $denom['pecahan'],
-                        'jumlah'           => $denom['jumlah'],
-                    ]);
+                if ($denom['jumlah'] <= 0) continue;
 
-                    // Hanya update detail kas utama (ID 3) jika ini transaksi masuk,
-                    // atau jika ini transaksi keluar dari kas utama itu sendiri.
-                    if ($request->id_kas == 3) {
-                        $detailKas = DetailKas::where('id_kas_warung', 3)
-                            ->where('pecahan', $denom['pecahan'])
-                            ->first();
-
-                        if ($detailKas) {
-                            if ($request->jenis === 'masuk') {
-                                $detailKas->jumlah += $denom['jumlah'];
-                            } else {
-                                if ($detailKas->jumlah < $denom['jumlah']) {
-                                    DB::rollBack();
-                                    return back()->withErrors(['msg' => "Jumlah pecahan Rp {$denom['pecahan']} tidak mencukupi di kas utama!"]);
-                                }
-                                $detailKas->jumlah -= $denom['jumlah'];
-                            }
-                            $detailKas->save();
-                        }
-                    }
-                }
-            }
-
-            // Buat transaksi pengeluaran baru untuk uang kembalian
-            if ($request->jenis === 'masuk' && !empty($changeDenominations)) {
-                $changeTransaksi = Transaksi::create([
-                    'jenis'         => 'keluar',
-                    'id_kas_warung' => 3, // Kas utama
-                    'total'         => $changeTotal,
-                    'biaya_admin'   => 0,
-                    'keterangan'    => "Uang kembalian dari transaksi masuk ID {$transaksi->id}",
+                DetailTransaksi::create([
+                    'id_transaksi_kas' => $transaksi->id,
+                    'pecahan'          => $denom['pecahan'],
+                    'jumlah'           => $denom['jumlah'],
                 ]);
 
-                // Simpan detail pecahan kembalian & update detail_kas kas id=3
-                foreach ($changeDenominations as $changeDenom) {
-                    if (!empty($changeDenom['pecahan']) && $changeDenom['jumlah'] > 0) {
-                        DetailTransaksi::create([
-                            'id_transaksi_kas' => $changeTransaksi->id,
-                            'pecahan'          => $changeDenom['pecahan'],
-                            'jumlah'           => $changeDenom['jumlah'],
-                        ]);
+                $dk = DetailKas::firstOrCreate(
+                    ['id_kas_warung' => $kasAsal->id, 'pecahan' => $denom['pecahan']],
+                    ['jumlah' => 0]
+                );
 
-                        // Update detail_kas kas id=3 (pengurangan)
-                        $changeDetailKas = DetailKas::where('id_kas_warung', 3)
-                            ->where('pecahan', $changeDenom['pecahan'])
-                            ->first();
+                if ($request->jenis === 'masuk') {
+                    $dk->jumlah += $denom['jumlah']; // Setor: Fisik nambah
+                } else {
+                    if ($dk->jumlah < $denom['jumlah']) throw new \Exception("Stok pecahan Rp " . number_format($denom['pecahan']) . " tidak cukup!");
+                    $dk->jumlah -= $denom['jumlah']; // Tarik: Fisik kurang
+                }
+                $dk->save();
+            }
 
-                        if ($changeDetailKas) {
-                            $changeDetailKas->jumlah -= $changeDenom['jumlah'];
-                            $changeDetailKas->save();
-                        }
+            // 4. Proses Admin Fisik (Jika nasabah bayar admin cash terpisah)
+            foreach ($adminDenominations as $aDenom) {
+                if ($aDenom['jumlah'] <= 0) continue;
+
+                $dkA = DetailKas::firstOrCreate(
+                    ['id_kas_warung' => $kasAsal->id, 'pecahan' => $aDenom['pecahan']],
+                    ['jumlah' => 0]
+                );
+                $dkA->jumlah += $aDenom['jumlah'];
+                $dkA->save();
+            }
+
+            // 5. Proses Kembalian (Mengurangi stok fisik di laci asal)
+            if ($changeTotal > 0) {
+                foreach ($changeDenominations as $cDenom) {
+                    $dkC = DetailKas::where('id_kas_warung', $kasAsal->id)
+                        ->where('pecahan', $cDenom['pecahan'])
+                        ->first();
+
+                    if (!$dkC || $dkC->jumlah < $cDenom['jumlah']) {
+                        throw new \Exception("Uang fisik untuk kembalian pecahan " . number_format($cDenom['pecahan']) . " tidak cukup!");
                     }
+                    $dkC->jumlah -= $cDenom['jumlah'];
+                    $dkC->save();
                 }
             }
 
-            // Update saldo kas utama dan kas yang dipilih untuk transaksi utama
+            // 6. UPDATE SALDO FINAL (Logika Positif/Negatif)
             if ($request->jenis === 'masuk') {
-                $kas->saldo += $totalBersih; // Saldo kas bertambah dari transaksi bersih
-                $saldoUtama->saldo += $totalBersih; // Saldo kas utama bertambah dari transaksi bersih
-            } else { // Transaksi keluar
-                $kas->saldo -= $totalBersih; // Saldo kas berkurang
+                /** * SETOR TUNAI:
+                 * Kas Asal (Laci) BERTAMBAH: Uang utama + Admin fisik (jika ada) - Kembalian
+                 */
+                // dd($request->total, $adminFisikTotal, $changeTotal, $biayaAdmin);
+                $kasAsal->saldo += ($request->total + $biayaAdmin);
 
-                // Saldo kas utama hanya berkurang jika transaksi berasal dari kas utama itu sendiri
-                if ($request->id_kas == 3) {
-                    $saldoUtama->saldo -= $totalBersih;
-                }
+                /** * Kas Tujuan (Bank Digital) BERKURANG:
+                 * Kita transfer saldo ke nasabah senilai 'total' dan bank potong 'biaya admin'
+                 */
+                $kasTujuan->saldo -= ($request->total);
+            } else {
+                /** * TARIK TUNAI:
+                 * Kas Asal (Laci) BERKURANG: Uang diserahkan ke nasabah. 
+                 * Jika nasabah bayar admin cash, laci bertambah sedikit.
+                 */
+                $kasAsal->saldo -= ($request->total + $adminFisikTotal - $biayaAdmin);
+
+                /** * Kas Tujuan (Bank Digital) BERTAMBAH:
+                 * Nasabah transfer ke kita senilai 'total', jatah kita berkurang biaya admin bank
+                 */
+                $kasTujuan->saldo += ($request->total - $biayaAdmin);
             }
 
-            // Kurangi saldo kas utama dengan total kembalian (jika ada)
-            if ($request->jenis === 'masuk' && !empty($changeDenominations)) {
-                $saldoUtama->saldo -= $changeTotal;
-            }
-
-            $kas->save();
-            $saldoUtama->save();
+            // Simpan perubahan saldo
+            $kasAsal->save();
+            $kasTujuan->save();
 
             DB::commit();
-            return redirect()->route('transaksi.index')
-                ->with('success', 'Transaksi berhasil ditambahkan!');
+            return redirect()->route('transaksi.index')->with('success', 'Transaksi berhasil disimpan!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['msg' => 'Gagal menyimpan transaksi: ' . $e->getMessage()]);
+            return back()->withInput()->withErrors(['msg' => $e->getMessage()]);
         }
     }
 }
