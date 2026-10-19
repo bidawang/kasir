@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Kasir;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -10,64 +11,69 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    /**
-     * Menampilkan halaman formulir login.
-     */
     public function showLoginForm()
     {
         return view('auth.login');
     }
 
-    /**
-     * Memproses permintaan login.
-     */
     public function login(Request $request)
     {
         $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required',
         ]);
-        // dd($credentials);
-        // Tambahkan syarat status aktif
+
         $credentials['status'] = 'aktif';
 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
-
-            $user = Auth::user();
-
-            // Redirect sesuai role
-            if ($user->role === 'kasir') {
-                // dd('berhasil login sebagai kasir');
-                return redirect()->route('dashboard');
-            } elseif ($user->role === 'admin') {
-                return redirect()->route('kas.index'); // misal ke kas
-            }
-
-            // Default fallback (kalau role tidak dikenali)
-            return redirect()->intended('/');
+        if (!Auth::attempt($credentials)) {
+            throw ValidationException::withMessages([
+                'email' => 'Email atau password salah atau akun tidak aktif.',
+            ]);
         }
 
-        throw ValidationException::withMessages([
-            'email' => 'Email atau password salah atau akun tidak aktif.',
-        ]);
+        $request->session()->regenerate();
+
+        $user = Auth::user();
+
+        // Kasir: cari cabang yang terhubung dengan akun
+        if ($user->role === 'kasir') {
+
+            $warung = Kasir::where('id_user', $user->id)
+                ->first();
+
+            if (!$warung) {
+                Auth::logout();
+
+                throw ValidationException::withMessages([
+                    'email' => 'Akun kasir belum memiliki cabang.',
+                ]);
+            }
+
+            session([
+                'id_warung' => $warung->id,
+            ]);
+
+            return redirect()->route('dashboard');
+        }
+
+        // Admin / Owner: pilih cabang terlebih dahulu
+        if ($user->role === 'admin') {
+
+            session()->forget('id_warung');
+
+            return redirect()->route('cabang.index');
+        }
+
+        return redirect()->intended('/');
     }
 
-
-    /**
-     * Menampilkan formulir pendaftaran.
-     */
     public function showRegistrationForm()
     {
         return view('auth.register');
     }
 
-    /**
-     * Memproses permintaan pendaftaran.
-     */
     public function register(Request $request)
     {
-        // Validasi input
         $request->validate([
             'nama' => 'required|string|max:255',
             'email' => 'required|email|unique:user,email',
@@ -83,27 +89,26 @@ class AuthController extends Controller
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
         ]);
 
-        // Simpan ke database
         User::create([
             'nama' => $request->nama,
             'email' => $request->email,
-            'role' => 'kasir', // default
+            'role' => 'kasir',
             'password' => Hash::make($request->password),
         ]);
 
-        // Redirect
-        return redirect()->route('login')->with('success', 'Pendaftaran berhasil! Silakan masuk.');
+        return redirect()
+            ->route('login')
+            ->with('success', 'Pendaftaran berhasil! Silakan masuk.');
     }
 
-
-    /**
-     * Melakukan logout pengguna.
-     */
     public function logout(Request $request)
     {
         Auth::logout();
+
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect()->route('login');
     }
 }
+

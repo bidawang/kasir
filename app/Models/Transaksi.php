@@ -18,6 +18,7 @@ class Transaksi extends Model
         'keterangan',
         'biaya_admin',
         'jenis',
+	'kategori'
     ];
 
     public function kas()
@@ -39,4 +40,6 @@ class Transaksi extends Model
     {
         return $this->belongsTo(JenisKas::class, 'id_jenis_kas');
     }
+	// Tambahkan 'id_kategori' ke properti $fillable
+
 }
