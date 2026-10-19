@@ -18,7 +18,12 @@ class Transaksi extends Model
         'keterangan',
         'biaya_admin',
         'jenis',
-	'kategori'
+        'kategori',
+        'id_item_jualan',
+        'nama_item',
+        'harga_item',
+        'metode_pembayaran',
+        'tanggal',
     ];
 
     public function kas()
@@ -34,6 +39,11 @@ class Transaksi extends Model
     public function details()
     {
         return $this->hasMany(DetailTransaksi::class, 'id_transaksi_kas');
+    }
+
+    public function itemJualan()
+    {
+        return $this->belongsTo(ItemJualan::class, 'id_item_jualan');
     }
 
     public function jenisTransaksi()

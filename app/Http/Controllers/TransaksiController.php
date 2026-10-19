@@ -6,6 +6,9 @@ use App\Models\DetailKas;
 use App\Models\Kas;
 use App\Models\Transaksi;
 use App\Models\DetailTransaksi;
+use App\Models\ItemJualan;
+use App\Models\BiayaAdmin;
+use App\Models\Kasir;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -22,34 +25,40 @@ class TransaksiController extends Controller
             ->with('error', 'Silakan pilih cabang terlebih dahulu.');
     }
 
-    // Base Query - Khusus Kategori transaksi_customer
+    // Financial summaries remain limited to customer transactions.
     $baseQuery = Transaksi::whereHas('kas', function ($q) use ($idWarung) {
         $q->where('id_warung', $idWarung);
     })->where('kategori', 'transaksi_customer');
 
-    // Filter Tanggal
+    $transaksiQuery = Transaksi::whereHas('kas', function ($q) use ($idWarung) {
+        $q->where('id_warung', $idWarung);
+    })->whereIn('kategori', ['transaksi_customer', 'penjualan_item']);
+    $profitQuery = clone $transaksiQuery;
+
     if ($request->filled(['start_date', 'end_date'])) {
-        $baseQuery->whereBetween('created_at', [
+        $dateRange = [
             $request->start_date . ' 00:00:00',
             $request->end_date . ' 23:59:59'
-        ]);
+        ];
+        $baseQuery->whereBetween('created_at', $dateRange);
+        $transaksiQuery->whereBetween('created_at', $dateRange);
+        $profitQuery->whereBetween('created_at', $dateRange);
     }
 
     // 1. Summary Metrics
     $summary = (clone $baseQuery)->selectRaw("
         COUNT(*) as total_transaksi,
         SUM(CASE WHEN jenis = 'masuk' THEN total ELSE 0 END) as total_setor,
-        SUM(CASE WHEN jenis = 'keluar' THEN total ELSE 0 END) as total_tarik,
-        SUM(biaya_admin) as total_keuntungan
+        SUM(CASE WHEN jenis = 'keluar' THEN total ELSE 0 END) as total_tarik
     ")->first();
+    $summary->total_keuntungan = $profitQuery->sum('biaya_admin');
 
     // 2. Data Grafik
-    $chartData = (clone $baseQuery)
+    $chartData = $profitQuery
         ->selectRaw("
             DATE(created_at) as date,
-            COUNT(*) as total_trx,
-            SUM(CASE WHEN jenis = 'masuk' THEN total ELSE 0 END) as setor,
-            SUM(CASE WHEN jenis = 'keluar' THEN total ELSE 0 END) as tarik,
+            SUM(CASE WHEN kategori = 'transaksi_customer' AND jenis = 'masuk' THEN total ELSE 0 END) as setor,
+            SUM(CASE WHEN kategori = 'transaksi_customer' AND jenis = 'keluar' THEN total ELSE 0 END) as tarik,
             SUM(biaya_admin) as profit
         ")
         ->groupBy('date')
@@ -65,8 +74,8 @@ class TransaksiController extends Controller
     $chartProfit   = $chartData->pluck('profit');
 
     // 3. Data Transaksi Paginated
-    $transaksi = (clone $baseQuery)
-        ->with(['kas.warung', 'detailTransaksi'])
+    $transaksi = $transaksiQuery
+        ->with(['kas.warung', 'detailTransaksi', 'itemJualan'])
         ->latest()
         ->paginate(10)
         ->withQueryString();
@@ -81,6 +90,75 @@ class TransaksiController extends Controller
         'chartProfit'
     ));
 }
+
+public function createPenjualanItem()
+{
+    $idWarung = $this->activeWarungId();
+    if (!$idWarung) {
+        return redirect()->route('cabang.index')->with('error', 'Silakan pilih cabang terlebih dahulu.');
+    }
+
+    $items = ItemJualan::where('id_warung', $idWarung)->orderBy('nama_item')->get();
+    $kasList = Kas::where('id_warung', $idWarung)->orderBy('jenis_kas')->get();
+    $biayaAdminList = BiayaAdmin::where('id_warung', $idWarung)
+        ->orderBy('range_awal')
+        ->get(['range_awal', 'range_akhir', 'biaya_admin']);
+
+    return view('transaksi.penjualan_item', compact('items', 'kasList', 'biayaAdminList'));
+}
+
+public function storePenjualanItem(Request $request)
+{
+    $idWarung = $this->activeWarungId();
+    if (!$idWarung) {
+        return redirect()->route('cabang.index')->with('error', 'Silakan pilih cabang terlebih dahulu.');
+    }
+
+    $validated = $request->validate([
+        'id_item_jualan' => 'required|integer|exists:item_jualan,id',
+        'id_kas' => 'required|integer|exists:kas,id',
+        'keterangan' => 'nullable|string|max:255',
+    ]);
+
+    return DB::transaction(function () use ($validated, $idWarung) {
+        $item = ItemJualan::where('id_warung', $idWarung)
+            ->lockForUpdate()
+            ->findOrFail($validated['id_item_jualan']);
+        $kas = Kas::where('id_warung', $idWarung)
+            ->lockForUpdate()
+            ->findOrFail($validated['id_kas']);
+
+        $biayaAdmin = BiayaAdmin::where('id_warung', $idWarung)
+            ->where('range_awal', '<=', $item->harga_jual)
+            ->where('range_akhir', '>=', $item->harga_jual)
+            ->orderBy('range_awal')
+            ->first();
+        $biaya = (int) ($biayaAdmin?->biaya_admin ?? 0);
+        $total = (int) $item->harga_jual + $biaya;
+        $transaksi = Transaksi::create([
+            'id_kas_warung' => $kas->id,
+            'jenis' => 'masuk',
+            'kategori' => 'penjualan_item',
+            'total' => $total,
+            'biaya_admin' => $biaya,
+            'keterangan' => ($validated['keterangan'] ?? null) ?: $item->id . '-Penjualan item: ' . $item->nama_item,
+        ]);
+
+        $kas->saldo += $total;
+        $kas->save();
+
+        return redirect()->route('transaksi.index')
+            ->with('success', 'Penjualan item berhasil dicatat sebesar Rp ' . number_format($total, 0, ',', '.') . '.');
+    });
+}
+
+private function activeWarungId(): ?int
+{
+    return Kasir::whereKey(session('id_warung'))
+        ->when(!in_array(auth()->user()->role, ['admin', 'owner']), fn ($query) => $query->where('id_user', auth()->id()))
+        ->value('id');
+}
+
 // Method untuk Halaman Setor Tunai
 public function setor()
 {

@@ -8,6 +8,8 @@ use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CabangController;
 use App\Http\Controllers\TransferKasController;
+use App\Http\Controllers\ItemJualanController;
+use App\Http\Controllers\BiayaAdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,7 +49,11 @@ Route::middleware(['auth'])->group(function () {
     // ==============================
 
     Route::resource('transaksi', TransaksiController::class)->except('show');
-Route::get('/transaksi/setor', [TransaksiController::class, 'setor'])->name('transaksi.setor');
+    Route::get('/transaksi/penjualan-item/create', [TransaksiController::class, 'createPenjualanItem'])
+        ->name('transaksi.penjualan-item.create');
+    Route::post('/transaksi/penjualan-item', [TransaksiController::class, 'storePenjualanItem'])
+        ->name('transaksi.penjualan-item.store');
+    Route::get('/transaksi/setor', [TransaksiController::class, 'setor'])->name('transaksi.setor');
 Route::get('/transaksi/tarik', [TransaksiController::class, 'tarik'])->name('transaksi.tarik');
 
 Route::get('/transfer-kas', [TransferKasController::class, 'index'])
@@ -79,6 +85,9 @@ Route::get('/kas/brilink-history', [KasController::class, 'getBrilinkHistory'])-
             '/kas/{id}/update-detail',
             [KasController::class, 'updateDetailKas']
         )->name('kas.updateDetail');
+
+        Route::resource('item-jualan', ItemJualanController::class)->except('show');
+        Route::resource('biaya-admin', BiayaAdminController::class)->except('show');
 
 
         // --------------------------

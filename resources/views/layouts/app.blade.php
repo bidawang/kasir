@@ -148,6 +148,25 @@
         Kas
     </a>
 
+    {{-- Item Jualan --}}
+    <a href="{{ route('item-jualan.index') }}"
+       class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('item-jualan.*') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l2.4 12.2a2 2 0 002 1.6h8.8a2 2 0 002-1.6L22 8H6M10 21h.01M18 21h.01"/>
+        </svg>
+        Item
+    </a>
+
+    {{-- Biaya Admin --}}
+    <a href="{{ route('biaya-admin.index') }}"
+       class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('biaya-admin.*') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m4-9H9.5a2.5 2.5 0 000 5h5a2.5 2.5 0 010 5H8"/>
+            <circle cx="12" cy="12" r="9"/>
+        </svg>
+        Biaya Admin
+    </a>
+
     {{-- Cabang --}}
     @if(in_array($userRole, ['admin', 'owner']))
         <a href="{{ route('cabang.index') }}" 
@@ -236,7 +255,7 @@
     <!-- BOTTOM NAVIGATION (Hanya Tampil di Mobile/Tablet < md) -->
     <nav aria-label="Menu Navigasi Bawah" class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shadow-mobile-nav pb-safe">
         <div class="max-w-md mx-auto px-1">
-            <div class="grid {{ in_array($userRole, ['admin', 'owner']) ? 'grid-cols-5' : 'grid-cols-4' }} items-center h-13">
+            <div class="grid {{ in_array($userRole, ['admin', 'owner']) ? 'grid-cols-7' : 'grid-cols-6' }} items-center h-13">
 
                 <!-- 1. Beranda -->
                 <a href="{{ route('dashboard') }}"
@@ -265,7 +284,26 @@
                     <span class="text-[9px] sm:text-[10px] tracking-tight mt-0.5">Kas</span>
                 </a>
 
-                <!-- 4. Cabang (Admin / Owner Only) -->
+                <!-- 4. Item Jualan -->
+                <a href="{{ route('item-jualan.index') }}"
+                   class="flex flex-col items-center justify-center py-1 transition-colors group {{ request()->routeIs('item-jualan.*') ? 'text-primary-600 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="{{ request()->routeIs('item-jualan.*') ? '2.5' : '2' }}" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l2.4 12.2a2 2 0 002 1.6h8.8a2 2 0 002-1.6L22 8H6M10 21h.01M18 21h.01"/>
+                    </svg>
+                    <span class="text-[9px] sm:text-[10px] tracking-tight mt-0.5">Item</span>
+                </a>
+
+                <!-- 5. Biaya Admin -->
+                <a href="{{ route('biaya-admin.index') }}"
+                   class="flex flex-col items-center justify-center py-1 transition-colors group {{ request()->routeIs('biaya-admin.*') ? 'text-primary-600 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="{{ request()->routeIs('biaya-admin.*') ? '2.5' : '2' }}" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m4-9H9.5a2.5 2.5 0 000 5h5a2.5 2.5 0 010 5H8"/>
+                        <circle cx="12" cy="12" r="9"/>
+                    </svg>
+                    <span class="text-[9px] sm:text-[10px] tracking-tight mt-0.5">Biaya Admin</span>
+                </a>
+
+                <!-- 6. Cabang (Admin / Owner Only) -->
                 @if(in_array($userRole, ['admin', 'owner']))
                     <a href="{{ route('cabang.index') }}"
                        class="flex flex-col items-center justify-center py-1 transition-colors group {{ request()->routeIs('cabang.*') ? 'text-primary-600 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
@@ -276,7 +314,7 @@
                     </a>
                 @endif
 
-                <!-- 5. Keluar -->
+                <!-- Keluar -->
                 <button type="button" 
                         onclick="event.preventDefault(); if(confirm('Yakin ingin keluar dari sistem?')) document.getElementById('logout-form').submit();"
                         class="flex flex-col items-center justify-center py-1 text-slate-400 hover:text-rose-500 transition-colors group font-medium">
