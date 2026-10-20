@@ -3,11 +3,12 @@
 @section('title', 'Edit Biaya Admin')
 
 @section('content')
-<div class="max-w-xl mx-auto space-y-5">
+<div class="max-w-xl mx-auto space-y-5"
+     x-data="bankFeeForm(@js($bankList), @js(old('jenis', $biayaAdmin->jenis)), @js((string) old('id_kas', $biayaAdmin->id_kas ?? '')))">
     <div class="flex items-center justify-between">
         <div>
             <h1 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">Edit Biaya Admin</h1>
-            <p class="text-xs text-slate-500 font-medium">Perbarui tarif admin berdasarkan rentang harga item</p>
+            <p class="text-xs text-slate-500 font-medium">Perbarui tarif berdasarkan jenis, bank, dan rentang nominal</p>
         </div>
         <a href="{{ route('biaya-admin.index') }}" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold">Kembali</a>
     </div>
@@ -16,6 +17,34 @@
         <form action="{{ route('biaya-admin.update', $biayaAdmin->id) }}" method="POST" class="space-y-4">
             @csrf
             @method('PUT')
+            <div>
+                <label for="jenis" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Jenis Tarif</label>
+                <select id="jenis" name="jenis" x-model="jenis" required
+                    class="w-full px-3.5 py-2.5 bg-slate-50 border @error('jenis') border-rose-300 @else border-slate-200 @enderror rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    @foreach(['fisik' => 'Fisik', 'virtual' => 'Virtual', 'bank' => 'Bank'] as $value => $label)
+                        <option value="{{ $value }}" @selected(old('jenis', $biayaAdmin->jenis) === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+                @error('jenis')<p class="mt-1 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
+            </div>
+            <div x-show="jenis === 'bank'" class="space-y-1.5" x-cloak>
+                <label for="bank_search" class="block text-xs sm:text-sm font-semibold text-slate-700">Bank / Wallet <span class="font-normal text-slate-400">(opsional, kosongkan untuk semua bank)</span></label>
+                <div class="relative">
+                    <input id="bank_search" type="search" x-model="bankSearch" @input="bankId = ''; bankListOpen = true" @focus="bankListOpen = true" @click.away="bankListOpen = false"
+                        placeholder="Cari nama bank atau wallet..." autocomplete="off"
+                        class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <input type="hidden" name="id_kas" :value="bankId">
+                    <div x-show="bankListOpen" x-cloak class="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg">
+                        <button type="button" @click="bankId = ''; bankSearch = ''; bankListOpen = false" class="block w-full px-3 py-2.5 text-left text-xs text-slate-600 hover:bg-slate-50">Semua bank (umum)</button>
+                        <template x-for="bank in filteredBanks" :key="bank.id">
+                            <button type="button" @click="bankId = String(bank.id); bankSearch = bank.jenis_kas; bankListOpen = false"
+                                class="block w-full px-3 py-2.5 text-left text-sm text-slate-800 hover:bg-slate-50" x-text="bank.jenis_kas"></button>
+                        </template>
+                        <p x-show="filteredBanks.length === 0" class="px-3 py-2.5 text-xs text-slate-500">Bank tidak ditemukan.</p>
+                    </div>
+                </div>
+                @error('id_kas')<p class="mt-1 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
+            </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label for="range_awal" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Harga Minimum</label>
@@ -52,4 +81,19 @@
         </form>
     </div>
 </div>
+<script>
+    function bankFeeForm(banks, initialType, initialBankId) {
+        return {
+            banks,
+            jenis: initialType,
+            bankId: initialBankId,
+            bankSearch: banks.find(bank => String(bank.id) === String(initialBankId))?.jenis_kas || '',
+            bankListOpen: false,
+            get filteredBanks() {
+                const query = this.bankSearch.toLowerCase();
+                return this.banks.filter(bank => bank.jenis_kas.toLowerCase().includes(query));
+            }
+        };
+    }
+</script>
 @endsection

@@ -16,11 +16,18 @@ class BiayaAdmin extends Model
         'range_awal',
         'range_akhir',
         'biaya_admin',
-        'id_warung'
+        'id_warung',
+        'jenis',
+        'id_kas',
     ];
 
     public function warung()
     {
         return $this->belongsTo(Kasir::class, 'id_warung');
+    }
+
+    public function kas()
+    {
+        return $this->belongsTo(Kas::class, 'id_kas');
     }
 }

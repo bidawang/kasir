@@ -41,8 +41,11 @@ class ItemJualanController extends Controller
         $validated = $request->validate([
             'nama_item' => 'required|string|max:255',
             'harga_jual' => 'required|integer|min:0',
+            'jenis' => 'required|in:fisik,virtual,bank',
+            'jumlah' => 'required_if:jenis,fisik|nullable|integer|min:0',
         ]);
 
+        $validated['jumlah'] = $validated['jenis'] === 'fisik' ? $validated['jumlah'] : null;
         ItemJualan::create($validated + ['id_warung' => $idWarung]);
 
         return redirect()->route('item-jualan.index')
@@ -72,8 +75,11 @@ class ItemJualanController extends Controller
         $validated = $request->validate([
             'nama_item' => 'required|string|max:255',
             'harga_jual' => 'required|integer|min:0',
+            'jenis' => 'required|in:fisik,virtual,bank',
+            'jumlah' => 'required_if:jenis,fisik|nullable|integer|min:0',
         ]);
 
+        $validated['jumlah'] = $validated['jenis'] === 'fisik' ? $validated['jumlah'] : null;
         $itemJualan->update($validated);
 
         return redirect()->route('item-jualan.index')

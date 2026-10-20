@@ -7,7 +7,7 @@
     <div class="flex items-center justify-between gap-3">
         <div>
             <h1 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">Biaya Admin</h1>
-            <p class="text-xs text-slate-500 font-medium mt-0.5">Atur tarif admin umum berdasarkan rentang harga item</p>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">Atur tarif berdasarkan jenis dan rentang nominal</p>
         </div>
         <a href="{{ route('biaya-admin.create') }}" class="bg-primary-600 hover:bg-primary-700 active:scale-95 text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
@@ -36,7 +36,8 @@
                 <table class="w-full text-left">
                     <thead class="bg-slate-50 border-b border-slate-200">
                         <tr class="text-[10px] uppercase tracking-wider text-slate-500">
-                            <th class="px-4 py-3 font-bold">Rentang Harga Item</th>
+                            <th class="px-4 py-3 font-bold">Rentang Nominal</th>
+                            <th class="px-4 py-3 font-bold">Jenis / Bank</th>
                             <th class="px-4 py-3 font-bold">Biaya Admin</th>
                             <th class="px-4 py-3 font-bold text-right">Aksi</th>
                         </tr>
@@ -45,6 +46,7 @@
                         @foreach($biayaAdmin as $biaya)
                             <tr class="text-xs">
                                 <td class="px-4 py-3 font-bold text-slate-800">Rp {{ number_format($biaya->range_awal, 0, ',', '.') }} – Rp {{ number_format($biaya->range_akhir, 0, ',', '.') }}</td>
+                                <td class="px-4 py-3 font-semibold text-slate-700">{{ ucfirst($biaya->jenis) }}{{ $biaya->jenis === 'bank' ? ' / ' . ($biaya->kas?->jenis_kas ?? 'Semua bank') : '' }}</td>
                                 <td class="px-4 py-3 font-semibold text-slate-700">Rp {{ number_format($biaya->biaya_admin, 0, ',', '.') }}</td>
                                 <td class="px-4 py-3">
                                     <div class="flex justify-end items-center gap-2">

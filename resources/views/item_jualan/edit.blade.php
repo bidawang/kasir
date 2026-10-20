@@ -23,6 +23,16 @@
                 @error('nama_item')<p class="mt-1 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
             </div>
             <div>
+                <label for="jenis" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Jenis</label>
+                <select id="jenis" name="jenis" required
+                    class="w-full px-3.5 py-2.5 bg-slate-50 border @error('jenis') border-rose-300 @else border-slate-200 @enderror rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    @foreach(['fisik' => 'Fisik', 'virtual' => 'Virtual', 'bank' => 'Bank'] as $value => $label)
+                        <option value="{{ $value }}" @selected(old('jenis', $itemJualan->jenis) === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+                @error('jenis')<p class="mt-1 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
+            </div>
+            <div>
                 <label for="harga_jual" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Harga Jual</label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 text-xs font-semibold">Rp</span>
@@ -30,6 +40,13 @@
                         class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border @error('harga_jual') border-rose-300 @else border-slate-200 @enderror rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                 </div>
                 @error('harga_jual')<p class="mt-1 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
+            </div>
+            <div>
+                <label for="jumlah" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Stok (khusus item fisik)</label>
+                <input id="jumlah" name="jumlah" type="number" inputmode="numeric" min="0" step="1" value="{{ old('jumlah', $itemJualan->jumlah) }}"
+                    class="w-full px-3.5 py-2.5 bg-slate-50 border @error('jumlah') border-rose-300 @else border-slate-200 @enderror rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                @error('jumlah')<p class="mt-1 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
+                <p class="mt-1 text-[10px] text-slate-400">Untuk jenis virtual atau bank, stok otomatis dikosongkan.</p>
             </div>
             <div class="pt-3 flex justify-end gap-3">
                 <a href="{{ route('item-jualan.index') }}" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs sm:text-sm font-semibold hover:bg-slate-50">Batal</a>

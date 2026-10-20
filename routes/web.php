@@ -48,6 +48,7 @@ Route::middleware(['auth'])->group(function () {
     // Admin & Kasir
     // ==============================
 
+    Route::get('/transaksi/menu', [TransaksiController::class, 'menu'])->name('transaksi.menu');
     Route::resource('transaksi', TransaksiController::class)->except('show');
     Route::get('/transaksi/penjualan-item/create', [TransaksiController::class, 'createPenjualanItem'])
         ->name('transaksi.penjualan-item.create');

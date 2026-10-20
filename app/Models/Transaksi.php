@@ -14,6 +14,7 @@ class Transaksi extends Model
 
     protected $fillable = [
         'id_kas_warung',
+        'id_kas_sumber',
         'total',
         'keterangan',
         'biaya_admin',
@@ -29,6 +30,11 @@ class Transaksi extends Model
     public function kas()
     {
         return $this->belongsTo(Kas::class, 'id_kas_warung');
+    }
+
+    public function kasSumber()
+    {
+        return $this->belongsTo(Kas::class, 'id_kas_sumber');
     }
 
     public function detailTransaksi()

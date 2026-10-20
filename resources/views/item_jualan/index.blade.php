@@ -37,6 +37,7 @@
                     <thead class="bg-slate-50 border-b border-slate-200">
                         <tr class="text-[10px] uppercase tracking-wider text-slate-500">
                             <th class="px-4 py-3 font-bold">Nama Item</th>
+                            <th class="px-4 py-3 font-bold">Jenis / Stok</th>
                             <th class="px-4 py-3 font-bold">Harga Jual</th>
                             <th class="px-4 py-3 font-bold text-right">Aksi</th>
                         </tr>
@@ -45,6 +46,7 @@
                         @foreach($itemJualan as $item)
                             <tr class="text-xs">
                                 <td class="px-4 py-3 font-bold text-slate-800">{{ $item->nama_item }}</td>
+                                <td class="px-4 py-3 font-semibold text-slate-700">{{ ucfirst($item->jenis) }}{{ $item->jenis === 'fisik' ? ' / ' . $item->jumlah : '' }}</td>
                                 <td class="px-4 py-3 font-semibold text-slate-700">Rp {{ number_format($item->harga_jual, 0, ',', '.') }}</td>
                                 <td class="px-4 py-3">
                                     <div class="flex justify-end items-center gap-2">

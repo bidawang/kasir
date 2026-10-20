@@ -15,7 +15,9 @@ class ItemJualan extends Model
     protected $fillable = [
         'nama_item',
         'harga_jual',
-        'id_warung'
+        'id_warung',
+        'jenis',
+        'jumlah',
     ];
 
     public function warung()

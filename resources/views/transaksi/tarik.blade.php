@@ -5,7 +5,7 @@
 @section('content')
 {{-- Tambahkan pb-36 di mobile agar konten bagian bawah tidak tertutup oleh floating bar --}}
 <div class="max-w-xl mx-auto pb-36 md:pb-24 space-y-3 sm:space-y-4 text-slate-800"
-     x-data="tarikApp({{ json_encode($kasAsal) }}, {{ json_encode($kasSumberList) }})">
+     x-data="tarikApp(@js($kasAsal), @js($kasSumberList), @js($biayaAdminList), @js(old('biaya_admin_manual', 0)))">
 
     <!-- Header Section -->
     <div class="flex items-center justify-between px-1">
@@ -86,13 +86,18 @@
         <div class="bg-white rounded-xl shadow-2xs border border-slate-200/80 p-3 sm:p-4">
             <div class="flex items-center justify-between gap-3">
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Biaya Admin Tarik Tunai</label>
-                    <p class="text-[10px] text-slate-400 font-medium">Ditambahkan ke tagihan transfer pelanggan</p>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Biaya Admin Bank</label>
+                    <p class="text-[10px] text-slate-400 font-medium">Dihitung otomatis berdasarkan nominal penarikan</p>
                 </div>
                 <div class="relative flex items-center w-36">
                     <span class="absolute left-2.5 text-xs font-bold text-slate-400">Rp</span>
-                    <input type="number" inputmode="numeric" class="w-full pl-8 pr-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-900 text-right focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-400" name="biaya_admin" x-model.number="biayaAdmin" placeholder="0" @focus="$event.target.select()" min="0">
+                    <input type="text" class="w-full pl-8 pr-2.5 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs font-bold text-slate-900 text-right" :value="biayaAdmin" readonly>
                 </div>
+            </div>
+            <div x-show="!matchedFee" x-cloak class="mt-3 flex items-center justify-between gap-3">
+                <label for="biaya_admin_manual" class="text-xs font-semibold text-slate-700">Tarif belum tersedia, isi manual</label>
+                <input id="biaya_admin_manual" type="number" name="biaya_admin_manual" min="0" step="1" x-model.number="manualBiaya"
+                    class="w-36 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-right text-xs font-bold">
             </div>
         </div>
 
@@ -133,7 +138,8 @@
 
         <input type="hidden" name="total" :value="grandTotal">
         <input type="hidden" name="denominations_json" :value="JSON.stringify(denominations.filter(d => d.jumlah > 0))">
-        <input type="hidden" name="change_denominations_json" :value="JSON.stringify(changeDenominations.filter(d => d.jumlah > 0))">
+        <input type="hidden" name="change_denominations_json" :value="JSON.stringify(hasChange ? changeDenominations.filter(d => d.jumlah > 0) : [])">
+        <input type="hidden" name="change_total" :value="totalKembalian">
     </form>
 
     <!-- FLOATING BOTTOM BAR -->
@@ -153,14 +159,15 @@
 
 <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 <script>
-    function tarikApp(kasAsal, kasSumberList) {
+    function tarikApp(kasAsal, kasSumberList, feeRanges, oldManualFee) {
         return {
             kasAsal: kasAsal || null,
             kasSumberList: kasSumberList || [],
+            feeRanges: feeRanges || [],
             selectedKasSumberId: '',
             isSubmitting: false,
-            biayaAdmin: 0,
             hasChange: false,
+            manualBiaya: Number(oldManualFee || 0),
 
             init() {
                 this.syncStok();
@@ -202,6 +209,15 @@
             get totalKembalian() {
                 if (!this.hasChange) return 0;
                 return this.changeDenominations.reduce((sum, item) => sum + (item.pecahan * (parseInt(item.jumlah) || 0)), 0);
+            },
+            get matchedFee() {
+                const nominal = this.totalUang - this.totalKembalian;
+                const matchesNominal = fee => nominal >= Number(fee.range_awal) && nominal <= Number(fee.range_akhir);
+                return this.feeRanges.find(fee => String(fee.id_kas) === String(this.selectedKasSumberId) && matchesNominal(fee))
+                    || this.feeRanges.find(fee => fee.id_kas === null && matchesNominal(fee));
+            },
+            get biayaAdmin() {
+                return this.matchedFee ? Number(this.matchedFee.biaya_admin) : Number(this.manualBiaya || 0);
             },
             get grandTotal() {
                 return this.totalUang + Math.max(0, parseInt(this.biayaAdmin) || 0) - this.totalKembalian;

@@ -11,9 +11,19 @@ use App\Models\BiayaAdmin;
 use App\Models\Kasir;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class TransaksiController extends Controller
 {
+
+    public function menu()
+    {
+        if (!$this->activeWarungId()) {
+            return redirect()->route('cabang.index')->with('error', 'Silakan pilih cabang terlebih dahulu.');
+        }
+
+        return view('transaksi.menu');
+    }
 
 	public function index(Request $request)
 {
@@ -75,7 +85,7 @@ class TransaksiController extends Controller
 
     // 3. Data Transaksi Paginated
     $transaksi = $transaksiQuery
-        ->with(['kas.warung', 'detailTransaksi', 'itemJualan'])
+        ->with(['kas.warung', 'kasSumber', 'detailTransaksi', 'itemJualan'])
         ->latest()
         ->paginate(10)
         ->withQueryString();
@@ -99,12 +109,12 @@ public function createPenjualanItem()
     }
 
     $items = ItemJualan::where('id_warung', $idWarung)->orderBy('nama_item')->get();
-    $kasList = Kas::where('id_warung', $idWarung)->orderBy('jenis_kas')->get();
+    $kasList = Kas::where('id_warung', $idWarung)->where('status', 'cash')->orderBy('jenis_kas')->get();
+    $walletList = Kas::where('id_warung', $idWarung)->where('status', 'ewallet')->orderBy('jenis_kas')->get();
     $biayaAdminList = BiayaAdmin::where('id_warung', $idWarung)
-        ->orderBy('range_awal')
-        ->get(['range_awal', 'range_akhir', 'biaya_admin']);
+        ->get(['jenis', 'id_kas', 'range_awal', 'range_akhir', 'biaya_admin']);
 
-    return view('transaksi.penjualan_item', compact('items', 'kasList', 'biayaAdminList'));
+    return view('transaksi.penjualan_item', compact('items', 'kasList', 'walletList', 'biayaAdminList'));
 }
 
 public function storePenjualanItem(Request $request)
@@ -117,6 +127,12 @@ public function storePenjualanItem(Request $request)
     $validated = $request->validate([
         'id_item_jualan' => 'required|integer|exists:item_jualan,id',
         'id_kas' => 'required|integer|exists:kas,id',
+        'id_kas_sumber' => 'nullable|integer|exists:kas,id',
+        'harga_item' => 'nullable|integer|min:1',
+        'biaya_admin_manual' => 'nullable|integer|min:0',
+        'denominations_json' => 'required|json',
+        'change_denominations_json' => 'nullable|json',
+        'change_total' => 'required|integer|min:0',
         'keterangan' => 'nullable|string|max:255',
     ]);
 
@@ -125,24 +141,132 @@ public function storePenjualanItem(Request $request)
             ->lockForUpdate()
             ->findOrFail($validated['id_item_jualan']);
         $kas = Kas::where('id_warung', $idWarung)
+            ->where('status', 'cash')
             ->lockForUpdate()
             ->findOrFail($validated['id_kas']);
 
-        $biayaAdmin = BiayaAdmin::where('id_warung', $idWarung)
-            ->where('range_awal', '<=', $item->harga_jual)
-            ->where('range_akhir', '>=', $item->harga_jual)
+        $isPhysical = $item->jenis === 'fisik';
+        $hargaItem = $isPhysical ? (int) $item->harga_jual : (int) ($validated['harga_item'] ?? 0);
+        if ($hargaItem <= 0) {
+            throw ValidationException::withMessages([
+                'harga_item' => $isPhysical ? 'Harga item fisik harus lebih dari 0.' : 'Nominal item virtual harus lebih dari 0.',
+            ]);
+        }
+
+        $wallet = null;
+        if (!$isPhysical) {
+            if (empty($validated['id_kas_sumber'])) {
+                throw ValidationException::withMessages([
+                    'id_kas_sumber' => 'Pilih wallet sumber untuk penjualan virtual.',
+                ]);
+            }
+
+            $wallet = Kas::where('id_warung', $idWarung)
+                ->where('status', 'ewallet')
+                ->lockForUpdate()
+                ->findOrFail($validated['id_kas_sumber']);
+
+            if ($wallet->saldo < $hargaItem) {
+                throw ValidationException::withMessages([
+                    'id_kas_sumber' => 'Saldo wallet tidak mencukupi untuk nominal item ini.',
+                ]);
+            }
+        } elseif ((int) ($item->jumlah ?? 0) < 1) {
+            throw ValidationException::withMessages([
+                'id_item_jualan' => 'Stok item fisik habis.',
+            ]);
+        }
+
+        $feeQuery = BiayaAdmin::where('id_warung', $idWarung)
+            ->where('jenis', $item->jenis)
+            ->where('range_awal', '<=', $hargaItem)
+            ->where('range_akhir', '>=', $hargaItem)
+            ->where(function ($query) use ($item, $wallet) {
+                if ($item->jenis !== 'bank' || !$wallet) {
+                    $query->whereNull('id_kas');
+                    return;
+                }
+                $query->where('id_kas', $wallet->id)->orWhereNull('id_kas');
+            });
+        $biayaAdmin = $feeQuery
+            ->orderByRaw('CASE WHEN id_kas IS NULL THEN 1 ELSE 0 END')
             ->orderBy('range_awal')
             ->first();
-        $biaya = (int) ($biayaAdmin?->biaya_admin ?? 0);
-        $total = (int) $item->harga_jual + $biaya;
+        $biaya = $biayaAdmin
+            ? (int) $biayaAdmin->biaya_admin
+            : (int) ($validated['biaya_admin_manual'] ?? 0);
+        $total = $hargaItem + $biaya;
+        $received = json_decode($validated['denominations_json'], true);
+        $change = json_decode($validated['change_denominations_json'] ?? '[]', true);
+        $allowedDenominations = [100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000];
+        $totalReceived = $this->denominationTotal($received, $allowedDenominations, 'denominations_json');
+        $totalChange = $this->denominationTotal($change, $allowedDenominations, 'change_denominations_json');
+
+        if ((int) $validated['change_total'] !== $totalChange || $totalReceived - $totalChange !== $total) {
+            throw ValidationException::withMessages([
+                'denominations_json' => 'Rincian total uang dan kembalian tidak sesuai dengan total transaksi Rp ' . number_format($total, 0, ',', '.') . '.',
+            ]);
+        }
+
         $transaksi = Transaksi::create([
             'id_kas_warung' => $kas->id,
+            'id_kas_sumber' => $wallet?->id,
+            'id_item_jualan' => $item->id,
             'jenis' => 'masuk',
             'kategori' => 'penjualan_item',
             'total' => $total,
             'biaya_admin' => $biaya,
+            'nama_item' => $item->nama_item,
+            'harga_item' => $hargaItem,
+            'metode_pembayaran' => 'cash',
+            'tanggal' => now()->toDateString(),
             'keterangan' => ($validated['keterangan'] ?? null) ?: $item->id . '-Penjualan item: ' . $item->nama_item,
         ]);
+
+        foreach ($received as $denomination) {
+            $pecahan = (int) $denomination['pecahan'];
+            $jumlah = (int) $denomination['jumlah'];
+            if ($jumlah < 1) {
+                continue;
+            }
+
+            DetailTransaksi::create([
+                'id_transaksi_kas' => $transaksi->id,
+                'pecahan' => (string) $pecahan,
+                'jumlah' => $jumlah,
+            ]);
+            DetailKas::firstOrCreate(
+                ['id_kas_warung' => $kas->id, 'pecahan' => (string) $pecahan],
+                ['jumlah' => 0]
+            )->increment('jumlah', $jumlah);
+        }
+
+        foreach ($change as $denomination) {
+            $pecahan = (int) $denomination['pecahan'];
+            $jumlah = (int) $denomination['jumlah'];
+            if ($jumlah < 1) {
+                continue;
+            }
+
+            $detailKas = DetailKas::where('id_kas_warung', $kas->id)
+                ->where('pecahan', (string) $pecahan)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$detailKas || $detailKas->jumlah < $jumlah) {
+                throw ValidationException::withMessages([
+                    'change_denominations_json' => 'Stok kembalian pecahan Rp ' . number_format($pecahan, 0, ',', '.') . ' tidak mencukupi.',
+                ]);
+            }
+
+            $detailKas->decrement('jumlah', $jumlah);
+        }
+
+        if ($isPhysical) {
+            $item->decrement('jumlah');
+        } else {
+            $wallet->decrement('saldo', $hargaItem);
+        }
 
         $kas->saldo += $total;
         $kas->save();
@@ -150,6 +274,33 @@ public function storePenjualanItem(Request $request)
         return redirect()->route('transaksi.index')
             ->with('success', 'Penjualan item berhasil dicatat sebesar Rp ' . number_format($total, 0, ',', '.') . '.');
     });
+}
+
+private function denominationTotal(mixed $denominations, array $allowed, string $field): int
+{
+    if (!is_array($denominations) || !array_is_list($denominations)) {
+        throw ValidationException::withMessages([$field => 'Rincian pecahan uang tidak valid.']);
+    }
+
+    $total = 0;
+    foreach ($denominations as $denomination) {
+        if (!is_array($denomination)
+            || !isset($denomination['pecahan'], $denomination['jumlah'])
+            || !is_numeric($denomination['pecahan'])
+            || !is_numeric($denomination['jumlah'])) {
+            throw ValidationException::withMessages([$field => 'Rincian pecahan uang tidak valid.']);
+        }
+
+        $pecahan = (int) $denomination['pecahan'];
+        $jumlah = (int) $denomination['jumlah'];
+        if (!in_array($pecahan, $allowed, true) || $jumlah < 0 || (string) $jumlah !== (string) $denomination['jumlah']) {
+            throw ValidationException::withMessages([$field => 'Rincian pecahan uang tidak valid.']);
+        }
+
+        $total += $pecahan * $jumlah;
+    }
+
+    return $total;
 }
 
 private function activeWarungId(): ?int
@@ -189,8 +340,11 @@ public function setor()
         ->where('status', 'ewallet')
         ->orderBy('jenis_kas', 'asc')
         ->get();
+    $biayaAdminList = BiayaAdmin::where('id_warung', $idWarung)
+        ->where('jenis', 'bank')
+        ->get(['id_kas', 'range_awal', 'range_akhir', 'biaya_admin']);
 
-    return view('transaksi.setor', compact('kasAsal', 'kasTujuanList'));
+    return view('transaksi.setor', compact('kasAsal', 'kasTujuanList', 'biayaAdminList'));
 }
 
 // Method untuk Halaman Tarik Tunai
@@ -225,8 +379,11 @@ public function tarik()
 
     // Juga disertakan $kasTujuanList sebagai alias agar compatible jika Blade membutuhkan nama variabel tersebut
     $kasTujuanList = $kasSumberList;
+    $biayaAdminList = BiayaAdmin::where('id_warung', $idWarung)
+        ->where('jenis', 'bank')
+        ->get(['id_kas', 'range_awal', 'range_akhir', 'biaya_admin']);
 
-    return view('transaksi.tarik', compact('kasAsal', 'kasSumberList', 'kasTujuanList'));
+    return view('transaksi.tarik', compact('kasAsal', 'kasSumberList', 'kasTujuanList', 'biayaAdminList'));
 }
     public function store(Request $request)
 {
@@ -242,20 +399,32 @@ public function tarik()
         'jenis'                     => 'required|in:masuk,keluar',
         'id_kas'                    => 'required|integer|exists:kas,id',
         'id_kas_tujuan'             => 'required|integer|exists:kas,id',
-        'total'                     => 'required|numeric|min:0',
-        'biaya_admin'               => 'nullable|numeric|min:0',
-        'denominations_json'        => 'required|string',
-        'change_denominations_json' => 'nullable|string',
+        'total'                     => 'required|integer|min:0',
+        'biaya_admin_manual'        => 'nullable|integer|min:0',
+        'change_total'              => 'required|integer|min:0',
+        'denominations_json'        => 'required|json',
+        'change_denominations_json' => 'nullable|json',
         'keterangan'                => 'nullable|string',
     ]);
 
     $denominations       = json_decode($request->denominations_json, true) ?? [];
     $changeDenominations = json_decode($request->change_denominations_json, true) ?? [];
-    $biayaAdmin          = (float) ($request->biaya_admin ?? 0);
 
     // Hitung total nilai nominal dari pecahan fisik utama & kembalian
-    $totalUangFisik   = collect($denominations)->sum(fn ($d) => ($d['pecahan'] ?? 0) * ($d['jumlah'] ?? 0));
-    $totalChangeFisik = collect($changeDenominations)->sum(fn ($d) => ($d['pecahan'] ?? 0) * ($d['jumlah'] ?? 0));
+    $allowedDenominations = [100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000];
+    $totalUangFisik = $this->denominationTotal($denominations, $allowedDenominations, 'denominations_json');
+    $totalChangeFisik = $this->denominationTotal($changeDenominations, $allowedDenominations, 'change_denominations_json');
+    if ((int) $request->change_total !== $totalChangeFisik) {
+        throw ValidationException::withMessages([
+            'change_total' => 'Total kembalian tidak sesuai dengan rincian pecahan uang.',
+        ]);
+    }
+    $nominalTransaksi = $totalUangFisik - $totalChangeFisik;
+    if ($nominalTransaksi <= 0) {
+        throw ValidationException::withMessages([
+            'denominations_json' => 'Nominal bersih transaksi harus lebih dari 0.',
+        ]);
+    }
 
     DB::beginTransaction();
 
@@ -263,22 +432,54 @@ public function tarik()
         // 1. Validasi Kas Asal & Tujuan milik cabang aktif
         $kasAsal = Kas::where('id', $request->id_kas)
             ->where('id_warung', $idWarung)
+            ->where('status', 'cash')
+            ->lockForUpdate()
             ->firstOrFail();
 
         $kasTujuan = Kas::where('id', $request->id_kas_tujuan)
             ->where('id_warung', $idWarung)
+            ->where('status', 'ewallet')
+            ->lockForUpdate()
             ->firstOrFail();
 
         if ($kasAsal->id === $kasTujuan->id) {
             throw new \Exception('Kas asal dan kas tujuan tidak boleh sama.');
         }
 
+        $feeRange = BiayaAdmin::where('id_warung', $idWarung)
+            ->where('jenis', 'bank')
+            ->where(function ($query) use ($kasTujuan) {
+                $query->where('id_kas', $kasTujuan->id)->orWhereNull('id_kas');
+            })
+            ->where('range_awal', '<=', $nominalTransaksi)
+            ->where('range_akhir', '>=', $nominalTransaksi)
+            ->orderByRaw('CASE WHEN id_kas IS NULL THEN 1 ELSE 0 END')
+            ->orderBy('range_awal')
+            ->first();
+        $biayaAdmin = $feeRange
+            ? (int) $feeRange->biaya_admin
+            : (int) ($request->biaya_admin_manual ?? 0);
+        $totalTransaksi = $request->jenis === 'masuk'
+            ? $nominalTransaksi - $biayaAdmin
+            : $nominalTransaksi + $biayaAdmin;
+
+        if ($totalTransaksi <= 0 || (int) $request->total !== $totalTransaksi) {
+            throw new \Exception('Total transaksi tidak sesuai dengan nominal dan biaya admin untuk jenis bank.');
+        }
+
+        if ($request->jenis === 'masuk' && $kasTujuan->saldo < $totalTransaksi) {
+            throw new \Exception('Saldo wallet tidak mencukupi untuk nominal setoran ini.');
+        }
         // 2. Simpan Header Transaksi Utama
         $transaksi = Transaksi::create([
             'jenis'         => $request->jenis,
             'id_kas_warung' => $kasAsal->id,
-            'total'         => $request->total,
+            'id_kas_sumber' => $kasTujuan->id,
+            'kategori'      => 'transaksi_customer',
+            'total'         => $totalTransaksi,
             'biaya_admin'   => $biayaAdmin,
+            'metode_pembayaran' => 'ewallet',
+            'tanggal'       => now()->toDateString(),
             'keterangan'    => $request->keterangan,
         ]);
 
@@ -330,7 +531,7 @@ public function tarik()
             $kasAsal->saldo += ($totalUangFisik - $totalChangeFisik);
             
             // E-Wallet Agen berkurang sebesar Nominal Netto Transfer ke Customer
-            $kasTujuan->saldo -= $request->total;
+            $kasTujuan->saldo -= $totalTransaksi;
         }
 
         // ==========================================
@@ -387,7 +588,7 @@ public function tarik()
             $kasAsal->saldo -= ($totalUangFisik - $totalChangeFisik);
 
             // E-Wallet Agen bertambah sebesar Total Transfer Digital yang masuk dari Customer
-            $kasTujuan->saldo += $request->total;
+            $kasTujuan->saldo += $totalTransaksi;
         }
 
         $kasAsal->save();

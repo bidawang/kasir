@@ -4,11 +4,11 @@
 
 @section('content')
 <div class="max-w-xl mx-auto pb-12 space-y-5"
-     x-data="itemSaleForm(@js($items), @js($biayaAdminList))">
+     x-data="itemSaleForm(@js($items), @js($biayaAdminList), @js((string) old('id_item_jualan', '')), @js(old('harga_item', '')), @js((string) old('id_kas_sumber', '')), @js(old('biaya_admin_manual', 0)))">
     <div class="flex items-center justify-between">
         <div>
             <h1 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">Penjualan Item</h1>
-            <p class="text-xs text-slate-500 font-medium">Biaya admin dihitung dari rentang harga item</p>
+            <p class="text-xs text-slate-500 font-medium">Pembayaran tunai; biaya admin dihitung otomatis berdasarkan jenis dan nominal</p>
         </div>
         <a href="{{ route('transaksi.index') }}" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold">Kembali</a>
     </div>
@@ -29,51 +29,131 @@
     @endif
     @if($kasList->isEmpty())
         <div class="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-2xl text-xs font-semibold">
-            Cabang ini belum memiliki akun kas untuk menerima pembayaran.
+            Cabang ini belum memiliki kas tunai untuk menerima pembayaran.
         </div>
     @endif
 
-    <form action="{{ route('transaksi.penjualan-item.store') }}" method="POST" class="space-y-4">
+    <form action="{{ route('transaksi.penjualan-item.store') }}" method="POST" class="space-y-4" @submit="return validatePayment($event)">
         @csrf
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 sm:p-6 space-y-4">
             <div>
-                <label for="id_item_jualan" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Item Jualan</label>
-                <select id="id_item_jualan" name="id_item_jualan" x-model="itemId" required @disabled($items->isEmpty())
-                    class="w-full px-3.5 py-2.5 bg-slate-50 border @error('id_item_jualan') border-rose-300 @else border-slate-200 @enderror rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                    <option value="">Pilih item</option>
-                    @foreach($items as $item)
-                        <option value="{{ $item->id }}" @selected(old('id_item_jualan') == $item->id)>{{ $item->nama_item }} — Rp {{ number_format($item->harga_jual, 0, ',', '.') }}</option>
+                <label for="item_search" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Item Jualan</label>
+                <div class="relative">
+                    <input id="item_search" type="search" x-model="itemSearch" @focus="itemDropdownOpen = true" @input="itemId = ''; itemDropdownOpen = true" @click.away="itemDropdownOpen = false"
+                        placeholder="Cari nama item..." autocomplete="off" :disabled="{{ $items->isEmpty() ? 'true' : 'false' }}"
+                        class="w-full px-3.5 py-2.5 bg-slate-50 border @error('id_item_jualan') border-rose-300 @else border-slate-200 @enderror rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <input type="hidden" name="id_item_jualan" :value="itemId">
+                    <div x-show="itemDropdownOpen" x-cloak class="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg">
+                        <template x-for="item in filteredItems" :key="item.id">
+                            <button type="button" @click="chooseItem(item)" :disabled="item.jenis === 'fisik' && Number(item.jumlah) < 1"
+                                class="block w-full px-3 py-2.5 text-left hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">
+                                <span class="block text-sm font-semibold text-slate-800" x-text="item.nama_item"></span>
+                                <span class="block text-xs text-slate-500" x-text="`${item.jenis} · Rp ${formatIDR(item.harga_jual)}${item.jenis === 'fisik' ? ` · stok ${item.jumlah}` : ''}`"></span>
+                            </button>
+                        </template>
+                        <p x-show="filteredItems.length === 0" class="px-3 py-3 text-xs text-slate-500">Item tidak ditemukan.</p>
+                    </div>
+                </div>
+                @error('id_item_jualan')<p class="mt-1 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
+            </div>
+
+            <div x-show="selectedItem && selectedItem.jenis !== 'fisik'">
+                <label for="harga_item" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Nominal Item Virtual / Bank</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 text-xs font-semibold">Rp</span>
+                    <input id="harga_item" type="number" inputmode="numeric" min="1" step="1" x-model.number="virtualAmount"
+                        class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                </div>
+                @error('harga_item')<p class="mt-1 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
+            </div>
+            <input type="hidden" name="harga_item" :value="salePrice">
+            <input type="hidden" name="biaya_admin_manual" :value="manualFee">
+
+            <div x-show="selectedItem && selectedItem.jenis !== 'fisik'">
+                <label for="id_kas_sumber" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Wallet Sumber</label>
+                <select id="id_kas_sumber" name="id_kas_sumber" x-model="walletId" :required="requiresWallet" :disabled="!requiresWallet || {{ $walletList->isEmpty() ? 'true' : 'false' }}"
+                    class="w-full px-3.5 py-2.5 bg-slate-50 border @error('id_kas_sumber') border-rose-300 @else border-slate-200 @enderror rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <option value="">Pilih wallet</option>
+                    @foreach($walletList as $wallet)
+                        <option value="{{ $wallet->id }}">{{ $wallet->jenis_kas }} (saldo Rp {{ number_format($wallet->saldo, 0, ',', '.') }})</option>
                     @endforeach
                 </select>
-                @error('id_item_jualan')<p class="mt-1 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
+                @error('id_kas_sumber')<p class="mt-1 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
+                @if($walletList->isEmpty())
+                    <p class="mt-1 text-xs text-rose-600">Belum ada wallet di cabang ini.</p>
+                @endif
+            </div>
+
+            <div>
+                <label for="id_kas" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Kas Tunai Penerima</label>
+                <select id="id_kas" name="id_kas" required @disabled($kasList->isEmpty())
+                    class="w-full px-3.5 py-2.5 bg-slate-50 border @error('id_kas') border-rose-300 @else border-slate-200 @enderror rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <option value="">Pilih kas tunai</option>
+                    @foreach($kasList as $cash)
+                        <option value="{{ $cash->id }}" @selected(old('id_kas') == $cash->id)>{{ $cash->jenis_kas }} (saldo Rp {{ number_format($cash->saldo, 0, ',', '.') }})</option>
+                    @endforeach
+                </select>
+                @error('id_kas')<p class="mt-1 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
+            </div>
+
+            <div x-show="selectedItem && !matchedFee" x-cloak>
+                <label for="manual_fee" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Biaya Admin Manual (tarif belum tersedia)</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 text-xs font-semibold">Rp</span>
+                    <input id="manual_fee" type="number" inputmode="numeric" min="0" step="1" x-model.number="manualFee"
+                        class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                </div>
             </div>
 
             <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2.5">
                 <div class="flex justify-between gap-3 text-xs">
-                    <span class="text-slate-500 font-medium">Harga item</span>
-                    <span class="font-bold text-slate-800" x-text="'Rp ' + formatIDR(selectedItem ? selectedItem.harga_jual : 0)"></span>
+                    <span class="text-slate-500 font-medium">Harga / nominal item</span>
+                    <span class="font-bold text-slate-800" x-text="'Rp ' + formatIDR(salePrice)"></span>
                 </div>
                 <div class="flex justify-between gap-3 text-xs">
                     <span class="text-slate-500 font-medium">Biaya admin</span>
                     <span class="font-bold text-slate-800" x-text="'Rp ' + formatIDR(selectedFee)"></span>
                 </div>
                 <div class="border-t border-slate-200 pt-2.5 flex justify-between gap-3">
-                    <span class="text-xs font-bold text-slate-700">Total dibayar customer</span>
-                    <span class="text-sm font-black text-primary-700" x-text="'Rp ' + formatIDR(total)"></span>
+                    <span class="text-xs font-bold text-slate-700">Total pembayaran tunai</span>
+                    <span class="text-sm font-black text-primary-700" x-text="'Rp ' + formatIDR(totalDue)"></span>
                 </div>
-                <p class="text-[10px] text-slate-400" x-show="selectedItem && !matchedFee">Tidak ada tarif yang cocok; biaya admin Rp 0.</p>
+                <p class="text-[10px] text-slate-500" x-show="selectedItem && !matchedFee">Tarif untuk rentang ini belum tersedia. Masukkan biaya manual bila diperlukan.</p>
             </div>
 
             <div>
-                <label for="id_kas" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Kas Penerima Pembayaran</label>
-                <select id="id_kas" name="id_kas" required @disabled($kasList->isEmpty())
-                    class="w-full px-3.5 py-2.5 bg-slate-50 border @error('id_kas') border-rose-300 @else border-slate-200 @enderror rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                    <option value="">Pilih kas</option>
-                    @foreach($kasList as $kas)
-                        <option value="{{ $kas->id }}" @selected(old('id_kas') == $kas->id)>{{ $kas->jenis_kas }} (saldo Rp {{ number_format($kas->saldo, 0, ',', '.') }})</option>
-                    @endforeach
-                </select>
-                @error('id_kas')<p class="mt-1 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
+                <label class="block text-xs sm:text-sm font-semibold text-slate-700 mb-2">Uang Tunai Diterima</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <template x-for="item in denominations" :key="item.pecahan">
+                        <label class="flex items-center justify-between gap-2 p-2 bg-slate-50 rounded-lg border border-slate-200">
+                            <span class="text-[11px] font-bold text-slate-700" x-text="'Rp ' + formatIDR(item.pecahan)"></span>
+                            <input type="number" min="0" step="1" inputmode="numeric" x-model.number="item.jumlah"
+                                class="w-16 px-1 py-1 text-center bg-white border border-slate-200 rounded text-xs font-bold">
+                        </label>
+                    </template>
+                </div>
+                <p class="mt-2 text-xs text-slate-600">Diterima: <strong x-text="'Rp ' + formatIDR(totalReceived)"></strong></p>
+            </div>
+
+            <div class="rounded-xl border border-slate-200 p-3">
+                <label class="flex min-h-11 cursor-pointer items-center gap-3 text-sm font-semibold text-slate-800">
+                    <input type="checkbox" x-model="hasChange" class="h-5 w-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500">
+                    Ada uang kembalian
+                </label>
+                <div x-show="hasChange" x-cloak class="pt-3">
+                <label class="block text-xs sm:text-sm font-semibold text-slate-700 mb-2">Rincian Kembalian Diberikan</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <template x-for="item in changeDenominations" :key="item.pecahan">
+                        <label class="flex items-center justify-between gap-2 p-2 bg-slate-50 rounded-lg border border-slate-200">
+                            <span class="text-[11px] font-bold text-slate-700" x-text="'Rp ' + formatIDR(item.pecahan)"></span>
+                            <input type="number" min="0" step="1" inputmode="numeric" x-model.number="item.jumlah"
+                                class="w-16 px-1 py-1 text-center bg-white border border-slate-200 rounded text-xs font-bold">
+                        </label>
+                    </template>
+                </div>
+                <p class="mt-2 text-sm font-semibold text-slate-700">Total kembalian (otomatis): <strong x-text="'Rp ' + formatIDR(totalChange)"></strong></p>
+                <p class="mt-1 text-xs text-slate-500">Kembalian seharusnya: <strong x-text="'Rp ' + formatIDR(requiredChange)"></strong></p>
+                </div>
             </div>
 
             <div>
@@ -84,6 +164,9 @@
             </div>
         </div>
 
+        <input type="hidden" name="denominations_json" :value="JSON.stringify(denominations.filter(item => item.jumlah > 0))">
+        <input type="hidden" name="change_denominations_json" :value="JSON.stringify(hasChange ? changeDenominations.filter(item => item.jumlah > 0) : [])">
+        <input type="hidden" name="change_total" :value="totalChange">
         <div class="flex justify-end gap-3">
             <a href="{{ route('transaksi.index') }}" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs sm:text-sm font-semibold hover:bg-slate-50">Batal</a>
             <button type="submit" @disabled($items->isEmpty() || $kasList->isEmpty()) class="bg-primary-600 hover:bg-primary-700 disabled:opacity-50 active:scale-95 text-white px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold shadow-sm">Simpan Penjualan</button>
@@ -92,29 +175,107 @@
 </div>
 
 <script>
-    function itemSaleForm(items, feeRanges) {
+    function itemSaleForm(items, feeRanges, oldItemId, oldAmount, oldWalletId, oldManualFee) {
         return {
             items,
             feeRanges,
-            itemId: @js((string) old('id_item_jualan', '')),
+            itemId: oldItemId,
+            itemSearch: '',
+            itemDropdownOpen: false,
+            virtualAmount: oldAmount || '',
+            walletId: oldWalletId,
+            manualFee: Number(oldManualFee || 0),
+            hasChange: false,
+            denominations: [100000, 50000, 20000, 10000, 5000, 2000, 1000].map(pecahan => ({ pecahan, jumlah: 0 })),
+            changeDenominations: [100000, 50000, 20000, 10000, 5000, 2000, 1000].map(pecahan => ({ pecahan, jumlah: 0 })),
+            init() {
+                const selected = this.selectedItem;
+                if (selected) this.itemSearch = selected.nama_item;
+                this.$watch('hasChange', value => {
+                    if (!value) this.changeDenominations.forEach(item => item.jumlah = 0);
+                });
+            },
+            get filteredItems() {
+                const query = this.itemSearch.toLowerCase();
+                return this.items.filter(item => item.nama_item.toLowerCase().includes(query));
+            },
+            chooseItem(item) {
+                this.itemId = String(item.id);
+                this.itemSearch = item.nama_item;
+                this.itemDropdownOpen = false;
+                this.manualFee = 0;
+                if (item.jenis !== 'fisik') this.virtualAmount = item.harga_jual;
+            },
             get selectedItem() {
                 return this.items.find(item => String(item.id) === String(this.itemId));
             },
+            get requiresWallet() {
+                return this.selectedItem && this.selectedItem.jenis !== 'fisik';
+            },
+            get salePrice() {
+                return this.requiresWallet ? Number(this.virtualAmount || 0) : Number(this.selectedItem?.harga_jual || 0);
+            },
             get matchedFee() {
-                const price = Number(this.selectedItem?.harga_jual ?? 0);
-                return this.feeRanges.find(fee => price >= Number(fee.range_awal) && price <= Number(fee.range_akhir));
+                const matches = this.feeRanges.filter(fee => fee.jenis === this.selectedItem?.jenis
+                    && (this.selectedItem?.jenis === 'bank'
+                        ? (String(fee.id_kas) === String(this.walletId) || fee.id_kas === null)
+                        : fee.id_kas === null)
+                    && this.salePrice >= Number(fee.range_awal)
+                    && this.salePrice <= Number(fee.range_akhir));
+                if (this.selectedItem?.jenis === 'bank') {
+                    return matches.find(fee => String(fee.id_kas) === String(this.walletId))
+                        || matches.find(fee => fee.id_kas === null);
+                }
+                return matches[0];
             },
             get selectedFee() {
-                return Number(this.matchedFee?.biaya_admin ?? 0);
+                return this.matchedFee ? Number(this.matchedFee.biaya_admin) : Number(this.manualFee || 0);
             },
-            get total() {
-                return Number(this.selectedItem?.harga_jual ?? 0) + this.selectedFee;
+            get totalDue() {
+                return this.salePrice + this.selectedFee;
+            },
+            get totalReceived() {
+                return this.denominations.reduce((sum, item) => sum + item.pecahan * (Number(item.jumlah) || 0), 0);
+            },
+            get totalChange() {
+                if (!this.hasChange) return 0;
+                return this.changeDenominations.reduce((sum, item) => sum + item.pecahan * (Number(item.jumlah) || 0), 0);
+            },
+            get requiredChange() {
+                return Math.max(0, this.totalReceived - this.totalDue);
+            },
+            formatIDR(value) {
+                return new Intl.NumberFormat('id-ID').format(value || 0);
+            },
+            validatePayment(event) {
+                if (!this.selectedItem) {
+                    alert('Pilih item jualan terlebih dahulu.');
+                    event.preventDefault();
+                    return false;
+                }
+                if (this.requiresWallet && !this.walletId) {
+                    alert('Pilih wallet sumber untuk penjualan item virtual/bank.');
+                    event.preventDefault();
+                    return false;
+                }
+                if (this.salePrice <= 0 || this.totalReceived < this.totalDue) {
+                    alert('Nominal item harus valid dan uang tunai harus mencukupi.');
+                    event.preventDefault();
+                    return false;
+                }
+                if (this.requiredChange > 0 && !this.hasChange) {
+                    alert('Centang "Ada uang kembalian", lalu masukkan rincian uang kembalian.');
+                    event.preventDefault();
+                    return false;
+                }
+                if (this.totalChange !== this.requiredChange) {
+                    alert('Rincian kembalian harus sama dengan jumlah kembalian yang diperlukan.');
+                    event.preventDefault();
+                    return false;
+                }
+                return true;
             }
         };
-    }
-
-    function formatIDR(value) {
-        return new Intl.NumberFormat('id-ID').format(value);
     }
 </script>
 @endsection

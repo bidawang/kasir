@@ -190,6 +190,12 @@
                                     <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Harga Item</span>
                                     <span class="font-bold text-slate-700">Rp {{ number_format($item->harga_item ?? 0, 0, ',', '.') }}</span>
                                 </div>
+                                @if($item->kasSumber)
+                                    <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                                        <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Wallet Sumber</span>
+                                        <span class="font-bold text-slate-700">{{ $item->kasSumber->jenis_kas }}</span>
+                                    </div>
+                                @endif
                                 <div class="bg-emerald-50/60 p-2.5 rounded-xl border border-emerald-100">
                                     <span class="block text-[10px] font-bold uppercase tracking-wider text-emerald-700">Total Dibayar</span>
                                     <span class="font-extrabold text-emerald-700">Rp {{ number_format($item->total, 0, ',', '.') }}</span>

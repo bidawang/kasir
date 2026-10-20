@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark">
     <title>{{ $title ?? 'Agen BRILink' }}</title>
 
     <!-- Google Fonts -->
@@ -57,6 +58,31 @@
         .pb-safe {
             padding-bottom: env(safe-area-inset-bottom, 0px);
         }
+        @media (prefers-color-scheme: dark) {
+            body, html { background-color: #0f172a !important; color: #e2e8f0; }
+            [class~="bg-white"], [class~="bg-white/95"] { background-color: #1e293b !important; }
+            [class~="bg-slate-50"], [class~="bg-slate-100"] { background-color: #0f172a !important; }
+            [class~="text-slate-900"], [class~="text-slate-800"] { color: #f1f5f9 !important; }
+            [class~="text-slate-700"], [class~="text-slate-600"] { color: #cbd5e1 !important; }
+            [class~="text-slate-500"], [class~="text-slate-400"] { color: #94a3b8 !important; }
+            [class~="border-slate-100"], [class~="border-slate-200"], [class~="border-slate-300"] { border-color: #334155 !important; }
+            [class~="divide-slate-100"] > :not([hidden]) ~ :not([hidden]) { border-color: #334155 !important; }
+            [class~="bg-primary-50"] { background-color: #172554 !important; }
+            [class~="text-primary-700"], [class~="text-primary-800"] { color: #bfdbfe !important; }
+            [class~="bg-emerald-50"], [class~="bg-emerald-100"] { background-color: #064e3b !important; }
+            [class~="text-emerald-700"], [class~="text-emerald-800"] { color: #a7f3d0 !important; }
+            [class~="bg-rose-50"], [class~="bg-rose-100"] { background-color: #4c0519 !important; }
+            [class~="text-rose-700"], [class~="text-rose-800"] { color: #fecdd3 !important; }
+            [class~="bg-amber-50"], [class~="bg-amber-100"] { background-color: #451a03 !important; }
+            [class~="text-amber-700"], [class~="text-amber-800"] { color: #fde68a !important; }
+            input, select, textarea { color-scheme: dark; }
+            input:not([type="checkbox"]):not([type="radio"]), select, textarea {
+                background-color: #0f172a;
+                color: #f1f5f9;
+                border-color: #475569;
+            }
+            ::placeholder { color: #94a3b8; opacity: 1; }
+        }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased selection:bg-primary-500 selection:text-white flex flex-col min-h-screen">
@@ -78,7 +104,7 @@
             ?? \App\Models\Kasir::find(session('id_warung'));
             
         // Helper untuk cek keaktifan menu transaksi
-        $isTransaksiActive = request()->routeIs('transaksi.index*') || request()->routeIs('transaksi.setor*') || request()->routeIs('transaksi.tarik*');
+        $isTransaksiActive = request()->routeIs('transaksi.menu*') || request()->routeIs('transaksi.index*') || request()->routeIs('transaksi.setor*') || request()->routeIs('transaksi.tarik*') || request()->routeIs('transaksi.kas.*') || request()->routeIs('transaksi.penjualan-item.*');
     @endphp
 
     <!-- HEADER UTAMA (Sticky Top) -->
@@ -123,9 +149,18 @@
     </a>
 
 
+    {{-- Transaksi --}}
+    <a href="{{ route('transaksi.menu') }}"
+       class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ ($isTransaksiActive && !request()->routeIs('transaksi.index')) ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 5.25h15m-15 5.25h15"/>
+        </svg>
+        Transaksi
+    </a>
+
     {{-- Riwayat --}}
     <a href="{{ route('transaksi.index') }}" 
-       class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ $isTransaksiActive ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+       class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('transaksi.index') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
 
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round"
@@ -184,27 +219,11 @@
 
 </nav>
 
-                <!-- Right: Action Buttons (Setor / Tarik) & Logout -->
+                <!-- Right: Shortcut Transaksi & Logout -->
                 <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                    
-                    <!-- Tombol Setor Tunai -->
-                    <a href="{{ route('transaksi.setor') }}"
-                       class="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5">
-                        <svg class="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m0 0l-4.5-4.5M12 19.5l4.5-4.5"/>
-                        </svg>
-                        <span class="hidden sm:inline">Setor Tunai</span>
-                        <span class="sm:hidden">Setor</span>
-                    </a>
-
-                    <!-- Tombol Tarik Tunai -->
-                    <a href="{{ route('transaksi.tarik') }}"
-                       class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5">
-                        <svg class="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 19.5v-15m0 0l-4.5 4.5M12 4.5l4.5 4.5"/>
-                        </svg>
-                        <span class="hidden sm:inline">Tarik Tunai</span>
-                        <span class="sm:hidden">Tarik</span>
+                    <a href="{{ route('transaksi.menu') }}"
+                       class="bg-white/15 hover:bg-white/25 active:scale-95 text-white px-3 py-2 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5">
+                        <span>Transaksi</span>
                     </a>
 
                     <button type="button" 
@@ -266,13 +285,13 @@
                     <span class="text-[9px] sm:text-[10px] tracking-tight mt-0.5">Beranda</span>
                 </a>
 
-                <!-- 2. Riwayat Transaksi -->
-                <a href="{{ route('transaksi.index') }}"
+                <!-- 2. Menu Transaksi -->
+                <a href="{{ route('transaksi.menu') }}"
                    class="flex flex-col items-center justify-center py-1 transition-colors group {{ $isTransaksiActive ? 'text-primary-600 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="{{ $isTransaksiActive ? '2.5' : '2' }}" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.66 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.66m-5.801 0c-3.04.15-5.5 2.66-5.5 5.75v9.5a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 18.25v-9.5c0-3.09-2.46-5.6-5.5-5.75m-5.801 0a48.108 48.108 0 015.801 0"/>
                     </svg>
-                    <span class="text-[9px] sm:text-[10px] tracking-tight mt-0.5">Riwayat</span>
+                    <span class="text-[9px] sm:text-[10px] tracking-tight mt-0.5">Transaksi</span>
                 </a>
 
                 <!-- 3. Kas -->
