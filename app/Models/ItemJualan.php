@@ -20,6 +20,14 @@ class ItemJualan extends Model
         'jumlah',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'harga_jual' => 'integer',
+            'jumlah' => 'integer',
+        ];
+    }
+
     public function warung()
     {
         return $this->belongsTo(Kasir::class, 'id_warung');

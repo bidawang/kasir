@@ -15,6 +15,7 @@ class Transaksi extends Model
     protected $fillable = [
         'id_kas_warung',
         'id_kas_sumber',
+        'id_kategori',
         'total',
         'keterangan',
         'biaya_admin',
@@ -27,6 +28,16 @@ class Transaksi extends Model
         'tanggal',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'total' => 'integer',
+            'biaya_admin' => 'integer',
+            'harga_item' => 'integer',
+            'tanggal' => 'date',
+        ];
+    }
+
     public function kas()
     {
         return $this->belongsTo(Kas::class, 'id_kas_warung');
@@ -35,6 +46,11 @@ class Transaksi extends Model
     public function kasSumber()
     {
         return $this->belongsTo(Kas::class, 'id_kas_sumber');
+    }
+
+    public function kategoriTransaksi()
+    {
+        return $this->belongsTo(KategoriTransaksi::class, 'id_kategori');
     }
 
     public function detailTransaksi()
@@ -51,11 +67,5 @@ class Transaksi extends Model
     {
         return $this->belongsTo(ItemJualan::class, 'id_item_jualan');
     }
-
-    public function jenisTransaksi()
-    {
-        return $this->belongsTo(JenisKas::class, 'id_jenis_kas');
-    }
-	// Tambahkan 'id_kategori' ke properti $fillable
 
 }

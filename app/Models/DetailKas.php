@@ -18,6 +18,14 @@ class DetailKas extends Model
         'jumlah',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'pecahan' => 'integer',
+            'jumlah' => 'integer',
+        ];
+    }
+
     public function kas()
     {
         return $this->belongsTo(Kas::class, 'id_kas_warung');

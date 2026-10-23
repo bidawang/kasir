@@ -18,6 +18,14 @@ class DetailTransaksi extends Model
         'jumlah',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'pecahan' => 'integer',
+            'jumlah' => 'integer',
+        ];
+    }
+
     public function transaksi()
     {
         return $this->belongsTo(Transaksi::class, 'id_transaksi_kas');

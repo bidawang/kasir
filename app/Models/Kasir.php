@@ -15,10 +15,16 @@ class Kasir extends Model
 
     protected $fillable = [
         'id_user',
-        'id_area',
         'nama_warung',
         'modal',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'modal' => 'integer',
+        ];
+    }
 
     public function user()
     {
@@ -27,6 +33,6 @@ class Kasir extends Model
 
     public function kas()
     {
-        return $this->hasOne(Kas::class, 'id_warung');
+        return $this->hasMany(Kas::class, 'id_warung');
     }
 }

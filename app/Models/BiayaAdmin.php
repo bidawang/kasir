@@ -21,6 +21,15 @@ class BiayaAdmin extends Model
         'id_kas',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'range_awal' => 'integer',
+            'range_akhir' => 'integer',
+            'biaya_admin' => 'integer',
+        ];
+    }
+
     public function warung()
     {
         return $this->belongsTo(Kasir::class, 'id_warung');

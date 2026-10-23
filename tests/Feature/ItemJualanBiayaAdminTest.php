@@ -63,8 +63,13 @@ class ItemJualanBiayaAdminTest extends TestCase
             ->assertSee('Jual Item');
         $this->get(route('transaksi.penjualan-item.create'))
             ->assertOk()
-            ->assertSee('Cari nama item')
-            ->assertSee('Ada uang kembalian');
+            ->assertSeeInOrder(['Jenis Item', 'Pilih jenis item', 'Item Jualan'])
+            ->assertSee('Uang pelanggan kurang')
+            ->assertSee('Uang pelanggan pas')
+            ->assertSee('Uang pelanggan lebih')
+            ->assertSee('Kembalian otomatis:')
+            ->assertDontSee('Ada uang kembalian')
+            ->assertSee('Cari nama item');
         $this->post(route('transaksi.penjualan-item.store'), [
             'id_item_jualan' => $item->id,
             'id_kas' => $kas->id,
@@ -84,7 +89,10 @@ class ItemJualanBiayaAdminTest extends TestCase
         $this->assertSame(2500, $transaksi->biaya_admin);
         $this->assertSame(14500, $transaksi->total);
         $this->assertSame('Pulsa', $transaksi->nama_item);
+        $this->assertSame($kas->id, $transaksi->kas->id);
+        $this->assertSame($wallet->id, $transaksi->kasSumber->id);
         $this->assertSame(19500, $kas->fresh()->saldo);
+        $this->assertSame($kas->id, $transaksi->id_kas_warung);
         $this->assertSame($wallet->id, $transaksi->id_kas_sumber);
         $this->assertSame(8000, $wallet->fresh()->saldo);
         $this->assertNull($item->fresh()->jumlah);
@@ -155,8 +163,45 @@ class ItemJualanBiayaAdminTest extends TestCase
             'harga_item' => 5000,
             'biaya_admin' => 1000,
             'total' => 6000,
+            'id_kas_warung' => $kas->id,
             'id_kas_sumber' => null,
         ]);
+    }
+
+    public function test_item_sale_rejects_change_that_is_more_or_less_than_the_amount_due(): void
+    {
+        [$user, $warung] = $this->signInForWarung();
+        $item = ItemJualan::create([
+            'id_warung' => $warung->id,
+            'nama_item' => 'Kartu',
+            'harga_jual' => 5000,
+            'jenis' => 'fisik',
+            'jumlah' => 2,
+        ]);
+        $kas = Kas::create([
+            'id_warung' => $warung->id,
+            'jenis_kas' => 'Tunai',
+            'status' => 'cash',
+            'saldo' => 0,
+        ]);
+        $this->actingAs($user)->withSession(['id_warung' => $warung->id]);
+
+        foreach ([6000, 4000] as $change) {
+            $changeDenominations = $change === 6000
+                ? [['pecahan' => 5000, 'jumlah' => 1], ['pecahan' => 1000, 'jumlah' => 1]]
+                : [['pecahan' => 2000, 'jumlah' => 2]];
+            $this->post(route('transaksi.penjualan-item.store'), [
+                'id_item_jualan' => $item->id,
+                'id_kas' => $kas->id,
+                'denominations_json' => json_encode([['pecahan' => 10000, 'jumlah' => 1]]),
+                'change_denominations_json' => json_encode($changeDenominations),
+                'change_total' => $change,
+            ])->assertSessionHasErrors('denominations_json');
+        }
+
+        $this->assertDatabaseCount('transaksi', 0);
+        $this->assertSame(2, $item->fresh()->jumlah);
+        $this->assertSame(0, $kas->fresh()->saldo);
     }
 
     public function test_item_sale_accepts_manual_admin_fee_when_no_range_matches(): void
@@ -315,6 +360,8 @@ class ItemJualanBiayaAdminTest extends TestCase
             'jenis' => 'masuk',
             'total' => 9000,
             'biaya_admin' => 1000,
+            'id_kas_warung' => $cash->id,
+            'id_kas_sumber' => $wallet->id,
         ]);
     }
 
@@ -360,6 +407,12 @@ class ItemJualanBiayaAdminTest extends TestCase
 
         $this->assertSame(0, $cash->fresh()->saldo);
         $this->assertSame(11000, $wallet->fresh()->saldo);
+        $this->assertDatabaseHas('transaksi', [
+            'kategori' => 'transaksi_customer',
+            'jenis' => 'keluar',
+            'id_kas_warung' => $cash->id,
+            'id_kas_sumber' => $wallet->id,
+        ]);
     }
 
     private function signInForWarung(): array

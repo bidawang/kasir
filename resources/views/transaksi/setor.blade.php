@@ -98,20 +98,14 @@
             </div>
         </div>
 
-        <!-- CARD 4: ADA UANG KEMBALIAN (Uang Fisik Keluar ke Customer) -->
-        <div :class="hasChange ? 'border-amber-300 bg-amber-50/20 shadow-2xs' : 'border-slate-200/80 bg-white'" class="rounded-xl border p-3 sm:p-4 space-y-3 transition-all">
+        <!-- CARD 4: RINCIAN KEMBALIAN -->
+        <div class="rounded-xl border border-slate-200/80 bg-white p-3 sm:p-4 space-y-3">
             <div class="flex items-center justify-between">
-                <label class="flex items-center gap-2 cursor-pointer select-none">
-                    <input type="checkbox" id="has_change" class="w-3.5 h-3.5 text-amber-600 border-slate-300 rounded focus:ring-amber-500" x-model="hasChange">
-                    <span class="text-xs font-bold uppercase tracking-wider text-slate-800">Ada Uang Kembalian (Uang Keluar)</span>
-                </label>
-                <div x-show="hasChange" class="text-right">
-                    <span class="text-[10px] text-slate-500 block">Kembalian Diinput:</span>
-                    <span class="text-xs font-extrabold text-amber-700" x-text="'Rp ' + formatIDR(totalKembalian)"></span>
-                </div>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-800">Rincian Kembalian (jika ada)</span>
+                <span class="text-xs font-extrabold text-amber-700" x-text="'Rp ' + formatIDR(totalKembalian)"></span>
             </div>
 
-            <div x-show="hasChange" x-transition class="pt-2 border-t border-amber-200/60 space-y-2">
+            <div class="pt-2 border-t border-slate-200 space-y-2">
                 <div class="grid grid-cols-2 gap-2">
                     <template x-for="(item, index) in changeDenominations" :key="'chg-' + index">
                         <div class="flex items-center justify-between p-1.5 px-2 bg-white rounded-lg border border-slate-200 hover:border-amber-300 transition-all">
@@ -138,7 +132,7 @@
 
         <input type="hidden" name="total" :value="grandTotal">
         <input type="hidden" name="denominations_json" :value="JSON.stringify(denominations.filter(d => d.jumlah > 0))">
-        <input type="hidden" name="change_denominations_json" :value="JSON.stringify(hasChange ? changeDenominations.filter(d => d.jumlah > 0) : [])">
+        <input type="hidden" name="change_denominations_json" :value="JSON.stringify(changeDenominations.filter(d => d.jumlah > 0))">
         <input type="hidden" name="change_total" :value="totalKembalian">
     </form>
 
@@ -166,14 +160,10 @@
             feeRanges: feeRanges || [],
             selectedKasTujuanId: '',
             isSubmitting: false,
-            hasChange: false,
             manualBiaya: Number(oldManualFee || 0),
 
             init() {
                 this.syncStokKembalian();
-                this.$watch('hasChange', (val) => {
-                    if (!val) this.changeDenominations.forEach(item => item.jumlah = 0);
-                });
             },
 
             denominations: [
@@ -207,7 +197,6 @@
                 return this.denominations.reduce((sum, item) => sum + (item.pecahan * (parseInt(item.jumlah) || 0)), 0);
             },
             get totalKembalian() {
-                if (!this.hasChange) return 0;
                 return this.changeDenominations.reduce((sum, item) => sum + (item.pecahan * (parseInt(item.jumlah) || 0)), 0);
             },
             get matchedFee() {
@@ -230,18 +219,16 @@
                 if (!this.selectedKasTujuanId) { alert('Silakan pilih E-Wallet Tujuan!'); e.preventDefault(); return false; }
                 if (this.totalUang <= 0) { alert('Jumlah uang diserahkan harus lebih dari 0!'); e.preventDefault(); return false; }
                 
-                if (this.hasChange) {
-                    if (this.totalKembalian > this.totalUang) { 
-                        alert('Kembalian tidak boleh melebihi uang diserahkan!'); 
-                        e.preventDefault(); 
-                        return false; 
-                    }
-                    for (let d of this.changeDenominations) {
-                        if (d.jumlah > d.stok) {
-                            alert(`Stok kembalian pecahan Rp ${this.formatIDR(d.pecahan)} kurang! (Tersedia: ${d.stok})`);
-                            e.preventDefault();
-                            return false;
-                        }
+                if (this.totalKembalian > this.totalUang) {
+                    alert('Kembalian tidak boleh melebihi uang diserahkan!');
+                    e.preventDefault();
+                    return false;
+                }
+                for (let d of this.changeDenominations) {
+                    if (d.jumlah > d.stok) {
+                        alert(`Stok kembalian pecahan Rp ${this.formatIDR(d.pecahan)} kurang! (Tersedia: ${d.stok})`);
+                        e.preventDefault();
+                        return false;
                     }
                 }
 

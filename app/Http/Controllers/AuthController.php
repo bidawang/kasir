@@ -92,6 +92,7 @@ class AuthController extends Controller
         User::create([
             'nama' => $request->nama,
             'email' => $request->email,
+            'status' => 'aktif',
             'role' => 'kasir',
             'password' => Hash::make($request->password),
         ]);
@@ -111,4 +112,3 @@ class AuthController extends Controller
         return redirect()->route('login');
     }
 }
-

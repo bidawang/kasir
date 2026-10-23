@@ -18,12 +18,14 @@ return new class extends Migration
             $table->index(['id_warung', 'jenis', 'range_awal', 'range_akhir'], 'biaya_admin_warung_jenis_range_index');
         });
 
-        Schema::table('transaksi', function (Blueprint $table) {
-            $table->foreignId('id_kas_sumber')->nullable()
-                ->after('id_kas_warung')
-                ->constrained('kas')
-                ->nullOnDelete();
-        });
+        if (!Schema::hasColumn('transaksi', 'id_kas_sumber')) {
+            Schema::table('transaksi', function (Blueprint $table) {
+                $table->foreignId('id_kas_sumber')->nullable()
+                    ->after('id_kas_warung')
+                    ->constrained('kas')
+                    ->nullOnDelete();
+            });
+        }
 
         foreach (['detail_kas', 'detail_transaksi'] as $tableName) {
             Schema::table($tableName, function (Blueprint $table) {
@@ -34,9 +36,11 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('transaksi', function (Blueprint $table) {
-            $table->dropConstrainedForeignId('id_kas_sumber');
-        });
+        if (Schema::hasColumn('transaksi', 'id_kas_sumber')) {
+            Schema::table('transaksi', function (Blueprint $table) {
+                $table->dropConstrainedForeignId('id_kas_sumber');
+            });
+        }
 
         Schema::table('biaya_admin', function (Blueprint $table) {
             $table->dropIndex('biaya_admin_warung_jenis_range_index');

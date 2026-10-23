@@ -194,20 +194,26 @@ class TransferKasController extends Controller
 
             Transaksi::create([
                 'id_kas_warung' => $kasAsal->id,
+                'id_kas_sumber' => $kasTujuan->id,
                 'total'         => $totalKeluar,
                 'biaya_admin'   => $biayaTransfer,
                 'keterangan'    => 'Transfer ke ' . $kasTujuan->jenis_kas . ($request->keterangan ? ' - ' . $request->keterangan : ''),
                 'jenis'         => 'keluar',
-				'kategori' => 'transaksi_brilink'
+                'kategori'       => 'transaksi_brilink',
+                'metode_pembayaran' => $kasAsal->status,
+                'tanggal'        => now()->toDateString(),
             ]);
 
             Transaksi::create([
                 'id_kas_warung' => $kasTujuan->id,
+                'id_kas_sumber' => $kasAsal->id,
                 'total'         => $jumlah,
                 'biaya_admin'   => 0,
                 'keterangan'    => 'Transfer dari ' . $kasAsal->jenis_kas . ($request->keterangan ? ' - ' . $request->keterangan : ''),
                 'jenis'         => 'masuk',
-				'kategori' => 'transaksi_brilink'
+                'kategori'       => 'transaksi_brilink',
+                'metode_pembayaran' => $kasTujuan->status,
+                'tanggal'        => now()->toDateString(),
             ]);
 
             DB::commit();

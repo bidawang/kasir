@@ -37,13 +37,23 @@
         @csrf
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 sm:p-6 space-y-4">
             <div>
+                <label for="item_type" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Jenis Item</label>
+                <select id="item_type" x-model="itemType" @change="resetItemSelection()"
+                    class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <option value="">Pilih jenis item</option>
+                    <option value="fisik">Fisik</option>
+                    <option value="virtual">Virtual / Bank</option>
+                </select>
+            </div>
+
+            <div>
                 <label for="item_search" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Item Jualan</label>
                 <div class="relative">
                     <input id="item_search" type="search" x-model="itemSearch" @focus="itemDropdownOpen = true" @input="itemId = ''; itemDropdownOpen = true" @click.away="itemDropdownOpen = false"
-                        placeholder="Cari nama item..." autocomplete="off" :disabled="{{ $items->isEmpty() ? 'true' : 'false' }}"
+                        placeholder="Cari nama item..." autocomplete="off" :disabled="!itemType || {{ $items->isEmpty() ? 'true' : 'false' }}"
                         class="w-full px-3.5 py-2.5 bg-slate-50 border @error('id_item_jualan') border-rose-300 @else border-slate-200 @enderror rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                     <input type="hidden" name="id_item_jualan" :value="itemId">
-                    <div x-show="itemDropdownOpen" x-cloak class="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg">
+                    <div x-show="itemType && itemDropdownOpen" x-cloak class="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg">
                         <template x-for="item in filteredItems" :key="item.id">
                             <button type="button" @click="chooseItem(item)" :disabled="item.jenis === 'fisik' && Number(item.jumlah) < 1"
                                 class="block w-full px-3 py-2.5 text-left hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">
@@ -72,7 +82,7 @@
             <div x-show="selectedItem && selectedItem.jenis !== 'fisik'">
                 <label for="id_kas_sumber" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Wallet Sumber</label>
                 <select id="id_kas_sumber" name="id_kas_sumber" x-model="walletId" :required="requiresWallet" :disabled="!requiresWallet || {{ $walletList->isEmpty() ? 'true' : 'false' }}"
-                    class="w-full px-3.5 py-2.5 bg-slate-50 border @error('id_kas_sumber') border-rose-300 @else border-slate-200 @enderror rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    class="w-full px-3.5 py-2.5 bg-slate-50 border @error('id_kas_warung') border-rose-300 @else border-slate-200 @enderror rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                     <option value="">Pilih wallet</option>
                     @foreach($walletList as $wallet)
                         <option value="{{ $wallet->id }}">{{ $wallet->jenis_kas }} (saldo Rp {{ number_format($wallet->saldo, 0, ',', '.') }})</option>
@@ -135,12 +145,18 @@
                 <p class="mt-2 text-xs text-slate-600">Diterima: <strong x-text="'Rp ' + formatIDR(totalReceived)"></strong></p>
             </div>
 
-            <div class="rounded-xl border border-slate-200 p-3">
-                <label class="flex min-h-11 cursor-pointer items-center gap-3 text-sm font-semibold text-slate-800">
-                    <input type="checkbox" x-model="hasChange" class="h-5 w-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500">
-                    Ada uang kembalian
-                </label>
-                <div x-show="hasChange" x-cloak class="pt-3">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
+                <p x-show="totalDue > 0 && paymentDifference < 0" class="text-sm font-semibold text-rose-700">
+                    Uang pelanggan kurang <strong x-text="'Rp ' + formatIDR(Math.abs(paymentDifference))"></strong>
+                </p>
+                <p x-show="totalDue > 0 && paymentDifference === 0" class="text-sm font-semibold text-emerald-700">Uang pelanggan pas.</p>
+                <p x-show="totalDue > 0 && paymentDifference > 0" class="text-sm font-semibold text-amber-700">
+                    Uang pelanggan lebih. Kembalian otomatis: <strong x-text="'Rp ' + formatIDR(requiredChange)"></strong>
+                </p>
+                <p x-show="requiredChange > 0" class="text-xs font-medium text-slate-700">
+                    Masukkan pecahan kembalian yang diberikan agar stok kas tercatat dengan benar.
+                </p>
+                <div x-show="requiredChange > 0" x-cloak>
                 <label class="block text-xs sm:text-sm font-semibold text-slate-700 mb-2">Rincian Kembalian Diberikan</label>
                 <div class="grid grid-cols-2 gap-2">
                     <template x-for="item in changeDenominations" :key="item.pecahan">
@@ -151,8 +167,14 @@
                         </label>
                     </template>
                 </div>
-                <p class="mt-2 text-sm font-semibold text-slate-700">Total kembalian (otomatis): <strong x-text="'Rp ' + formatIDR(totalChange)"></strong></p>
-                <p class="mt-1 text-xs text-slate-500">Kembalian seharusnya: <strong x-text="'Rp ' + formatIDR(requiredChange)"></strong></p>
+                <p class="mt-2 text-sm font-semibold text-slate-700">Total pecahan kembalian: <strong x-text="'Rp ' + formatIDR(totalChange)"></strong></p>
+                <p x-show="totalChange < requiredChange" class="mt-1 text-xs font-semibold text-rose-700">
+                    Rincian kembalian masih kurang <strong x-text="'Rp ' + formatIDR(requiredChange - totalChange)"></strong>.
+                </p>
+                <p x-show="totalChange > requiredChange" class="mt-1 text-xs font-semibold text-rose-700">
+                    Rincian kembalian kelebihan <strong x-text="'Rp ' + formatIDR(totalChange - requiredChange)"></strong>.
+                </p>
+                <p x-show="totalChange === requiredChange" class="mt-1 text-xs font-semibold text-emerald-700">Rincian kembalian sudah tepat.</p>
                 </div>
             </div>
 
@@ -165,7 +187,7 @@
         </div>
 
         <input type="hidden" name="denominations_json" :value="JSON.stringify(denominations.filter(item => item.jumlah > 0))">
-        <input type="hidden" name="change_denominations_json" :value="JSON.stringify(hasChange ? changeDenominations.filter(item => item.jumlah > 0) : [])">
+        <input type="hidden" name="change_denominations_json" :value="JSON.stringify(changeDenominations.filter(item => item.jumlah > 0))">
         <input type="hidden" name="change_total" :value="totalChange">
         <div class="flex justify-end gap-3">
             <a href="{{ route('transaksi.index') }}" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs sm:text-sm font-semibold hover:bg-slate-50">Batal</a>
@@ -180,24 +202,34 @@
             items,
             feeRanges,
             itemId: oldItemId,
+            itemType: '',
             itemSearch: '',
             itemDropdownOpen: false,
             virtualAmount: oldAmount || '',
             walletId: oldWalletId,
             manualFee: Number(oldManualFee || 0),
-            hasChange: false,
-            denominations: [100000, 50000, 20000, 10000, 5000, 2000, 1000].map(pecahan => ({ pecahan, jumlah: 0 })),
-            changeDenominations: [100000, 50000, 20000, 10000, 5000, 2000, 1000].map(pecahan => ({ pecahan, jumlah: 0 })),
+            denominations: [100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100].map(pecahan => ({ pecahan, jumlah: 0 })),
+            changeDenominations: [100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100].map(pecahan => ({ pecahan, jumlah: 0 })),
             init() {
                 const selected = this.selectedItem;
-                if (selected) this.itemSearch = selected.nama_item;
-                this.$watch('hasChange', value => {
-                    if (!value) this.changeDenominations.forEach(item => item.jumlah = 0);
-                });
+                if (selected) {
+                    this.itemType = selected.jenis === 'fisik' ? 'fisik' : 'virtual';
+                    this.itemSearch = selected.nama_item;
+                }
             },
             get filteredItems() {
                 const query = this.itemSearch.toLowerCase();
-                return this.items.filter(item => item.nama_item.toLowerCase().includes(query));
+                return this.items.filter(item => (this.itemType === 'fisik' ? item.jenis === 'fisik' : item.jenis !== 'fisik')
+                    && item.nama_item.toLowerCase().includes(query));
+            },
+            resetItemSelection() {
+                this.itemId = '';
+                this.itemSearch = '';
+                this.walletId = '';
+                this.virtualAmount = '';
+                this.manualFee = 0;
+                this.itemDropdownOpen = false;
+                this.changeDenominations.forEach(item => item.jumlah = 0);
             },
             chooseItem(item) {
                 this.itemId = String(item.id);
@@ -234,11 +266,13 @@
             get totalDue() {
                 return this.salePrice + this.selectedFee;
             },
+            get paymentDifference() {
+                return this.totalReceived - this.totalDue;
+            },
             get totalReceived() {
                 return this.denominations.reduce((sum, item) => sum + item.pecahan * (Number(item.jumlah) || 0), 0);
             },
             get totalChange() {
-                if (!this.hasChange) return 0;
                 return this.changeDenominations.reduce((sum, item) => sum + item.pecahan * (Number(item.jumlah) || 0), 0);
             },
             get requiredChange() {
@@ -263,13 +297,9 @@
                     event.preventDefault();
                     return false;
                 }
-                if (this.requiredChange > 0 && !this.hasChange) {
-                    alert('Centang "Ada uang kembalian", lalu masukkan rincian uang kembalian.');
-                    event.preventDefault();
-                    return false;
-                }
                 if (this.totalChange !== this.requiredChange) {
-                    alert('Rincian kembalian harus sama dengan jumlah kembalian yang diperlukan.');
+                    const selisih = Math.abs(this.totalChange - this.requiredChange);
+                    alert(`Rincian kembalian ${this.totalChange > this.requiredChange ? 'kelebihan' : 'kurang'} Rp ${this.formatIDR(selisih)}. Kembalian harus tepat Rp ${this.formatIDR(this.requiredChange)}.`);
                     event.preventDefault();
                     return false;
                 }

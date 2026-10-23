@@ -681,6 +681,8 @@ public function storePengeluaran(Request $request)
             'id_kategori'   => $request->id_kategori ?? null,
             'total'         => $request->total,
             'biaya_admin'   => 0,
+            'metode_pembayaran' => $kas->status === 'cash' ? 'cash' : 'ewallet',
+            'tanggal'       => now()->toDateString(),
             'keterangan'    => $request->keterangan,
         ]);
 
@@ -831,11 +833,12 @@ public function storePengeluaran(Request $request)
             // 1. Buat Header Transaksi (menyimpan enum kategori dan jenis)
             $transaksi = Transaksi::create([
                 'jenis'         => $request->jenis,
-                'kategori'      => $request->kategori,
+                'kategori'      => 'transaksi_brilink',
                 'id_kas_warung' => $kas->id,
                 'total'         => $request->total,
                 'biaya_admin'   => 0,
-				'kategori' => 'transaksi_brilink',
+                'metode_pembayaran' => $kas->status === 'cash' ? 'cash' : 'ewallet',
+                'tanggal'       => now()->toDateString(),
                 'keterangan'    => $request->keterangan,
             ]);
 

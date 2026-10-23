@@ -43,6 +43,7 @@ class CabangController extends Controller
         $warung = Kasir::create([
             'id_user'     => auth()->id(),
             'nama_warung' => $request->nama_warung,
+            'modal'       => 0,
         ]);
 
         // 2. Buat Kas Utama (Cash Tunai) Otomatis

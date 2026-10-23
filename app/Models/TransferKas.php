@@ -19,6 +19,14 @@ class TransferKas extends Model
         'keterangan',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'jumlah' => 'integer',
+            'biaya_transfer' => 'integer',
+        ];
+    }
+
     public function kasAsal(): BelongsTo
     {
         return $this->belongsTo(Kas::class, 'id_kas_asal');
