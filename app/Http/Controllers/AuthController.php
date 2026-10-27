@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Kasir;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -25,7 +24,7 @@ class AuthController extends Controller
 
         $credentials['status'] = 'aktif';
 
-        if (!Auth::attempt($credentials)) {
+        if (! Auth::attempt($credentials)) {
             throw ValidationException::withMessages([
                 'email' => 'Email atau password salah atau akun tidak aktif.',
             ]);
@@ -38,10 +37,9 @@ class AuthController extends Controller
         // Kasir: cari cabang yang terhubung dengan akun
         if ($user->role === 'kasir') {
 
-            $warung = Kasir::where('id_user', $user->id)
-                ->first();
+            $warung = $user->warungs()->first();
 
-            if (!$warung) {
+            if (! $warung) {
                 Auth::logout();
 
                 throw ValidationException::withMessages([

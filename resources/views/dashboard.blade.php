@@ -52,7 +52,7 @@
 
     {{-- Detail Kas Tunai Fisik (status = cash) --}}
     @if($kasTunai)
-        <div x-data="{ open: true }" class="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden transition-all duration-200">
+        <div x-data="{ open: false }" class="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden transition-all duration-200">
             <!-- Accordion Header -->
             <button @click="open = !open" type="button" class="w-full flex items-center justify-between p-3.5 text-left hover:bg-slate-50 transition-colors group">
                 <div class="flex items-center gap-3 min-w-0">

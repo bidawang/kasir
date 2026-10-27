@@ -9,10 +9,15 @@
             <h1 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">Item Jualan</h1>
             <p class="text-xs text-slate-500 font-medium mt-0.5">Kelola item dan harga jual di cabang aktif</p>
         </div>
-        <a href="{{ route('item-jualan.create') }}" class="bg-primary-600 hover:bg-primary-700 active:scale-95 text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-            Tambah Item
-        </a>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('transaksi.penjualan-item.create') }}" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0">
+                Jual Item
+            </a>
+            <a href="{{ route('item-jualan.create') }}" class="bg-primary-600 hover:bg-primary-700 active:scale-95 text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                Tambah Item
+            </a>
+        </div>
     </div>
 
     @if(session('success'))

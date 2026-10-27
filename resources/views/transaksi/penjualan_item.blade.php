@@ -94,18 +94,6 @@
                 @endif
             </div>
 
-            <div>
-                <label for="id_kas" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Kas Tunai Penerima</label>
-                <select id="id_kas" name="id_kas" required @disabled($kasList->isEmpty())
-                    class="w-full px-3.5 py-2.5 bg-slate-50 border @error('id_kas') border-rose-300 @else border-slate-200 @enderror rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                    <option value="">Pilih kas tunai</option>
-                    @foreach($kasList as $cash)
-                        <option value="{{ $cash->id }}" @selected(old('id_kas') == $cash->id)>{{ $cash->jenis_kas }} (saldo Rp {{ number_format($cash->saldo, 0, ',', '.') }})</option>
-                    @endforeach
-                </select>
-                @error('id_kas')<p class="mt-1 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
-            </div>
-
             <div x-show="selectedItem && !matchedFee" x-cloak>
                 <label for="manual_fee" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">Biaya Admin Manual (tarif belum tersedia)</label>
                 <div class="relative">

@@ -9,15 +9,11 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
             <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Riwayat Transaksi</h1>
-            <p class="text-xs sm:text-sm text-slate-500 font-medium">Transaksi customer dan penjualan item di cabang aktif</p>
+            <p class="text-xs sm:text-sm text-slate-500 font-medium">Semua jenis transaksi di cabang aktif</p>
         </div>
-        <a href="{{ route('transaksi.penjualan-item.create') }}" class="bg-primary-600 hover:bg-primary-700 active:scale-95 text-white px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm shrink-0">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-            Jual Item
-        </a>
     </div>
 
-    @if(auth()->user()->role === 'owner')
+    @if(in_array(auth()->user()->role, ['admin', 'owner']))
         <!-- Metric Cards Summary -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl p-4 text-white shadow-lg shadow-emerald-500/10">
@@ -142,13 +138,27 @@
                                 <span class="font-bold text-xs sm:text-sm text-slate-900 tracking-tight">
                                     {{ $item->keterangan ?: 'Tanpa Keterangan' }}
                                 </span>
+                                @php
+                                    $labelKategori = match($item->kategori) {
+                                        'penjualan_item' => 'Penjualan Item',
+                                        'transaksi_customer' => 'Transaksi Customer',
+                                        'transaksi_brilink' => 'Transaksi BRILink',
+                                        default => $item->kategoriTransaksi->nama_kategori ?? 'Transaksi',
+                                    };
+                                    $labelAktivitas = match($item->kategori) {
+                                        'penjualan_item' => 'Penjualan Item',
+                                        'transaksi_brilink' => $item->jenis === 'masuk' ? 'Kas Masuk' : 'Kas Keluar',
+                                        'transaksi_customer' => $item->jenis === 'masuk' ? 'Setor Tunai' : 'Tarik Tunai',
+                                        default => $item->kategoriTransaksi->nama_kategori ?? ucfirst($item->jenis),
+                                    };
+                                @endphp
                                 <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200">
-                                    {{ $item->kategori === 'penjualan_item' ? 'Penjualan Item' : 'Customer' }}
+                                    {{ $labelKategori }}
                                 </span>
                             </div>
                             <div class="flex items-center gap-2 text-[11px] sm:text-xs text-slate-500 font-medium">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-semibold">
-                                    {{ $item->kas->jenis_kas ?? 'Tanpa Kas' }}
+                                    {{ $item->kas->jenis_kas ?? 'Tanpa Kas' }} · {{ ($item->kas->status ?? $item->metode_pembayaran) === 'cash' ? 'Tunai' : 'E-Wallet' }}
                                 </span>
                                 <span>•</span>
                                 <span>{{ $item->created_at->translatedFormat('d M Y, H:i') }}</span>
@@ -160,7 +170,7 @@
                                     {{ $item->jenis == 'masuk' ? '+' : '-' }} Rp {{ number_format($item->total, 0, ',', '.') }}
                                 </span>
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                                    {{ $item->kategori === 'penjualan_item' ? 'Penjualan' : ($item->jenis == 'masuk' ? 'Setor Tunai' : 'Tarik Tunai') }}
+                                    {{ $labelAktivitas }}
                                 </span>
                             </div>
                             <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="expanded === {{ $item->id }} ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
@@ -172,7 +182,7 @@
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 text-xs">
                             <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                                 <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Jenis Aktivitas</span>
-                                <span class="font-bold text-slate-700">{{ $item->kategori === 'penjualan_item' ? 'Penjualan Item' : ($item->jenis == 'masuk' ? 'Setor Tunai' : 'Tarik Tunai') }}</span>
+                                <span class="font-bold text-slate-700">{{ $labelAktivitas }}</span>
                             </div>
                             <div class="bg-emerald-50/60 p-2.5 rounded-xl border border-emerald-100">
                                 <span class="block text-[10px] font-bold uppercase tracking-wider text-emerald-700">Keuntungan (Admin)</span>
@@ -180,7 +190,7 @@
                             </div>
                             <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 col-span-2">
                                 <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Warung & Kas</span>
-                                <span class="font-bold text-slate-700 truncate block">{{ $item->kas->jenis_kas ?? '-' }} <span class="font-normal text-slate-500">({{ $item->kas->warung->nama ?? '-' }})</span></span>
+                                <span class="font-bold text-slate-700 truncate block">{{ $item->kas->jenis_kas ?? '-' }} <span class="font-normal text-slate-500">({{ $item->kas->warung->nama_warung ?? '-' }})</span></span>
                             </div>
                         </div>
 
@@ -193,7 +203,7 @@
                                 @if($item->kasSumber)
                                     <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                                         <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Wallet Sumber</span>
-                                        <span class="font-bold text-slate-700">{{ $item->kasSumber->jenis_kas }}</span>
+                                        <span class="font-bold text-slate-700">{{ $item->kasSumber->jenis_kas }} · {{ $item->kasSumber->status === 'cash' ? 'Tunai' : 'E-Wallet' }}</span>
                                     </div>
                                 @endif
                                 <div class="bg-emerald-50/60 p-2.5 rounded-xl border border-emerald-100">
@@ -224,7 +234,7 @@
             @empty
                 <div class="bg-white rounded-2xl p-8 text-center border border-slate-200/85 space-y-2">
                     <svg class="w-10 h-10 text-slate-300 mx-auto" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12l-3-3m0 0l-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
-                    <p class="text-xs sm:text-sm font-semibold text-slate-500">Belum ada data transaksi customer.</p>
+                    <p class="text-xs sm:text-sm font-semibold text-slate-500">Belum ada data transaksi.</p>
                 </div>
             @endforelse
         </div>
@@ -265,7 +275,7 @@
 
 </div>
 
-@if(auth()->user()->role === 'owner')
+@if(in_array(auth()->user()->role, ['admin', 'owner']))
     <!-- Chart Script (hanya dimuat untuk owner) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>

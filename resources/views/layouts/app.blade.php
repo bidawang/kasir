@@ -204,6 +204,13 @@
 
     {{-- Cabang --}}
     @if(in_array($userRole, ['admin', 'owner']))
+        <a href="{{ route('manajemen-kasir.index') }}"
+           class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('manajemen-kasir.*') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2m12-13a4 4 0 11-8 0 4 4 0 018 0zm2 13h4v-2a4 4 0 00-3-3.87M18 3.13a4 4 0 010 7.75"/>
+            </svg>
+            Kasir
+        </a>
         <a href="{{ route('cabang.index') }}" 
            class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('cabang.*') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
 
@@ -274,7 +281,7 @@
     <!-- BOTTOM NAVIGATION (Hanya Tampil di Mobile/Tablet < md) -->
     <nav aria-label="Menu Navigasi Bawah" class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shadow-mobile-nav pb-safe">
         <div class="max-w-md mx-auto px-1">
-            <div class="grid {{ in_array($userRole, ['admin', 'owner']) ? 'grid-cols-7' : 'grid-cols-6' }} items-center h-13">
+            <div class="grid {{ in_array($userRole, ['admin', 'owner']) ? 'grid-cols-8' : 'grid-cols-6' }} items-center h-13">
 
                 <!-- 1. Beranda -->
                 <a href="{{ route('dashboard') }}"
@@ -324,6 +331,13 @@
 
                 <!-- 6. Cabang (Admin / Owner Only) -->
                 @if(in_array($userRole, ['admin', 'owner']))
+                    <a href="{{ route('manajemen-kasir.index') }}"
+                       class="flex flex-col items-center justify-center py-1 transition-colors group {{ request()->routeIs('manajemen-kasir.*') ? 'text-primary-600 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2m12-13a4 4 0 11-8 0 4 4 0 018 0zm2 13h4v-2a4 4 0 00-3-3.87M18 3.13a4 4 0 010 7.75"/>
+                        </svg>
+                        <span class="text-[9px] sm:text-[10px] tracking-tight mt-0.5">Kasir</span>
+                    </a>
                     <a href="{{ route('cabang.index') }}"
                        class="flex flex-col items-center justify-center py-1 transition-colors group {{ request()->routeIs('cabang.*') ? 'text-primary-600 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
                         <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="{{ request()->routeIs('cabang.*') ? '2.5' : '2' }}" viewBox="0 0 24 24">

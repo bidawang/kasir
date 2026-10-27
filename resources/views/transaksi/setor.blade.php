@@ -114,9 +114,9 @@
                                 <div class="text-[9px] font-semibold" :class="item.stok > 0 ? 'text-slate-400' : 'text-rose-500'" x-text="'Stok: ' + item.stok + ' lbr'"></div>
                             </div>
                             <div class="flex items-center gap-1">
-                                <button type="button" @click="if(item.jumlah > 0) item.jumlah--" class="w-6 h-6 flex items-center justify-center rounded bg-slate-100 border border-slate-200 active:bg-slate-200 text-slate-600 font-bold text-xs">-</button>
-                                <input type="number" inputmode="numeric" class="w-10 py-0.5 px-1 bg-slate-50 border border-slate-200 rounded text-center text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-1 focus:ring-amber-500" x-model.number="item.jumlah" @input="if (item.stok > 0 && item.jumlah > item.stok) item.jumlah = item.stok" @focus="$event.target.select()" min="0">
-                                <button type="button" @click="if (item.stok === 0 || item.jumlah < item.stok) item.jumlah++" class="w-6 h-6 flex items-center justify-center rounded bg-slate-100 border border-slate-200 active:bg-slate-200 text-slate-600 font-bold text-xs">+</button>
+                                <button type="button" @click="if (item.jumlah > 0) item.jumlah--" :disabled="item.stok <= 0 || item.jumlah <= 0" class="w-6 h-6 flex items-center justify-center rounded bg-slate-100 border border-slate-200 active:bg-slate-200 text-slate-600 font-bold text-xs disabled:opacity-40 disabled:cursor-not-allowed">-</button>
+                                <input type="number" inputmode="numeric" class="w-10 py-0.5 px-1 bg-slate-50 border border-slate-200 rounded text-center text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-1 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed" x-model.number="item.jumlah" @input="item.jumlah = Math.max(0, Math.min(item.stok, Number.parseInt(item.jumlah, 10) || 0))" @focus="$event.target.select()" min="0" :max="item.stok" :disabled="item.stok <= 0">
+                                <button type="button" @click="if (item.jumlah < item.stok) item.jumlah++" :disabled="item.stok <= 0 || item.jumlah >= item.stok" class="w-6 h-6 flex items-center justify-center rounded bg-slate-100 border border-slate-200 active:bg-slate-200 text-slate-600 font-bold text-xs disabled:opacity-40 disabled:cursor-not-allowed">+</button>
                             </div>
                         </div>
                     </template>

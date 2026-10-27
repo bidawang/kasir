@@ -11,6 +11,7 @@ class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
+
     protected $table = 'user';
 
     /**
@@ -49,5 +50,11 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function warungs()
+    {
+        return $this->belongsToMany(Kasir::class, 'kasir_user', 'id_user', 'id_kasir')
+            ->withTimestamps();
     }
 }
