@@ -15,7 +15,7 @@
         </a>
         <div class="min-w-0">
             <h2 class="text-base sm:text-lg font-extrabold text-slate-800 leading-snug">Edit Cabang</h2>
-            <p class="text-xs text-slate-500 truncate">Perbarui informasi data cabang BRILINK</p>
+            <p class="text-xs text-slate-500 truncate">Perbarui informasi data cabang Agent Kas</p>
         </div>
     </div>
 
@@ -53,7 +53,7 @@
                     id="nama_warung"
                     name="nama_warung"
                     value="{{ old('nama_warung', $warung->nama_warung) }}"
-                    placeholder="Contoh: BRILINK Cabang Utama"
+                    placeholder="Contoh: Agent Kas Cabang Utama"
                     required
                     autofocus
                     class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none text-xs text-slate-800 transition font-medium placeholder:text-slate-400"

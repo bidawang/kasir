@@ -193,6 +193,7 @@ class TransferKasController extends Controller
             $kasTujuan->save();
 
             Transaksi::create([
+                'id_user'       => auth()->id(),
                 'id_kas_warung' => $kasAsal->id,
                 'id_kas_sumber' => $kasTujuan->id,
                 'total'         => $totalKeluar,
@@ -205,6 +206,7 @@ class TransferKasController extends Controller
             ]);
 
             Transaksi::create([
+                'id_user'       => auth()->id(),
                 'id_kas_warung' => $kasTujuan->id,
                 'id_kas_sumber' => $kasAsal->id,
                 'total'         => $jumlah,

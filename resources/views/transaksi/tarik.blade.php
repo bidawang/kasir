@@ -5,7 +5,7 @@
 @section('content')
 {{-- Tambahkan pb-36 di mobile agar konten bagian bawah tidak tertutup oleh floating bar --}}
 <div class="max-w-xl mx-auto pb-36 md:pb-24 space-y-3 sm:space-y-4 text-slate-800"
-     x-data="tarikApp(@js($kasAsal), @js($kasSumberList), @js($biayaAdminList), @js(old('biaya_admin_manual', 0)))">
+     x-data="tarikApp(@js($kasAsal), @js($kasSumberList), @js($biayaAdminList), @js(old('biaya_admin_manual', 0)), @js(old('biaya_admin_toko', 0)))">
 
     <!-- Header Section -->
     <div class="flex items-center justify-between px-1">
@@ -73,9 +73,9 @@
                             <div class="text-[9px] font-semibold" :class="item.stok > 0 ? 'text-slate-400' : 'text-rose-500'" x-text="'Stok: ' + item.stok + ' lbr'"></div>
                         </div>
                         <div class="flex items-center gap-1">
-                            <button type="button" @click="if(item.jumlah > 0) item.jumlah--" class="w-6 h-6 flex items-center justify-center rounded bg-white border border-slate-200 active:bg-slate-100 text-slate-600 font-bold text-xs shadow-2xs">-</button>
-                            <input type="number" inputmode="numeric" class="w-10 py-0.5 text-center bg-white border border-slate-200 rounded text-xs font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-400" x-model.number="item.jumlah" @input="if (item.stok > 0 && item.jumlah > item.stok) item.jumlah = item.stok" @focus="$event.target.select()" min="0">
-                            <button type="button" @click="if (item.stok === 0 || item.jumlah < item.stok) item.jumlah++" class="w-6 h-6 flex items-center justify-center rounded bg-white border border-slate-200 active:bg-slate-100 text-slate-600 font-bold text-xs shadow-2xs">+</button>
+                            <button type="button" @click="if (item.jumlah > 0) item.jumlah--" :disabled="item.stok <= 0 || item.jumlah <= 0" class="w-6 h-6 flex items-center justify-center rounded bg-white border border-slate-200 active:bg-slate-100 text-slate-600 font-bold text-xs shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed">-</button>
+                            <input type="number" inputmode="numeric" class="w-10 py-0.5 text-center bg-white border border-slate-200 rounded text-xs font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-400 disabled:opacity-50 disabled:cursor-not-allowed" x-model.number="item.jumlah" @input="item.jumlah = Math.max(0, Math.min(item.stok, Number.parseInt(item.jumlah, 10) || 0))" @focus="$event.target.select()" min="0" :max="item.stok" :disabled="item.stok <= 0">
+                            <button type="button" @click="if (item.jumlah < item.stok) item.jumlah++" :disabled="item.stok <= 0 || item.jumlah >= item.stok" class="w-6 h-6 flex items-center justify-center rounded bg-white border border-slate-200 active:bg-slate-100 text-slate-600 font-bold text-xs shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed">+</button>
                         </div>
                     </div>
                 </template>
@@ -98,6 +98,17 @@
                 <label for="biaya_admin_manual" class="text-xs font-semibold text-slate-700">Tarif belum tersedia, isi manual</label>
                 <input id="biaya_admin_manual" type="number" name="biaya_admin_manual" min="0" step="1" x-model.number="manualBiaya"
                     class="w-36 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-right text-xs font-bold">
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-2xs border border-slate-200/80 p-3 sm:p-4">
+            <label for="biaya_admin_toko" class="block text-xs font-bold uppercase tracking-wider text-slate-700">Biaya Admin Toko</label>
+            <p class="text-[10px] text-slate-400 font-medium mb-2">Biaya layanan toko yang dihitung sebagai keuntungan</p>
+            <div class="relative flex items-center w-36">
+                <span class="absolute left-2.5 text-xs font-bold text-slate-400">Rp</span>
+                <input id="biaya_admin_toko" type="number" name="biaya_admin_toko" min="0" step="1" x-model.number="manualBiayaToko"
+                       class="w-full pl-8 pr-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-900 text-right"
+                       placeholder="0">
             </div>
         </div>
 
@@ -153,7 +164,7 @@
 
 <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 <script>
-    function tarikApp(kasAsal, kasSumberList, feeRanges, oldManualFee) {
+    function tarikApp(kasAsal, kasSumberList, feeRanges, oldManualFee, oldShopFee) {
         return {
             kasAsal: kasAsal || null,
             kasSumberList: kasSumberList || [],
@@ -161,6 +172,7 @@
             selectedKasSumberId: '',
             isSubmitting: false,
             manualBiaya: Number(oldManualFee || 0),
+            manualBiayaToko: Number(oldShopFee || 0),
 
             init() {
                 this.syncStok();
@@ -208,8 +220,14 @@
             get biayaAdmin() {
                 return this.matchedFee ? Number(this.matchedFee.biaya_admin) : Number(this.manualBiaya || 0);
             },
+            get biayaAdminToko() {
+                return Number(this.manualBiayaToko || 0);
+            },
             get grandTotal() {
-                return this.totalUang + Math.max(0, parseInt(this.biayaAdmin) || 0) - this.totalKembalian;
+                return this.totalUang
+                    + Math.max(0, parseInt(this.biayaAdmin) || 0)
+                    + Math.max(0, parseInt(this.biayaAdminToko) || 0)
+                    - this.totalKembalian;
             },
             formatIDR(val) {
                 return new Intl.NumberFormat('id-ID').format(val || 0);

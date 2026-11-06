@@ -13,13 +13,16 @@ class Transaksi extends Model
     protected $table = 'transaksi';
 
     protected $fillable = [
+        'id_user',
         'id_kas_warung',
         'id_kas_sumber',
         'id_kategori',
         'total',
         'keterangan',
         'biaya_admin',
+        'biaya_admin_bank',
         'jenis',
+        'is_profit',
         'kategori',
         'id_item_jualan',
         'nama_item',
@@ -33,7 +36,9 @@ class Transaksi extends Model
         return [
             'total' => 'integer',
             'biaya_admin' => 'integer',
+            'biaya_admin_bank' => 'integer',
             'harga_item' => 'integer',
+            'is_profit' => 'boolean',
             'tanggal' => 'date',
         ];
     }
@@ -41,6 +46,11 @@ class Transaksi extends Model
     public function kas()
     {
         return $this->belongsTo(Kas::class, 'id_kas_warung');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'id_user');
     }
 
     public function kasSumber()

@@ -19,7 +19,7 @@
             </h1>
             <p class="text-[11px] text-slate-500 font-medium mt-0.5">Kelola likuiditas saldo tunai fisik dan akun digital</p>
         </div>
-@if(auth()->user()->role === 'owner')
+@if(in_array(auth()->user()->role, ['admin', 'owner']))
         <a href="{{ route('kas.create') }}"
            class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-md shadow-indigo-600/10 shrink-0">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -71,14 +71,14 @@
         </div>
     </div>
 
-    {{-- SECTION: KARTU MUTASI BRILINK (ACCORDION INTERAKTIF + AJAX FILTER) --}}
+    {{-- SECTION: KARTU MUTASI KAS (ACCORDION INTERAKTIF + AJAX FILTER) --}}
     <div class="bg-slate-900 text-white rounded-2xl p-4 shadow-md border border-slate-800 space-y-3">
         
         {{-- Accordion Header --}}
         <div class="flex items-center justify-between cursor-pointer select-none" onclick="toggleBrilinkAccordion()">
             <span class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
-                Mutasi & Riwayat BRILink
+                Mutasi & Riwayat Kas
             </span>
             <div class="flex items-center gap-2">
                 <span id="accordionStatusText" class="text-[11px] text-indigo-300 font-semibold">Buka Riwayat</span>
@@ -223,14 +223,14 @@
                         Rp {{ number_format($kasTunai->saldo, 0, ',', '.') }}
                     </div>
                 </div>
-@if(auth()->user()->role === 'owner')
+@if(in_array(auth()->user()->role, ['admin', 'owner']))
                 <a href="{{ route('kas.show', $kasTunai->id) }}"
                    class="bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 hover:text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border border-slate-700 shadow-sm shrink-0">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.573 16.49 16.638 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
-                    <span>Ubah Jumlah Pecahan</span>
+                    <span>Lihat Detail Cash</span>
                 </a>
 				@endif
             </div>
@@ -303,7 +303,7 @@
                         </svg>
                     </div>
                     <p class="text-xs font-bold text-slate-700">Belum Ada Akun E-Wallet</p>
-                    <p class="text-[11px] text-slate-400 max-w-xs mx-auto">Tambahkan e-wallet (OVO, Dana, BRI, dll) untuk mempermudah pencatatan transaksi BRILink Anda.</p>
+                    <p class="text-[11px] text-slate-400 max-w-xs mx-auto">Tambahkan e-wallet (OVO, Dana, BRI, dll) untuk mempermudah pencatatan transaksi kas Anda.</p>
                 </div>
             @endforelse
         </div>
@@ -391,7 +391,7 @@
                         <div class="space-y-0.5">
                             <div class="flex items-center gap-2">
                                 <span class="font-bold text-slate-200">${item.kas ? (item.kas.nama_kas || item.kas.jenis_kas) : 'Kas'}</span>
-                                <span class="text-[9px] px-1.5 py-0.5 rounded border ${badgeColor} font-bold uppercase">${item.jenis}</span>
+                                <span class="text-[9px] px-1.5 py-0.5 rounded border ${badgeColor} font-bold uppercase">${item.is_profit ? 'Profit' : item.jenis}</span>
                             </div>
                             <span class="text-[10px] text-slate-400 block">${item.formatted_date}</span>
                             ${item.keterangan ? `<span class="text-[10px] text-slate-400 italic block">${item.keterangan}</span>` : ''}

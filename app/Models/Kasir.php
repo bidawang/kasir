@@ -31,6 +31,12 @@ class Kasir extends Model
         return $this->belongsTo(User::class, 'id_user');
     }
 
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'kasir_user', 'id_kasir', 'id_user')
+            ->withTimestamps();
+    }
+
     public function kas()
     {
         return $this->hasMany(Kas::class, 'id_warung');

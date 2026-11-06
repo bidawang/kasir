@@ -25,7 +25,7 @@ class AuthController extends Controller
 
         $credentials['status'] = 'aktif';
 
-        if (!Auth::attempt($credentials)) {
+        if (! Auth::attempt($credentials)) {
             throw ValidationException::withMessages([
                 'email' => 'Email atau password salah atau akun tidak aktif.',
             ]);
@@ -38,10 +38,10 @@ class AuthController extends Controller
         // Kasir: cari cabang yang terhubung dengan akun
         if ($user->role === 'kasir') {
 
-            $warung = Kasir::where('id_user', $user->id)
-                ->first();
+            $warung = $user->warungs()->first()
+                ?? Kasir::where('id_user', $user->id)->first();
 
-            if (!$warung) {
+            if (! $warung) {
                 Auth::logout();
 
                 throw ValidationException::withMessages([
@@ -53,7 +53,7 @@ class AuthController extends Controller
                 'id_warung' => $warung->id,
             ]);
 
-            return redirect()->route('dashboard');
+            return redirect()->route('transaksi.menu');
         }
 
         // Admin / Owner: pilih cabang terlebih dahulu

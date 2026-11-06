@@ -14,7 +14,7 @@
                     {{ $warungs->count() }}
                 </span>
             </div>
-            <p class="text-xs text-slate-500 truncate mt-0.5">Kelola seluruh lokasi agen BRILINK Anda</p>
+            <p class="text-xs text-slate-500 truncate mt-0.5">Kelola seluruh lokasi cabang Agent Kas Anda</p>
         </div>
 
         <a href="{{ route('cabang.create') }}"
@@ -128,7 +128,7 @@
 
             <h3 class="font-bold text-slate-800 text-sm">Belum Ada Cabang</h3>
             <p class="text-xs text-slate-500 mt-1 mb-4 max-w-[220px] mx-auto leading-relaxed">
-                Tambahkan lokasi cabang BRILINK pertama Anda untuk mulai mengelola transaksi.
+                Tambahkan lokasi cabang Agent Kas pertama Anda untuk mulai mengelola transaksi.
             </p>
 
             <a href="{{ route('cabang.create') }}"

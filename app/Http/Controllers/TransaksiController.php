@@ -11,6 +11,7 @@ use App\Models\BiayaAdmin;
 use App\Models\Kasir;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 class TransaksiController extends Controller
@@ -27,7 +28,7 @@ class TransaksiController extends Controller
 
 	public function index(Request $request)
 {
-    $idWarung = session('id_warung');
+    $idWarung = $this->activeWarungId();
 
     if (!$idWarung) {
         return redirect()
@@ -35,57 +36,63 @@ class TransaksiController extends Controller
             ->with('error', 'Silakan pilih cabang terlebih dahulu.');
     }
 
-    // Financial summaries remain limited to customer transactions.
-    $baseQuery = Transaksi::whereHas('kas', function ($q) use ($idWarung) {
+    $branchQuery = Transaksi::whereHas('kas', function ($q) use ($idWarung) {
         $q->where('id_warung', $idWarung);
-    })->where('kategori', 'transaksi_customer');
+    });
+    if (auth()->user()->role === 'kasir') {
+        $branchQuery->where('id_user', auth()->id());
+    }
 
-    $transaksiQuery = Transaksi::whereHas('kas', function ($q) use ($idWarung) {
-        $q->where('id_warung', $idWarung);
-    })->whereIn('kategori', ['transaksi_customer', 'penjualan_item']);
-    $profitQuery = clone $transaksiQuery;
+    $customerQuery = (clone $branchQuery)->where('kategori', 'transaksi_customer');
+    $transaksiQuery = clone $branchQuery;
+    $profitQuery = (clone $branchQuery)->where(function ($query) {
+        $query->whereIn('kategori', ['transaksi_customer', 'penjualan_item'])
+            ->orWhere('is_profit', true);
+    });
 
     if ($request->filled(['start_date', 'end_date'])) {
         $dateRange = [
             $request->start_date . ' 00:00:00',
             $request->end_date . ' 23:59:59'
         ];
-        $baseQuery->whereBetween('created_at', $dateRange);
+        $customerQuery->whereBetween('created_at', $dateRange);
         $transaksiQuery->whereBetween('created_at', $dateRange);
         $profitQuery->whereBetween('created_at', $dateRange);
     }
 
-    // 1. Summary Metrics
-    $summary = (clone $baseQuery)->selectRaw("
-        COUNT(*) as total_transaksi,
-        SUM(CASE WHEN jenis = 'masuk' THEN total ELSE 0 END) as total_setor,
-        SUM(CASE WHEN jenis = 'keluar' THEN total ELSE 0 END) as total_tarik
-    ")->first();
-    $summary->total_keuntungan = $profitQuery->sum('biaya_admin');
+    $summary = null;
+    $chartRawDates = $chartLabels = $chartSetor = $chartTarik = $chartProfit = collect();
+    if (in_array(auth()->user()->role, ['admin', 'owner'], true)) {
+        $summary = (clone $customerQuery)->selectRaw("
+            COUNT(*) as total_transaksi,
+            SUM(CASE WHEN jenis = 'masuk' THEN total ELSE 0 END) as total_setor,
+            SUM(CASE WHEN jenis = 'keluar' THEN total ELSE 0 END) as total_tarik
+        ")->first();
+        $summary->total_transaksi = $transaksiQuery->count();
+        $summary->total_keuntungan = (clone $profitQuery)->sum('biaya_admin')
+            + (clone $profitQuery)->where('is_profit', true)->sum('total');
 
-    // 2. Data Grafik
-    $chartData = $profitQuery
-        ->selectRaw("
-            DATE(created_at) as date,
-            SUM(CASE WHEN kategori = 'transaksi_customer' AND jenis = 'masuk' THEN total ELSE 0 END) as setor,
-            SUM(CASE WHEN kategori = 'transaksi_customer' AND jenis = 'keluar' THEN total ELSE 0 END) as tarik,
-            SUM(biaya_admin) as profit
-        ")
-        ->groupBy('date')
-        ->orderBy('date', 'ASC')
-        ->get();
+        $chartData = $profitQuery
+            ->selectRaw("
+                DATE(created_at) as transaction_date,
+                SUM(CASE WHEN kategori = 'transaksi_customer' AND jenis = 'masuk' THEN total ELSE 0 END) as setor,
+                SUM(CASE WHEN kategori = 'transaksi_customer' AND jenis = 'keluar' THEN total ELSE 0 END) as tarik,
+                SUM(biaya_admin) + SUM(CASE WHEN is_profit = 1 THEN total ELSE 0 END) as profit
+            ")
+            ->groupBy('transaction_date')
+            ->orderBy('transaction_date', 'ASC')
+            ->get();
 
-    // Format ISO (Y-m-d) untuk interaksi JavaScript/Form
-    $chartRawDates = $chartData->pluck('date');
-    // Format Display (d M) untuk Tampilan Sumbu X Grafik
-    $chartLabels   = $chartData->pluck('date')->map(fn($d) => date('d M', strtotime($d)));
-    $chartSetor    = $chartData->pluck('setor');
-    $chartTarik    = $chartData->pluck('tarik');
-    $chartProfit   = $chartData->pluck('profit');
+        $chartRawDates = $chartData->pluck('transaction_date');
+        $chartLabels = $chartData->pluck('transaction_date')->map(fn ($date) => date('d M', strtotime($date)));
+        $chartSetor = $chartData->pluck('setor');
+        $chartTarik = $chartData->pluck('tarik');
+        $chartProfit = $chartData->pluck('profit');
+    }
 
     // 3. Data Transaksi Paginated
     $transaksi = $transaksiQuery
-        ->with(['kas.warung', 'kasSumber', 'detailTransaksi', 'itemJualan'])
+        ->with(['kas.warung', 'kasSumber', 'detailTransaksi', 'itemJualan', 'kategoriTransaksi'])
         ->latest()
         ->paginate(10)
         ->withQueryString();
@@ -126,7 +133,6 @@ public function storePenjualanItem(Request $request)
 
     $validated = $request->validate([
         'id_item_jualan' => 'required|integer|exists:item_jualan,id',
-        'id_kas' => 'required|integer|exists:kas,id',
         'id_kas_sumber' => 'nullable|integer|exists:kas,id',
         'harga_item' => 'nullable|integer|min:1',
         'biaya_admin_manual' => 'nullable|integer|min:0',
@@ -142,8 +148,14 @@ public function storePenjualanItem(Request $request)
             ->findOrFail($validated['id_item_jualan']);
         $kas = Kas::where('id_warung', $idWarung)
             ->where('status', 'cash')
+            ->orderBy('id')
             ->lockForUpdate()
-            ->findOrFail($validated['id_kas']);
+            ->first();
+        if (!$kas) {
+            throw ValidationException::withMessages([
+                'kas_tunai' => 'Cabang ini belum memiliki kas tunai untuk menerima pembayaran.',
+            ]);
+        }
 
         $isPhysical = $item->jenis === 'fisik';
         $hargaItem = $isPhysical ? (int) $item->harga_jual : (int) ($validated['harga_item'] ?? 0);
@@ -209,6 +221,7 @@ public function storePenjualanItem(Request $request)
         }
 
         $transaksi = Transaksi::create([
+            'id_user' => auth()->id(),
             'id_kas_warung' => $kas->id,
             'id_kas_sumber' => $wallet?->id,
             'id_item_jualan' => $item->id,
@@ -306,14 +319,20 @@ private function denominationTotal(mixed $denominations, array $allowed, string 
 private function activeWarungId(): ?int
 {
     return Kasir::whereKey(session('id_warung'))
-        ->when(!in_array(auth()->user()->role, ['admin', 'owner']), fn ($query) => $query->where('id_user', auth()->id()))
+        ->when(auth()->user()->role === 'kasir', function ($query) {
+            $query->where(function ($query) {
+                $query->where('id_user', auth()->id())
+                    ->orWhereHas('users', fn ($users) => $users->where('user.id', auth()->id()));
+            });
+        })
+        ->when(!in_array(auth()->user()->role, ['admin', 'owner', 'kasir'], true), fn ($query) => $query->where('id_user', auth()->id()))
         ->value('id');
 }
 
 // Method untuk Halaman Setor Tunai
 public function setor()
 {
-    $idWarung = session('id_warung');
+    $idWarung = $this->activeWarungId();
 
     if (!$idWarung) {
         return redirect()
@@ -350,7 +369,7 @@ public function setor()
 // Method untuk Halaman Tarik Tunai
 public function tarik()
 {
-    $idWarung = session('id_warung');
+    $idWarung = $this->activeWarungId();
 
     if (!$idWarung) {
         return redirect()
@@ -387,7 +406,7 @@ public function tarik()
 }
     public function store(Request $request)
 {
-    $idWarung = session('id_warung');
+        $idWarung = $this->activeWarungId();
 
     if (!$idWarung) {
         return redirect()
@@ -401,6 +420,7 @@ public function tarik()
         'id_kas_tujuan'             => 'required|integer|exists:kas,id',
         'total'                     => 'required|integer|min:0',
         'biaya_admin_manual'        => 'nullable|integer|min:0',
+        'biaya_admin_toko'          => 'nullable|integer|min:0',
         'change_total'              => 'required|integer|min:0',
         'denominations_json'        => 'required|json',
         'change_denominations_json' => 'nullable|json',
@@ -456,15 +476,16 @@ public function tarik()
             ->orderByRaw('CASE WHEN id_kas IS NULL THEN 1 ELSE 0 END')
             ->orderBy('range_awal')
             ->first();
-        $biayaAdmin = $feeRange
+        $biayaAdminBank = $feeRange
             ? (int) $feeRange->biaya_admin
             : (int) ($request->biaya_admin_manual ?? 0);
+        $biayaAdminToko = (int) ($request->biaya_admin_toko ?? 0);
         $totalTransaksi = $request->jenis === 'masuk'
-            ? $nominalTransaksi - $biayaAdmin
-            : $nominalTransaksi + $biayaAdmin;
+            ? $nominalTransaksi - $biayaAdminBank - $biayaAdminToko
+            : $nominalTransaksi + $biayaAdminBank + $biayaAdminToko;
 
         if ($totalTransaksi <= 0 || (int) $request->total !== $totalTransaksi) {
-            throw new \Exception('Total transaksi tidak sesuai dengan nominal dan biaya admin untuk jenis bank.');
+            throw new \Exception('Total transaksi tidak sesuai dengan nominal dan biaya admin bank/toko.');
         }
 
         if ($request->jenis === 'masuk' && $kasTujuan->saldo < $totalTransaksi) {
@@ -472,12 +493,14 @@ public function tarik()
         }
         // 2. Simpan Header Transaksi Utama
         $transaksi = Transaksi::create([
+            'id_user'         => auth()->id(),
             'jenis'         => $request->jenis,
             'id_kas_warung' => $kasAsal->id,
             'id_kas_sumber' => $kasTujuan->id,
             'kategori'      => 'transaksi_customer',
             'total'         => $totalTransaksi,
-            'biaya_admin'   => $biayaAdmin,
+            'biaya_admin'   => $biayaAdminToko,
+            'biaya_admin_bank' => $biayaAdminBank,
             'metode_pembayaran' => 'ewallet',
             'tanggal'       => now()->toDateString(),
             'keterangan'    => $request->keterangan,
@@ -613,7 +636,7 @@ public function tarik()
 	// Method untuk menampilkan Halaman Form Pengeluaran Kas Operasional / Biaya
 public function pengeluaran()
 {
-    $idWarung = session('id_warung');
+    $idWarung = $this->activeWarungId();
 
     if (!$idWarung) {
         return redirect()
@@ -644,7 +667,7 @@ public function pengeluaran()
 // Method untuk memproses simpan Pengeluaran Kas
 public function storePengeluaran(Request $request)
 {
-    $idWarung = session('id_warung');
+    $idWarung = $this->activeWarungId();
 
     if (!$idWarung) {
         return redirect()
@@ -676,6 +699,7 @@ public function storePengeluaran(Request $request)
 
         // 1. Simpan Transaksi Pengeluaran
         $transaksi = Transaksi::create([
+            'id_user'         => auth()->id(),
             'jenis'         => 'keluar',
             'id_kas_warung' => $kas->id,
             'id_kategori'   => $request->id_kategori ?? null,
@@ -740,7 +764,7 @@ public function storePengeluaran(Request $request)
      */
     public function kasMasuk()
     {
-        $idWarung = session('id_warung');
+        $idWarung = $this->activeWarungId();
 
         if (!$idWarung) {
             return redirect()
@@ -770,7 +794,7 @@ public function storePengeluaran(Request $request)
      */
     public function kasKeluar()
     {
-        $idWarung = session('id_warung');
+        $idWarung = $this->activeWarungId();
 
         if (!$idWarung) {
             return redirect()
@@ -800,7 +824,7 @@ public function storePengeluaran(Request $request)
      */
     public function storeKas(Request $request)
     {
-        $idWarung = session('id_warung');
+        $idWarung = $this->activeWarungId();
 
         if (!$idWarung) {
             return redirect()
@@ -808,38 +832,62 @@ public function storePengeluaran(Request $request)
                 ->with('error', 'Silakan pilih cabang terlebih dahulu.');
         }
 
-        $request->validate([
+        $validated = $request->validate([
             'jenis'              => 'required|in:masuk,keluar',
+            'is_profit'          => 'sometimes|boolean',
             'id_kas'             => 'required|integer|exists:kas,id',
-            'total'              => 'required|numeric|min:1',
+            'total'              => 'required|integer|min:1',
             'keterangan'         => 'required|string|max:255',
-            'denominations_json' => 'nullable|string',
+            'denominations_json' => 'nullable|json',
         ]);
 
-        $denominations = json_decode($request->denominations_json, true) ?? [];
+        $denominations = json_decode($validated['denominations_json'] ?? '[]', true);
+        Validator::make(
+            ['denominations' => $denominations],
+            [
+                'denominations' => 'required|array',
+                'denominations.*.pecahan' => 'required|integer|min:1',
+                'denominations.*.jumlah' => 'required|integer|min:0',
+            ]
+        )->validate();
 
         DB::beginTransaction();
 
         try {
             $kas = Kas::where('id', $request->id_kas)
                 ->where('id_warung', $idWarung)
+                ->lockForUpdate()
                 ->firstOrFail();
 
+            if ($kas->status === 'cash') {
+                $totalPecahan = collect($denominations)->sum(
+                    fn ($denom) => (int) $denom['pecahan'] * (int) $denom['jumlah']
+                );
+
+                if ($totalPecahan !== (int) $validated['total']) {
+                    throw ValidationException::withMessages([
+                        'total' => 'Nominal harus sama dengan total rincian pecahan uang fisik.',
+                    ]);
+                }
+            }
+
             // Jika Kas Keluar, pastikan saldo cukup
-            if ($request->jenis === 'keluar' && $kas->saldo < $request->total) {
-                throw new \Exception("Saldo kas {$kas->jenis_kas} tidak mencukupi untuk pengeluaran sebesar Rp " . number_format($request->total, 0, ',', '.'));
+            if ($validated['jenis'] === 'keluar' && $kas->saldo < $validated['total']) {
+                throw new \Exception("Saldo kas {$kas->jenis_kas} tidak mencukupi untuk pengeluaran sebesar Rp " . number_format($validated['total'], 0, ',', '.'));
             }
 
             // 1. Buat Header Transaksi (menyimpan enum kategori dan jenis)
             $transaksi = Transaksi::create([
-                'jenis'         => $request->jenis,
+                'id_user'         => auth()->id(),
+                'jenis'         => $validated['jenis'],
+                'is_profit'     => $validated['jenis'] === 'masuk' && $request->boolean('is_profit'),
                 'kategori'      => 'transaksi_brilink',
                 'id_kas_warung' => $kas->id,
-                'total'         => $request->total,
+                'total'         => $validated['total'],
                 'biaya_admin'   => 0,
                 'metode_pembayaran' => $kas->status === 'cash' ? 'cash' : 'ewallet',
                 'tanggal'       => now()->toDateString(),
-                'keterangan'    => $request->keterangan,
+                'keterangan'    => $validated['keterangan'],
             ]);
 
             // 2. Jika Kas bertipe 'cash' dan ada pecahan uang fisik yang diisi
@@ -861,7 +909,7 @@ public function storePengeluaran(Request $request)
                         ['jumlah' => 0]
                     );
 
-                    if ($request->jenis === 'masuk') {
+                    if ($validated['jenis'] === 'masuk') {
                         // Kas Masuk -> Tambah stok pecahan fisik
                         $detailKas->jumlah += $jumlah;
                     } else {
@@ -877,21 +925,27 @@ public function storePengeluaran(Request $request)
             }
 
             // 3. Mutasi Saldo Utama Kas
-            if ($request->jenis === 'masuk') {
-                $kas->saldo += $request->total;
+            if ($validated['jenis'] === 'masuk') {
+                $kas->saldo += $validated['total'];
             } else {
-                $kas->saldo -= $request->total;
+                $kas->saldo -= $validated['total'];
             }
             $kas->save();
 
             DB::commit();
 
-            $pesan = $request->jenis === 'masuk' ? 'Kas Masuk berhasil dicatat!' : 'Kas Keluar berhasil dicatat!';
+            $pesan = $validated['jenis'] === 'masuk' ? 'Kas Masuk berhasil dicatat!' : 'Kas Keluar berhasil dicatat!';
+            $routeSukses = auth()->user()->role === 'kasir'
+                ? 'transaksi.index'
+                : 'kas.index';
 
             return redirect()
-                ->route('kas.index')
+                ->route($routeSukses)
                 ->with('success', $pesan);
 
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            throw $e;
         } catch (\Exception $e) {
             DB::rollBack();
 

@@ -71,6 +71,7 @@ public function index()
         return [
             'id' => $item->id,
             'jenis' => $item->jenis,
+            'is_profit' => $item->is_profit,
             'total' => $item->total,
             'keterangan' => $item->keterangan,
             'formatted_date' => $item->created_at->format('d M Y, H:i'),

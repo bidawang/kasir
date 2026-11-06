@@ -9,7 +9,7 @@
     {{-- Header --}}
     <div class="flex items-center justify-between px-1">
         <div class="flex items-center gap-2.5">
-            <a href="{{ route('kas.index') }}" 
+            <a href="{{ auth()->user()->role === 'kasir' ? route('transaksi.menu') : route('kas.index') }}"
                class="w-8 h-8 rounded-xl bg-white border border-slate-200/80 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition-colors shadow-xs">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -117,6 +117,20 @@
                           placeholder="Contoh: Bayar listrik warung / Setor modal awal"
                           class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"></textarea>
             </div>
+
+            @if($jenisTransaksi === 'masuk')
+                <label class="flex items-start gap-3 p-3 rounded-xl bg-emerald-50 border border-emerald-100 cursor-pointer">
+                    <input type="checkbox"
+                           name="is_profit"
+                           value="1"
+                           @checked(old('is_profit'))
+                           class="mt-0.5 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500">
+                    <span>
+                        <span class="block text-xs font-bold text-emerald-800">Tandai sebagai keuntungan (profit)</span>
+                        <span class="block text-[11px] text-emerald-700 mt-0.5">Nominal kas masuk ini akan dihitung ke statistik keuntungan.</span>
+                    </span>
+                </label>
+            @endif
         </div>
 
         {{-- RINCIAN PECAHAN FISIK (Hanya muncul jika Kas bertipe 'cash') --}}

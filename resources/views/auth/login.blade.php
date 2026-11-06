@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Login - BRILINK</title>
+    <title>Login - Agent Kas</title>
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -33,7 +33,7 @@
 
         <!-- Logo / Header -->
         <div class="text-center space-y-1">
-            <h1 class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">BRILINK</h1>
+            <h1 class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">Agent Kas</h1>
             <p class="text-xs text-slate-500 font-medium">Masuk untuk mengelola transaksi kas</p>
         </div>
 

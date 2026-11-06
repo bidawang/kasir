@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="color-scheme" content="light dark">
-    <title>{{ $title ?? 'Agen BRILink' }}</title>
+    <title>{{ $title ?? 'Agent Kas' }}</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -90,8 +90,14 @@
     @php
         // Ambil daftar cabang yang berhak diakses
         $userRole = auth()->user()->role ?? '';
-        $listWarungs = \App\Models\Kasir::when(!in_array($userRole, ['owner', 'admin']), function ($q) {
-            $q->where('id_user', auth()->id());
+        $isAdminRole = in_array($userRole, ['admin', 'owner'], true);
+        $listWarungs = \App\Models\Kasir::when($userRole === 'kasir', function ($query) {
+            $query->where(function ($query) {
+                $query->where('id_user', auth()->id())
+                    ->orWhereHas('users', fn ($users) => $users->where('user.id', auth()->id()));
+            });
+        })->when(!$isAdminRole && $userRole !== 'kasir', function ($query) {
+            $query->where('id_user', auth()->id());
         })->orderBy('id')->get();
 
         // Auto-set session cabang pertama jika session masih kosong
@@ -115,12 +121,12 @@
                 <!-- Left: Logo & Cabang Info -->
                 <div class="flex items-center gap-2.5 min-w-0">
                     <div class="w-8 h-8 sm:w-10 sm:h-10 shrink-0 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center font-black text-white text-xs sm:text-sm tracking-wider shadow-inner">
-                        BL
+                        AK
                     </div>
 
                     <div class="min-w-0 leading-tight">
                         <div class="flex items-center gap-1.5">
-                            <span class="text-[9px] sm:text-[10px] font-extrabold tracking-widest text-primary-200 uppercase">BRILink</span>
+                            <span class="text-[9px] sm:text-[10px] font-extrabold tracking-widest text-primary-200 uppercase">Agent Kas</span>
                             @if($cabangAktif)
                                 <span class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Active
@@ -137,6 +143,7 @@
 <nav class="hidden md:flex items-center gap-1 bg-white/10 p-1 rounded-xl backdrop-blur-sm border border-white/10">
 
     {{-- Beranda --}}
+    @if($isAdminRole)
     <a href="{{ route('dashboard') }}" 
        class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('dashboard') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
 
@@ -147,6 +154,7 @@
 
         Beranda
     </a>
+    @endif
 
 
     {{-- Transaksi --}}
@@ -171,6 +179,7 @@
     </a>
 
 
+    @if($isAdminRole)
     {{-- Kas --}}
     <a href="{{ route('kas.index') }}" 
        class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('kas.*') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
@@ -201,9 +210,17 @@
         </svg>
         Biaya Admin
     </a>
+    @endif
 
     {{-- Cabang --}}
     @if(in_array($userRole, ['admin', 'owner']))
+        <a href="{{ route('manajemen-kasir.index') }}"
+           class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('manajemen-kasir.*') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2m12-13a4 4 0 11-8 0 4 4 0 018 0zm2 13h4v-2a4 4 0 00-3-3.87M18 3.13a4 4 0 010 7.75"/>
+            </svg>
+            Kasir
+        </a>
         <a href="{{ route('cabang.index') }}" 
            class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('cabang.*') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
 
@@ -239,7 +256,7 @@
             </div>
 
             <!-- Cabang Quick Selector Pill Bar -->
-            @if($listWarungs->count() > 1)
+            @if($isAdminRole && $listWarungs->count() > 1)
                 <div class="pb-2 pt-0.5 border-t border-white/10">
                     <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
                         <span class="text-[9px] font-bold text-primary-200 uppercase tracking-wider shrink-0 mr-1">Cabang:</span>
@@ -274,9 +291,10 @@
     <!-- BOTTOM NAVIGATION (Hanya Tampil di Mobile/Tablet < md) -->
     <nav aria-label="Menu Navigasi Bawah" class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shadow-mobile-nav pb-safe">
         <div class="max-w-md mx-auto px-1">
-            <div class="grid {{ in_array($userRole, ['admin', 'owner']) ? 'grid-cols-7' : 'grid-cols-6' }} items-center h-13">
+            <div class="grid {{ $isAdminRole ? 'grid-cols-9' : 'grid-cols-3' }} items-center h-13">
 
                 <!-- 1. Beranda -->
+                @if($isAdminRole)
                 <a href="{{ route('dashboard') }}"
                    class="flex flex-col items-center justify-center py-1 transition-colors group {{ request()->routeIs('dashboard') ? 'text-primary-600 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="{{ request()->routeIs('dashboard') ? '2.5' : '2' }}" viewBox="0 0 24 24">
@@ -284,16 +302,27 @@
                     </svg>
                     <span class="text-[9px] sm:text-[10px] tracking-tight mt-0.5">Beranda</span>
                 </a>
+                @endif
 
                 <!-- 2. Menu Transaksi -->
                 <a href="{{ route('transaksi.menu') }}"
-                   class="flex flex-col items-center justify-center py-1 transition-colors group {{ $isTransaksiActive ? 'text-primary-600 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="{{ $isTransaksiActive ? '2.5' : '2' }}" viewBox="0 0 24 24">
+                   class="flex flex-col items-center justify-center py-1 transition-colors group {{ $isTransaksiActive && !request()->routeIs('transaksi.index') ? 'text-primary-600 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="{{ $isTransaksiActive && !request()->routeIs('transaksi.index') ? '2.5' : '2' }}" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.66 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.66m-5.801 0c-3.04.15-5.5 2.66-5.5 5.75v9.5a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 18.25v-9.5c0-3.09-2.46-5.6-5.5-5.75m-5.801 0a48.108 48.108 0 015.801 0"/>
                     </svg>
                     <span class="text-[9px] sm:text-[10px] tracking-tight mt-0.5">Transaksi</span>
                 </a>
 
+                <!-- Riwayat Transaksi -->
+                <a href="{{ route('transaksi.index') }}"
+                   class="flex flex-col items-center justify-center py-1 transition-colors group {{ request()->routeIs('transaksi.index') ? 'text-primary-600 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="{{ request()->routeIs('transaksi.index') ? '2.5' : '2' }}" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.66 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.66m-5.801 0c-3.04.15-5.5 2.66-5.5 5.75v9.5a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 18.25v-9.5c0-3.09-2.46-5.6-5.5-5.75m-5.801 0a48.108 48.108 0 015.801 0"/>
+                    </svg>
+                    <span class="text-[9px] sm:text-[10px] tracking-tight mt-0.5">Riwayat</span>
+                </a>
+
+                @if($isAdminRole)
                 <!-- 3. Kas -->
                 <a href="{{ route('kas.index') }}"
                    class="flex flex-col items-center justify-center py-1 transition-colors group {{ request()->routeIs('kas.*') ? 'text-primary-600 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
@@ -321,9 +350,17 @@
                     </svg>
                     <span class="text-[9px] sm:text-[10px] tracking-tight mt-0.5">Biaya Admin</span>
                 </a>
+                @endif
 
                 <!-- 6. Cabang (Admin / Owner Only) -->
-                @if(in_array($userRole, ['admin', 'owner']))
+                @if($isAdminRole)
+                    <a href="{{ route('manajemen-kasir.index') }}"
+                       class="flex flex-col items-center justify-center py-1 transition-colors group {{ request()->routeIs('manajemen-kasir.*') ? 'text-primary-600 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2m12-13a4 4 0 11-8 0 4 4 0 018 0zm2 13h4v-2a4 4 0 00-3-3.87M18 3.13a4 4 0 010 7.75"/>
+                        </svg>
+                        <span class="text-[9px] sm:text-[10px] tracking-tight mt-0.5">Kasir</span>
+                    </a>
                     <a href="{{ route('cabang.index') }}"
                        class="flex flex-col items-center justify-center py-1 transition-colors group {{ request()->routeIs('cabang.*') ? 'text-primary-600 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
                         <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="{{ request()->routeIs('cabang.*') ? '2.5' : '2' }}" viewBox="0 0 24 24">

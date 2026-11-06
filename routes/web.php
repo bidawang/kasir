@@ -10,6 +10,7 @@ use App\Http\Controllers\CabangController;
 use App\Http\Controllers\TransferKasController;
 use App\Http\Controllers\ItemJualanController;
 use App\Http\Controllers\BiayaAdminController;
+use App\Http\Controllers\ManajemenKasirController;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,70 +39,55 @@ Route::post('/register', [AuthController::class, 'register']);
 
 Route::middleware(['auth'])->group(function () {
 
-    // Dashboard
+    // Dashboard and reporting are reserved for administrators and owners.
     Route::get('/', [DashboardController::class, 'index'])
+        ->middleware('role:admin,owner')
         ->name('dashboard');
 
+    // Cashiers can create transactions and review their own transaction history.
+    Route::middleware('role:admin,kasir')->group(function () {
+        Route::get('/transaksi/menu', [TransaksiController::class, 'menu'])->name('transaksi.menu');
+        Route::resource('transaksi', TransaksiController::class)->only(['index', 'store']);
+        Route::get('/transaksi/penjualan-item/create', [TransaksiController::class, 'createPenjualanItem'])
+            ->name('transaksi.penjualan-item.create');
+        Route::post('/transaksi/penjualan-item', [TransaksiController::class, 'storePenjualanItem'])
+            ->name('transaksi.penjualan-item.store');
+        Route::get('/transaksi/setor', [TransaksiController::class, 'setor'])->name('transaksi.setor');
+        Route::get('/transaksi/tarik', [TransaksiController::class, 'tarik'])->name('transaksi.tarik');
+        Route::get('/transaksi/kas-masuk', [TransaksiController::class, 'kasMasuk'])->name('transaksi.kas.masuk');
+        Route::get('/transaksi/kas-keluar', [TransaksiController::class, 'kasKeluar'])->name('transaksi.kas.keluar');
+        Route::post('/transaksi/kas-store', [TransaksiController::class, 'storeKas'])->name('transaksi.kas.store');
+    });
 
-    // ==============================
-    // TRANSAKSI
-    // Admin & Kasir
-    // ==============================
-
-    Route::get('/transaksi/menu', [TransaksiController::class, 'menu'])->name('transaksi.menu');
-    Route::resource('transaksi', TransaksiController::class)->except('show');
-    Route::get('/transaksi/penjualan-item/create', [TransaksiController::class, 'createPenjualanItem'])
-        ->name('transaksi.penjualan-item.create');
-    Route::post('/transaksi/penjualan-item', [TransaksiController::class, 'storePenjualanItem'])
-        ->name('transaksi.penjualan-item.store');
-    Route::get('/transaksi/setor', [TransaksiController::class, 'setor'])->name('transaksi.setor');
-Route::get('/transaksi/tarik', [TransaksiController::class, 'tarik'])->name('transaksi.tarik');
-
-Route::get('/transfer-kas', [TransferKasController::class, 'index'])
-    ->name('transfer-kas.index');
-
-Route::get('/transfer-kas/create', [TransferKasController::class, 'create'])
-    ->name('transfer-kas.create');
-
-Route::post('/transfer-kas', [TransferKasController::class, 'store'])
-    ->name('transfer-kas.store');
-
-Route::get('/transfer-kas/{id}', [TransferKasController::class, 'show'])
-    ->name('transfer-kas.show');
-	Route::get('/api/warung/{idWarung}/kas', [TransferKasController::class, 'getKasByWarung']);
-Route::get('/kas/brilink-history', [KasController::class, 'getBrilinkHistory'])->name('kas.brilink-history');
-
-	Route::get('/transaksi/kas-masuk', [TransaksiController::class, 'kasMasuk'])->name('transaksi.kas.masuk');
-    Route::get('/transaksi/kas-keluar', [TransaksiController::class, 'kasKeluar'])->name('transaksi.kas.keluar');
-    Route::post('/transaksi/kas-store', [TransaksiController::class, 'storeKas'])->name('transaksi.kas.store');
-
-
-	// --------------------------
-        // Kas
-        // --------------------------
+    // Cash, inventory setup, transfers, and reports are not cashier pages.
+    Route::middleware('role:admin,owner')->group(function () {
+        Route::get('/transfer-kas', [TransferKasController::class, 'index'])
+            ->name('transfer-kas.index');
+        Route::get('/transfer-kas/create', [TransferKasController::class, 'create'])
+            ->name('transfer-kas.create');
+        Route::post('/transfer-kas', [TransferKasController::class, 'store'])
+            ->name('transfer-kas.store');
+        Route::get('/transfer-kas/{id}', [TransferKasController::class, 'show'])
+            ->name('transfer-kas.show');
+        Route::get('/api/warung/{idWarung}/kas', [TransferKasController::class, 'getKasByWarung']);
+        Route::get('/kas/brilink-history', [KasController::class, 'getBrilinkHistory'])->name('kas.brilink-history');
 
         Route::resource('kas', KasController::class);
-
-        Route::post(
-            '/kas/{id}/update-detail',
-            [KasController::class, 'updateDetailKas']
-        )->name('kas.updateDetail');
-
+        Route::post('/kas/{id}/update-detail', [KasController::class, 'updateDetailKas'])
+            ->name('kas.updateDetail');
         Route::resource('item-jualan', ItemJualanController::class)->except('show');
         Route::resource('biaya-admin', BiayaAdminController::class)->except('show');
-
-
-        // --------------------------
-        // Laporan
-        // --------------------------
-
         Route::get('/laporan', [LaporanController::class, 'index'])
             ->name('laporan.index');
+    });
     // ==============================
     // KHUSUS ADMIN
     // ==============================
 
     Route::middleware(['role:admin'])->group(function () {
+
+        Route::resource('manajemen-kasir', ManajemenKasirController::class)
+            ->except(['show']);
 
         // --------------------------
         // Cabang / Warung
