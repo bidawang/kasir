@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Tambah Kas')
+@section('title', 'Tambah Akun Kas')
 
 @section('content')
 <div class="max-w-xl mx-auto space-y-5">
@@ -9,10 +9,10 @@
     <div class="flex items-center justify-between">
         <div>
             <h1 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
-                Tambah Kas Baru
+                Tambah Akun Kas
             </h1>
             <p class="text-xs text-slate-500 font-medium">
-                Tambahkan jenis akun kas dan saldo awal
+                Masukkan nama akun dan saldo awal, misalnya kas tunai, e-wallet, atau rekening bank
             </p>
         </div>
 
@@ -33,10 +33,10 @@
             {{-- Ganti dengan id warung yang sesuai --}}
             <input type="hidden" name="id_warung" value="2">
 
-            <!-- Jenis Kas -->
+            <!-- Nama Akun -->
             <div>
                 <label for="jenis_kas" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">
-                    Jenis Kas
+                    Nama Akun
                 </label>
 
                 <div class="relative">
@@ -53,7 +53,7 @@
                         id="jenis_kas"
                         value="{{ old('jenis_kas') }}"
                         required
-                        placeholder="Contoh: Kas Utama, Kas Tunai, dll"
+                        placeholder="Contoh: Kas Tunai, OVO, atau Bank BRI"
                         class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border
                         @error('jenis_kas')
                             border-rose-300 focus:ring-rose-500 focus:border-rose-500
@@ -115,7 +115,7 @@
 
                 <button type="submit"
                         class="bg-primary-600 hover:bg-primary-700 active:scale-95 text-white px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold shadow-sm shadow-primary-500/25 transition-all duration-200">
-                    Simpan Kas
+                    Simpan Akun
                 </button>
             </div>
         </form>

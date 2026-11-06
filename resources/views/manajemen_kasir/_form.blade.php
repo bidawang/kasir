@@ -4,7 +4,7 @@
 @endforeach
 
 <label class="block space-y-1 text-sm font-semibold text-slate-700">
-    Nama
+    Nama Lengkap
     <input name="nama" required maxlength="255" value="{{ old('nama', $akun->nama ?? '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2">
 </label>
 <label class="block space-y-1 text-sm font-semibold text-slate-700">
@@ -12,11 +12,11 @@
     <input type="email" name="email" required maxlength="255" value="{{ old('email', $akun->email ?? '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2">
 </label>
 <label class="block space-y-1 text-sm font-semibold text-slate-700">
-    Nomor HP
+    Nomor Telepon
     <input name="nomor_hp" maxlength="30" value="{{ old('nomor_hp', $akun->nomor_hp ?? '') }}" class="w-full rounded-xl border border-slate-300 px-3 py-2">
 </label>
 <label class="block space-y-1 text-sm font-semibold text-slate-700">
-    Cabang
+    Cabang Tugas
     <select name="id_kasir" required class="w-full rounded-xl border border-slate-300 px-3 py-2">
         <option value="">Pilih cabang</option>
         @foreach($warungs as $warung)
@@ -25,7 +25,7 @@
     </select>
 </label>
 <label class="block space-y-1 text-sm font-semibold text-slate-700">
-    Kata Sandi {{ $akun ? '(kosongkan jika tidak diubah)' : '' }}
+    Kata Sandi {{ $akun ? '(biarkan kosong jika tidak ingin mengubahnya)' : '' }}
     <input type="password" name="password" {{ $akun ? '' : 'required' }} minlength="8" class="w-full rounded-xl border border-slate-300 px-3 py-2">
 </label>
 <label class="block space-y-1 text-sm font-semibold text-slate-700">
@@ -33,7 +33,7 @@
     <input type="password" name="password_confirmation" {{ $akun ? '' : 'required' }} minlength="8" class="w-full rounded-xl border border-slate-300 px-3 py-2">
 </label>
 <label class="block space-y-1 text-sm font-semibold text-slate-700">
-    Status
+    Status Akun
     <select name="status" required class="w-full rounded-xl border border-slate-300 px-3 py-2">
         <option value="aktif" @selected(old('status', $akun->status ?? 'aktif') === 'aktif')>Aktif</option>
         <option value="nonaktif" @selected(old('status', $akun->status ?? '') === 'nonaktif')>Nonaktif</option>

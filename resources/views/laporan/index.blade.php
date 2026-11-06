@@ -9,7 +9,7 @@
     <div class="flex items-center justify-between">
         <div>
             <h1 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">Laporan Keuangan</h1>
-            <p class="text-xs text-slate-500 font-medium">Analisis transaksi dan rekapitulasi saldo</p>
+            <p class="text-xs text-slate-500 font-medium">Lihat ringkasan pemasukan, pengeluaran, dan saldo</p>
         </div>
     </div>
 
@@ -40,7 +40,7 @@
                 <button type="submit" 
                         class="w-full sm:w-auto bg-primary-600 hover:bg-primary-700 active:scale-95 text-white px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-sm shadow-primary-500/25 transition-all duration-200 flex items-center justify-center gap-1.5">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.658 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z"/></svg>
-                    <span>Filter Laporan</span>
+                    <span>Tampilkan Laporan</span>
                 </button>
             </div>
         </form>

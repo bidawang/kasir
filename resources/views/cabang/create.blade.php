@@ -15,7 +15,7 @@
         </a>
         <div class="min-w-0">
             <h2 class="text-base sm:text-lg font-extrabold text-slate-800 leading-snug">Tambah Cabang</h2>
-            <p class="text-xs text-slate-500 truncate">Tambahkan lokasi cabang Agent Kas baru</p>
+            <p class="text-xs text-slate-500 truncate">Tambahkan cabang baru untuk usaha Anda</p>
         </div>
     </div>
 
@@ -26,7 +26,7 @@
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
                 </svg>
-                <span>Terjadi kesalahan input:</span>
+                <span>Periksa kembali data yang diisi:</span>
             </div>
             <ul class="list-disc list-inside space-y-0.5 text-slate-600 pl-1">
                 @foreach($errors->all() as $error)
@@ -43,7 +43,7 @@
 
         <div>
             <label for="nama_warung" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Nama Cabang / Warung <span class="text-rose-500">*</span>
+                Nama Cabang <span class="text-rose-500">*</span>
             </label>
 
             <div class="relative">
@@ -52,13 +52,13 @@
                     id="nama_warung"
                     name="nama_warung"
                     value="{{ old('nama_warung') }}"
-                    placeholder="Contoh: Agent Kas Cabang Utama"
+                    placeholder="Contoh: Cabang Utama"
                     required
                     autofocus
                     class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none text-xs text-slate-800 transition font-medium placeholder:text-slate-400"
                 >
             </div>
-            <p class="text-[11px] text-slate-400 mt-1">Gunakan nama yang mudah dikenali oleh kasir/admin.</p>
+            <p class="text-[11px] text-slate-400 mt-1">Gunakan nama yang mudah dikenali oleh Anda dan staf.</p>
         </div>
 
         <!-- ACTION BUTTONS -->

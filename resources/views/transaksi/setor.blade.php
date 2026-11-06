@@ -14,7 +14,7 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m0 0l6-6m-6 6l-6-6"/></svg>
                 Setor Tunai
             </h1>
-            <p class="text-[11px] text-slate-500 font-medium">Input penerimaan setoran uang tunai</p>
+            <p class="text-[11px] text-slate-500 font-medium">Catat uang tunai yang diterima dari pelanggan</p>
         </div>
         <a href="{{ route('transaksi.index') }}"
            class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1 shadow-xs">
@@ -42,15 +42,15 @@
         <input type="hidden" name="jenis" value="masuk">
         <input type="hidden" name="id_kas" :value="kasAsal ? kasAsal.id : ''">
 
-        <!-- CARD 1: SELEKSI KAS TUJUAN (E-WALLET) -->
+        <!-- CARD 1: PILIH AKUN TUJUAN -->
         <div class="bg-white rounded-xl shadow-2xs border border-slate-200/80 p-3 sm:p-4 space-y-3">
             <div>
-                <label for="id_kas_tujuan" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Kas Tujuan (E-Wallet)</label>
+                <label for="id_kas_tujuan" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">E-Wallet atau Rekening Bank Tujuan</label>
                 <select class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all"
                         name="id_kas_tujuan"
                         x-model="selectedKasTujuanId"
                         required>
-                    <option value="">-- Pilih E-Wallet Tujuan --</option>
+                    <option value="">-- Pilih akun tujuan --</option>
                     <template x-for="kas in kasTujuanList" :key="'tujuan-' + kas.id">
                         <option :value="kas.id" x-text="kas.nama_kas || kas.jenis_kas"></option>
                     </template>
@@ -61,7 +61,7 @@
         <!-- CARD 2: PECAHAN UANG DISERAHKAN -->
         <div class="bg-white rounded-xl shadow-2xs border border-slate-200/80 p-3 sm:p-4 space-y-2.5">
             <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Rincian Uang Diserahkan Customer</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Rincian Uang dari Pelanggan</label>
                 <div class="text-xs font-bold text-slate-900" x-text="'Subtotal: Rp ' + formatIDR(totalUang)"></div>
             </div>
 
@@ -83,7 +83,7 @@
         <div class="bg-white rounded-xl shadow-2xs border border-slate-200/80 p-3 sm:p-4">
             <div class="flex items-center justify-between gap-3">
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Biaya Admin Bank</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Biaya Admin Transaksi</label>
                     <p class="text-[10px] text-slate-400 font-medium">Dihitung otomatis berdasarkan nominal setoran</p>
                 </div>
                 <div class="relative flex items-center w-36">
@@ -99,8 +99,8 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-2xs border border-slate-200/80 p-3 sm:p-4">
-            <label for="biaya_admin_toko" class="block text-xs font-bold uppercase tracking-wider text-slate-700">Biaya Admin Toko</label>
-            <p class="text-[10px] text-slate-400 font-medium mb-2">Biaya layanan toko yang dihitung sebagai keuntungan</p>
+            <label for="biaya_admin_toko" class="block text-xs font-bold uppercase tracking-wider text-slate-700">Biaya Layanan Toko</label>
+            <p class="text-[10px] text-slate-400 font-medium mb-2">Biaya layanan yang menjadi pendapatan toko</p>
             <div class="relative flex items-center w-36">
                 <span class="absolute left-2.5 text-xs font-bold text-slate-400">Rp</span>
                 <input id="biaya_admin_toko" type="number" name="biaya_admin_toko" min="0" step="1" x-model.number="manualBiayaToko"
@@ -122,7 +122,7 @@
                         <div class="flex items-center justify-between p-1.5 px-2 bg-white rounded-lg border border-slate-200 hover:border-amber-300 transition-all">
                             <div>
                                 <div class="text-[11px] font-bold text-slate-800" x-text="'Rp ' + formatIDR(item.pecahan)"></div>
-                                <div class="text-[9px] font-semibold" :class="item.stok > 0 ? 'text-slate-400' : 'text-rose-500'" x-text="'Stok: ' + item.stok + ' lbr'"></div>
+                                <div class="text-[9px] font-semibold" :class="item.stok > 0 ? 'text-slate-400' : 'text-rose-500'" x-text="'Stok: ' + item.stok + ' lembar'"></div>
                             </div>
                             <div class="flex items-center gap-1">
                                 <button type="button" @click="if (item.jumlah > 0) item.jumlah--" :disabled="item.stok <= 0 || item.jumlah <= 0" class="w-6 h-6 flex items-center justify-center rounded bg-slate-100 border border-slate-200 active:bg-slate-200 text-slate-600 font-bold text-xs disabled:opacity-40 disabled:cursor-not-allowed">-</button>
@@ -152,7 +152,7 @@
     <div class="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:bottom-4 left-3 right-3 max-w-xl mx-auto z-40">
         <div class="bg-slate-900/95 backdrop-blur-md text-white px-3.5 py-2.5 rounded-xl border border-slate-800 shadow-2xl flex items-center justify-between gap-2">
             <div>
-                <div class="text-[9px] text-slate-400 uppercase tracking-wider font-bold">Total Setor Netto</div>
+                <div class="text-[9px] text-slate-400 uppercase tracking-wider font-bold">Total Setoran Bersih</div>
                 <div class="text-sm sm:text-base font-black text-emerald-400" x-text="'Rp ' + formatIDR(grandTotal)"></div>
             </div>
             <button type="submit" form="transactionForm" :disabled="isSubmitting" class="bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer">
@@ -233,24 +233,24 @@
                 return new Intl.NumberFormat('id-ID').format(val || 0);
             },
             handleSubmit(e) {
-                if (!this.kasAsal) { alert('Kas Asal tidak ditemukan!'); e.preventDefault(); return false; }
-                if (!this.selectedKasTujuanId) { alert('Silakan pilih E-Wallet Tujuan!'); e.preventDefault(); return false; }
-                if (this.totalUang <= 0) { alert('Jumlah uang diserahkan harus lebih dari 0!'); e.preventDefault(); return false; }
+                if (!this.kasAsal) { alert('Kas tunai tidak ditemukan.'); e.preventDefault(); return false; }
+                if (!this.selectedKasTujuanId) { alert('Silakan pilih e-wallet atau rekening bank tujuan!'); e.preventDefault(); return false; }
+                if (this.totalUang <= 0) { alert('Masukkan jumlah uang yang diterima dari pelanggan.'); e.preventDefault(); return false; }
                 
                 if (this.totalKembalian > this.totalUang) {
-                    alert('Kembalian tidak boleh melebihi uang diserahkan!');
+                    alert('Jumlah kembalian tidak boleh lebih besar daripada uang yang diterima.');
                     e.preventDefault();
                     return false;
                 }
                 for (let d of this.changeDenominations) {
                     if (d.jumlah > d.stok) {
-                        alert(`Stok kembalian pecahan Rp ${this.formatIDR(d.pecahan)} kurang! (Tersedia: ${d.stok})`);
+                        alert(`Stok uang pecahan Rp ${this.formatIDR(d.pecahan)} tidak mencukupi. Tersedia: ${d.stok} lembar.`);
                         e.preventDefault();
                         return false;
                     }
                 }
 
-                if (this.grandTotal <= 0) { alert('Total setoran netto tidak valid!'); e.preventDefault(); return false; }
+                if (this.grandTotal <= 0) { alert('Jumlah setoran setelah dikurangi biaya dan kembalian harus lebih dari Rp 0.'); e.preventDefault(); return false; }
                 this.isSubmitting = true;
             }
         }

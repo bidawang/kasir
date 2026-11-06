@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Pemantauan Transaksi Customer')
+@section('title', 'Riwayat Transaksi')
 
 @section('content')
 <div class="max-w-6xl mx-auto space-y-6" x-data="{ expanded: null }">
@@ -24,7 +24,7 @@
                 <div class="text-2xl font-black tracking-tight">
                     Rp {{ number_format($summary->total_keuntungan ?? 0, 0, ',', '.') }}
                 </div>
-                <div class="text-[11px] text-emerald-100 mt-1 font-medium">Biaya Admin + Kas Masuk Profit</div>
+                <div class="text-[11px] text-emerald-100 mt-1 font-medium">Biaya admin dan kas masuk yang dihitung sebagai keuntungan</div>
             </div>
 
             <div class="bg-white rounded-2xl p-4 border border-slate-200/85 shadow-sm">
@@ -61,9 +61,9 @@
                     </div>
                 </div>
                 <div class="text-xl font-bold text-slate-900">
-                    {{ number_format($summary->total_transaksi ?? 0, 0, ',', '.') }} <span class="text-xs text-slate-400 font-normal">Trx</span>
+                    {{ number_format($summary->total_transaksi ?? 0, 0, ',', '.') }} <span class="text-xs text-slate-400 font-normal">transaksi</span>
                 </div>
-                <div class="text-[11px] text-slate-400 mt-1">Total Aktivitas</div>
+                <div class="text-[11px] text-slate-400 mt-1">Semua aktivitas</div>
             </div>
         </div>
 
@@ -97,8 +97,8 @@
             <!-- Chart Canvas -->
             <div class="lg:col-span-2 bg-white rounded-2xl p-5 border border-slate-200/85 shadow-sm">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Grafik Perputaran Kas & Profit</h3>
-                    <span class="text-xs text-slate-400">Klik titik grafik untuk memfilter data harian</span>
+                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Grafik Pergerakan Kas dan Keuntungan</h3>
+                    <span class="text-xs text-slate-400">Pilih titik pada grafik untuk melihat transaksi di tanggal tersebut</span>
                 </div>
                 <div class="relative h-64 w-full">
                     <canvas id="brilinkChart"></canvas>
@@ -141,13 +141,13 @@
                                 @php
                                     $labelKategori = match($item->kategori) {
                                         'penjualan_item' => 'Penjualan Item',
-                                        'transaksi_customer' => 'Transaksi Customer',
+                                        'transaksi_customer' => 'Transaksi Pelanggan',
                                         'transaksi_brilink' => 'Transaksi Kas',
                                         default => $item->kategoriTransaksi->nama_kategori ?? 'Transaksi',
                                     };
                                     $labelAktivitas = match($item->kategori) {
                                         'penjualan_item' => 'Penjualan Item',
-                                        'transaksi_brilink' => $item->is_profit ? 'Kas Masuk · Profit' : ($item->jenis === 'masuk' ? 'Kas Masuk' : 'Kas Keluar'),
+                                        'transaksi_brilink' => $item->is_profit ? 'Kas Masuk · Keuntungan' : ($item->jenis === 'masuk' ? 'Kas Masuk' : 'Kas Keluar'),
                                         'transaksi_customer' => $item->jenis === 'masuk' ? 'Setor Tunai' : 'Tarik Tunai',
                                         default => $item->kategoriTransaksi->nama_kategori ?? ucfirst($item->jenis),
                                     };
@@ -158,7 +158,7 @@
                             </div>
                             <div class="flex items-center gap-2 text-[11px] sm:text-xs text-slate-500 font-medium">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-semibold">
-                                    {{ $item->kas->jenis_kas ?? 'Tanpa Kas' }} · {{ ($item->kas->status ?? $item->metode_pembayaran) === 'cash' ? 'Tunai' : 'E-Wallet' }}
+                                    {{ $item->kas->jenis_kas ?? 'Tanpa Kas' }} · {{ ($item->kas->status ?? $item->metode_pembayaran) === 'cash' ? 'Tunai' : 'E-wallet atau rekening bank' }}
                                 </span>
                                 <span>•</span>
                                 <span>{{ $item->created_at->translatedFormat('d M Y, H:i') }}</span>
@@ -185,11 +185,11 @@
                                 <span class="font-bold text-slate-700">{{ $labelAktivitas }}</span>
                             </div>
                             <div class="bg-emerald-50/60 p-2.5 rounded-xl border border-emerald-100">
-                                <span class="block text-[10px] font-bold uppercase tracking-wider text-emerald-700">Keuntungan ({{ $item->is_profit ? 'Profit' : 'Admin' }})</span>
+                                <span class="block text-[10px] font-bold uppercase tracking-wider text-emerald-700">Keuntungan ({{ $item->is_profit ? 'Kas masuk' : 'Biaya admin' }})</span>
                                 <span class="font-extrabold text-emerald-700">Rp {{ number_format($item->is_profit ? $item->total : ($item->biaya_admin ?? 0), 0, ',', '.') }}</span>
                             </div>
                             <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 col-span-2">
-                                <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Warung & Kas</span>
+                                <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Cabang dan Kas</span>
                                 <span class="font-bold text-slate-700 truncate block">{{ $item->kas->jenis_kas ?? '-' }} <span class="font-normal text-slate-500">({{ $item->kas->warung->nama_warung ?? '-' }})</span></span>
                             </div>
                         </div>
@@ -202,8 +202,8 @@
                                 </div>
                                 @if($item->kasSumber)
                                     <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                                        <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Wallet Sumber</span>
-                                        <span class="font-bold text-slate-700">{{ $item->kasSumber->jenis_kas }} · {{ $item->kasSumber->status === 'cash' ? 'Tunai' : 'E-Wallet' }}</span>
+                                        <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Akun Sumber</span>
+                                        <span class="font-bold text-slate-700">{{ $item->kasSumber->jenis_kas }} · {{ $item->kasSumber->status === 'cash' ? 'Tunai' : 'E-wallet atau rekening bank' }}</span>
                                     </div>
                                 @endif
                                 <div class="bg-emerald-50/60 p-2.5 rounded-xl border border-emerald-100">
@@ -214,7 +214,7 @@
                         @else
                             <!-- Detail Pecahan -->
                             <div class="space-y-2">
-                                <h6 class="text-xs font-bold uppercase tracking-wider text-slate-500">Detail Pecahan Uang:</h6>
+                                <h6 class="text-xs font-bold uppercase tracking-wider text-slate-500">Rincian Pecahan Uang:</h6>
                                 @if($item->detailTransaksi && $item->detailTransaksi->count())
                                     <div class="bg-slate-50/70 p-3 rounded-xl border border-slate-200/80 space-y-2">
                                         @foreach($item->detailTransaksi as $detail)
@@ -234,7 +234,7 @@
             @empty
                 <div class="bg-white rounded-2xl p-8 text-center border border-slate-200/85 space-y-2">
                     <svg class="w-10 h-10 text-slate-300 mx-auto" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12l-3-3m0 0l-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
-                    <p class="text-xs sm:text-sm font-semibold text-slate-500">Belum ada data transaksi.</p>
+                    <p class="text-xs sm:text-sm font-semibold text-slate-500">Belum ada transaksi pada periode ini.</p>
                 </div>
             @endforelse
         </div>
@@ -249,9 +249,9 @@
             <div class="flex items-center gap-1">
                 {{-- Previous Link --}}
                 @if ($transaksi->onFirstPage())
-                    <span class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-400 cursor-not-allowed font-medium">« Prev</span>
+                    <span class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-400 cursor-not-allowed font-medium">« Sebelumnya</span>
                 @else
-                    <a href="{{ $transaksi->previousPageUrl() }}" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-all">« Prev</a>
+                    <a href="{{ $transaksi->previousPageUrl() }}" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-all">« Sebelumnya</a>
                 @endif
 
                 {{-- Page Numbers --}}
@@ -265,9 +265,9 @@
 
                 {{-- Next Link --}}
                 @if ($transaksi->hasMorePages())
-                    <a href="{{ $transaksi->nextPageUrl() }}" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-all">Next »</a>
+                    <a href="{{ $transaksi->nextPageUrl() }}" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-all">Berikutnya »</a>
                 @else
-                    <span class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-400 cursor-not-allowed font-medium">Next »</span>
+                    <span class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-400 cursor-not-allowed font-medium">Berikutnya »</span>
                 @endif
             </div>
         </div>

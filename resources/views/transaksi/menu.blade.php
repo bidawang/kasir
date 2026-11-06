@@ -12,12 +12,12 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <a href="{{ route('transaksi.setor') }}" class="group min-h-36 flex items-center gap-4 rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
             <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800 text-2xl font-black">↓</span>
-            <span><span class="block text-lg font-bold text-slate-900">Setor Tunai</span><span class="mt-1 block text-sm text-slate-600">Terima uang dan kirim saldo ke wallet.</span></span>
+            <span><span class="block text-lg font-bold text-slate-900">Setor Tunai</span><span class="mt-1 block text-sm text-slate-600">Terima uang tunai dan kirim saldo ke e-wallet atau rekening bank.</span></span>
         </a>
 
         <a href="{{ route('transaksi.tarik') }}" class="group min-h-36 flex items-center gap-4 rounded-2xl border border-rose-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-rose-500">
             <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-800 text-2xl font-black">↑</span>
-            <span><span class="block text-lg font-bold text-slate-900">Tarik Tunai</span><span class="mt-1 block text-sm text-slate-600">Berikan uang tunai dari saldo wallet.</span></span>
+            <span><span class="block text-lg font-bold text-slate-900">Tarik Tunai</span><span class="mt-1 block text-sm text-slate-600">Berikan uang tunai dari saldo e-wallet atau rekening bank.</span></span>
         </a>
 
         <a href="{{ route('transaksi.kas.masuk') }}" class="group min-h-36 flex items-center gap-4 rounded-2xl border border-sky-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500">
@@ -32,7 +32,7 @@
 
         <a href="{{ route('transaksi.penjualan-item.create') }}" class="group min-h-36 flex items-center gap-4 rounded-2xl border border-primary-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary-500">
             <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-100 text-primary-800 text-2xl font-black">▣</span>
-            <span><span class="block text-lg font-bold text-slate-900">Jual Item</span><span class="mt-1 block text-sm text-slate-600">Jual item fisik, virtual, atau bank.</span></span>
+            <span><span class="block text-lg font-bold text-slate-900">Jual Barang atau Layanan</span><span class="mt-1 block text-sm text-slate-600">Jual barang fisik, layanan virtual, atau layanan bank.</span></span>
         </a>
     </div>
 

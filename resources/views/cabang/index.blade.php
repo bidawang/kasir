@@ -14,7 +14,7 @@
                     {{ $warungs->count() }}
                 </span>
             </div>
-            <p class="text-xs text-slate-500 truncate mt-0.5">Kelola seluruh lokasi cabang Agent Kas Anda</p>
+            <p class="text-xs text-slate-500 truncate mt-0.5">Lihat dan kelola semua cabang usaha Anda</p>
         </div>
 
         <a href="{{ route('cabang.create') }}"
@@ -22,7 +22,7 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
             </svg>
-            <span>Tambah</span>
+            <span>Tambah Cabang</span>
         </a>
     </div>
 
@@ -64,11 +64,11 @@
                             @if($isActive)
                                 <span class="inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-full bg-emerald-50 text-[10px] font-bold text-emerald-600 border border-emerald-200/60">
                                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    Aktif Digunakan
+                                    Cabang Aktif
                                 </span>
                             @else
                                 <span class="text-[11px] text-slate-400 font-medium block mt-0.5">
-                                    Cabang Agen
+                                    Cabang Lain
                                 </span>
                             @endif
                         </div>
@@ -81,7 +81,7 @@
                                 @csrf
                                 <button type="submit"
                                         class="px-3 py-1.5 rounded-xl bg-primary-50 hover:bg-primary-100 active:scale-95 text-primary-700 text-xs font-bold transition border border-primary-100">
-                                    Pilih
+                                    Gunakan Cabang Ini
                                 </button>
                             </form>
                         @endif
@@ -126,9 +126,9 @@
                 </svg>
             </div>
 
-            <h3 class="font-bold text-slate-800 text-sm">Belum Ada Cabang</h3>
+            <h3 class="font-bold text-slate-800 text-sm">Belum ada cabang</h3>
             <p class="text-xs text-slate-500 mt-1 mb-4 max-w-[220px] mx-auto leading-relaxed">
-                Tambahkan lokasi cabang Agent Kas pertama Anda untuk mulai mengelola transaksi.
+                Tambahkan cabang pertama untuk mulai mencatat transaksi.
             </p>
 
             <a href="{{ route('cabang.create') }}"

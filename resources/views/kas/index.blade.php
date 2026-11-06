@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Daftar Kas & E-Wallet')
+@section('title', 'Daftar Kas dan Akun Digital/Bank')
 
 @section('content')
 <div class="max-w-2xl mx-auto pb-12 space-y-5 text-slate-800">
@@ -15,9 +15,9 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v1a1 1 0 01-1 1h-3a1 1 0 00-1 1v1a1 1 0 001 1h4a1 1 0 001-1m-4-8v1m0 8v1" />
                     </svg>
                 </div>
-                Manajemen Kas & E-Wallet
+                Manajemen Kas dan Akun Digital/Bank
             </h1>
-            <p class="text-[11px] text-slate-500 font-medium mt-0.5">Kelola likuiditas saldo tunai fisik dan akun digital</p>
+            <p class="text-[11px] text-slate-500 font-medium mt-0.5">Kelola saldo tunai, e-wallet, dan rekening bank termasuk akun virtual</p>
         </div>
 @if(in_array(auth()->user()->role, ['admin', 'owner']))
         <a href="{{ route('kas.create') }}"
@@ -58,7 +58,7 @@
     {{-- SECTION 0: SUMMARY TOTAL LIKUIDITAS --}}
     <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 flex items-center justify-between gap-3">
         <div>
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Total Likuiditas Kas</span>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Total Saldo</span>
             <div class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-0.5">
                 Rp {{ number_format($totalLikuiditas, 0, ',', '.') }}
             </div>
@@ -120,40 +120,40 @@
             {{-- Filter Periode --}}
             <div class="bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/40 space-y-2">
                 <div class="flex items-center justify-between">
-                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Filter Periode</label>
+                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Pilih Periode</label>
                     <select id="filterPeriode" onchange="handlePeriodeChange()" class="bg-slate-900 text-xs text-slate-200 border border-slate-700 rounded-lg px-2 py-1 focus:outline-none focus:border-indigo-500">
                         <option value="today" selected>Hari Ini</option>
                         <option value="this_month">Bulan Ini</option>
-                        <option value="custom">Kustom Tanggal</option>
+                        <option value="custom">Pilih Tanggal</option>
                     </select>
                 </div>
 
                 {{-- Input Kustom Tanggal (Default Hidden) --}}
                 <div id="customDateContainer" class="hidden grid-cols-2 gap-2 pt-1">
                     <div>
-                        <span class="text-[9px] text-slate-400 block mb-0.5">Dari</span>
+                        <span class="text-[9px] text-slate-400 block mb-0.5">Tanggal Mulai</span>
                         <input type="date" id="startDate" class="w-full bg-slate-900 text-xs text-slate-200 border border-slate-700 rounded-lg p-1.5 focus:outline-none">
                     </div>
                     <div>
-                        <span class="text-[9px] text-slate-400 block mb-0.5">Sampai</span>
+                        <span class="text-[9px] text-slate-400 block mb-0.5">Tanggal Akhir</span>
                         <input type="date" id="endDate" class="w-full bg-slate-900 text-xs text-slate-200 border border-slate-700 rounded-lg p-1.5 focus:outline-none">
                     </div>
                     <button onclick="fetchBrilinkHistory()" class="col-span-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-1.5 rounded-lg transition-colors mt-1">
-                        Terapkan Filter
+                        Tampilkan Riwayat
                     </button>
                 </div>
             </div>
 
             {{-- Container List Riwayat Transaksi --}}
             <div id="brilinkListContainer" class="space-y-2 max-h-60 overflow-y-auto pr-1">
-                <div class="text-center py-4 text-slate-400 text-xs">Memuat data...</div>
+                <div class="text-center py-4 text-slate-400 text-xs">Memuat riwayat transaksi...</div>
             </div>
         </div>
     </div>
 
     {{-- QUICK ACTIONS: KAS & OPERASIONAL INTERN --}}
     <div class="space-y-1.5">
-        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1">Kas & Operasional Intern</span>
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1">Kas dan Operasional</span>
         <div class="grid grid-cols-3 gap-2.5">
             <a href="{{ route('transfer-kas.index') }}"
                class="bg-white hover:bg-indigo-50/50 active:scale-98 p-3 rounded-2xl border border-slate-200/80 hover:border-indigo-300 transition-all shadow-xs group flex flex-col items-center justify-center text-center">
@@ -230,7 +230,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.573 16.49 16.638 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
-                    <span>Lihat Detail Cash</span>
+                    <span>Lihat Rincian Tunai</span>
                 </a>
 				@endif
             </div>
@@ -238,14 +238,14 @@
     </div>
 @endif
 
-    {{-- SECTION 2: DAFTAR AKUN E-WALLET --}}
+    {{-- SECTION 2: DAFTAR E-WALLET DAN REKENING BANK --}}
     <div class="space-y-2.5">
         <div class="flex items-center justify-between px-1 pt-1">
             <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                 <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
                 </svg>
-                Daftar E-Wallet & Bank Digital
+                Daftar E-Wallet dan Rekening Bank
             </h3>
             <span class="text-[10px] font-extrabold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200/60">
                 {{ $kasEwallet->count() }} Akun
@@ -302,8 +302,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
-                    <p class="text-xs font-bold text-slate-700">Belum Ada Akun E-Wallet</p>
-                    <p class="text-[11px] text-slate-400 max-w-xs mx-auto">Tambahkan e-wallet (OVO, Dana, BRI, dll) untuk mempermudah pencatatan transaksi kas Anda.</p>
+                    <p class="text-xs font-bold text-slate-700">Belum ada akun e-wallet atau rekening bank</p>
+                    <p class="text-[11px] text-slate-400 max-w-xs mx-auto">Tambahkan e-wallet atau rekening bank, termasuk akun virtual, untuk mencatat transaksi.</p>
                 </div>
             @endforelse
         </div>
@@ -391,7 +391,7 @@
                         <div class="space-y-0.5">
                             <div class="flex items-center gap-2">
                                 <span class="font-bold text-slate-200">${item.kas ? (item.kas.nama_kas || item.kas.jenis_kas) : 'Kas'}</span>
-                                <span class="text-[9px] px-1.5 py-0.5 rounded border ${badgeColor} font-bold uppercase">${item.is_profit ? 'Profit' : item.jenis}</span>
+                                <span class="text-[9px] px-1.5 py-0.5 rounded border ${badgeColor} font-bold uppercase">${item.is_profit ? 'Keuntungan' : item.jenis === 'masuk' ? 'Kas Masuk' : 'Kas Keluar'}</span>
                             </div>
                             <span class="text-[10px] text-slate-400 block">${item.formatted_date}</span>
                             ${item.keterangan ? `<span class="text-[10px] text-slate-400 italic block">${item.keterangan}</span>` : ''}

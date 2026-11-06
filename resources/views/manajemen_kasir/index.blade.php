@@ -7,7 +7,7 @@
     <div class="flex items-center justify-between gap-3">
         <div>
             <h1 class="text-xl font-black text-slate-900">Manajemen Kasir</h1>
-            <p class="text-sm text-slate-500">Kelola akun staf dan cabang tempat mereka bertugas.</p>
+            <p class="text-sm text-slate-500">Kelola akun kasir dan cabang tempat mereka bekerja.</p>
         </div>
         <a href="{{ route('manajemen-kasir.create') }}" class="rounded-xl bg-primary-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-primary-700">
             Tambah Kasir
@@ -25,17 +25,17 @@
         @if($kasir->isEmpty())
             <div class="p-8 text-center">
                 <p class="font-bold text-slate-800">Belum ada akun kasir</p>
-                <p class="mt-1 text-sm text-slate-500">Buat akun kasir dan tentukan cabang penugasannya.</p>
+                <p class="mt-1 text-sm text-slate-500">Tambahkan akun kasir beserta cabang tempatnya bekerja.</p>
             </div>
         @else
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
                     <thead class="bg-slate-50 text-xs uppercase text-slate-500">
                         <tr>
-                            <th class="px-4 py-3">Nama</th>
+                            <th class="px-4 py-3">Nama Lengkap</th>
                             <th class="px-4 py-3">Email</th>
                             <th class="px-4 py-3">Cabang</th>
-                            <th class="px-4 py-3">Status</th>
+                            <th class="px-4 py-3">Status Akun</th>
                             <th class="px-4 py-3 text-right">Aksi</th>
                         </tr>
                     </thead>
@@ -47,12 +47,12 @@
                                 <td class="px-4 py-3 text-slate-600">{{ $akun->warungs->pluck('nama_warung')->join(', ') ?: '-' }}</td>
                                 <td class="px-4 py-3">
                                     <span class="rounded-full px-2.5 py-1 text-xs font-bold {{ $akun->status === 'aktif' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600' }}">
-                                        {{ ucfirst($akun->status) }}
+                                        {{ $akun->status === 'aktif' ? 'Aktif' : 'Tidak aktif' }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3">
                                     <div class="flex justify-end gap-2">
-                                        <a href="{{ route('manajemen-kasir.edit', $akun) }}" class="rounded-lg bg-amber-50 px-3 py-1.5 font-bold text-amber-700 hover:bg-amber-100">Edit</a>
+                                        <a href="{{ route('manajemen-kasir.edit', $akun) }}" class="rounded-lg bg-amber-50 px-3 py-1.5 font-bold text-amber-700 hover:bg-amber-100">Ubah</a>
                                         <form method="POST" action="{{ route('manajemen-kasir.destroy', $akun) }}" onsubmit="return confirm('Hapus akun kasir ini?')">
                                             @csrf
                                             @method('DELETE')

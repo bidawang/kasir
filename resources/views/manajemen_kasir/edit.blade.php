@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Kasir')
+@section('title', 'Ubah Akun Kasir')
 
 @section('content')
 <div class="max-w-xl mx-auto space-y-5">
-    <h1 class="text-xl font-black text-slate-900">Edit Akun Kasir</h1>
+    <h1 class="text-xl font-black text-slate-900">Ubah Akun Kasir</h1>
     <form method="POST" action="{{ route('manajemen-kasir.update', $manajemenKasir) }}" class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5">
         @csrf
         @method('PUT')

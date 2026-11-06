@@ -12,7 +12,7 @@
                 Transfer Dana
             </h2>
             <p class="text-xs sm:text-sm text-slate-500 mt-1">
-                Riwayat pemindahan dana antar kas
+                Riwayat pemindahan saldo antar akun kas
             </p>
         </div>
 
@@ -25,7 +25,7 @@
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h10m0 0v10m0-10L7 17"/>
             </svg>
-            Transfer Dana
+            Buat Transfer
         </a>
     </div>
 
@@ -65,10 +65,10 @@
 
             <div class="flex items-end gap-2">
                 <button type="submit" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white rounded-xl py-2.5 text-sm font-bold transition">
-                    Filter
+                    Tampilkan
                 </button>
                 <a href="{{ route('transfer-kas.index') }}" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold transition">
-                    Reset
+                    Hapus Filter
                 </a>
             </div>
         </div>
@@ -81,9 +81,9 @@
                 <thead class="bg-slate-50 border-b border-slate-200">
                     <tr>
                         <th class="text-left px-5 py-3 text-xs font-bold text-slate-500">Tanggal</th>
-                        <th class="text-left px-5 py-3 text-xs font-bold text-slate-500">Dari</th>
+                        <th class="text-left px-5 py-3 text-xs font-bold text-slate-500">Akun Pengirim</th>
                         <th class="text-center px-5 py-3 text-xs font-bold text-slate-500">→</th>
-                        <th class="text-left px-5 py-3 text-xs font-bold text-slate-500">Ke</th>
+                        <th class="text-left px-5 py-3 text-xs font-bold text-slate-500">Akun Penerima</th>
                         <th class="text-right px-5 py-3 text-xs font-bold text-slate-500">Jumlah</th>
                         <th class="text-right px-5 py-3 text-xs font-bold text-slate-500">Biaya</th>
                         <th class="text-left px-5 py-3 text-xs font-bold text-slate-500">Keterangan</th>
@@ -95,9 +95,9 @@
                             $payload = json_encode([
                                 'id' => $transfer->id,
                                 'kas_asal' => $transfer->kasAsal->jenis_kas ?? '-',
-                                'status_asal' => ucfirst($transfer->kasAsal->status ?? '-'),
+                                'status_asal' => ($transfer->kasAsal->status ?? null) === 'cash' ? 'Tunai' : (($transfer->kasAsal->status ?? null) === 'ewallet' ? 'E-wallet atau rekening bank' : '-'),
                                 'kas_tujuan' => $transfer->kasTujuan->jenis_kas ?? '-',
-                                'status_tujuan' => ucfirst($transfer->kasTujuan->status ?? '-'),
+                                'status_tujuan' => ($transfer->kasTujuan->status ?? null) === 'cash' ? 'Tunai' : (($transfer->kasTujuan->status ?? null) === 'ewallet' ? 'E-wallet atau rekening bank' : '-'),
                                 'jumlah' => number_format($transfer->jumlah, 0, ',', '.'),
                                 'biaya_transfer' => number_format($transfer->biaya_transfer ?? 0, 0, ',', '.'),
                                 'total_keluar' => number_format($transfer->jumlah + ($transfer->biaya_transfer ?? 0), 0, ',', '.'),
@@ -113,14 +113,14 @@
                             </td>
                             <td class="px-5 py-4">
                                 <div class="font-bold text-slate-800">{{ $transfer->kasAsal->jenis_kas ?? '-' }}</div>
-                                <div class="text-xs text-slate-400 mt-0.5">{{ ucfirst($transfer->kasAsal->status ?? '-') }}</div>
+                                <div class="text-xs text-slate-400 mt-0.5">{{ ($transfer->kasAsal->status ?? null) === 'cash' ? 'Tunai' : (($transfer->kasAsal->status ?? null) === 'ewallet' ? 'E-wallet atau rekening bank' : '-') }}</div>
                             </td>
                             <td class="px-5 py-4 text-center">
                                 <span class="text-primary-500 font-bold text-lg">→</span>
                             </td>
                             <td class="px-5 py-4">
                                 <div class="font-bold text-slate-800">{{ $transfer->kasTujuan->jenis_kas ?? '-' }}</div>
-                                <div class="text-xs text-slate-400 mt-0.5">{{ ucfirst($transfer->kasTujuan->status ?? '-') }}</div>
+                                <div class="text-xs text-slate-400 mt-0.5">{{ ($transfer->kasTujuan->status ?? null) === 'cash' ? 'Tunai' : (($transfer->kasTujuan->status ?? null) === 'ewallet' ? 'E-wallet atau rekening bank' : '-') }}</div>
                             </td>
                             <td class="px-5 py-4 text-right font-extrabold text-slate-800">
                                 Rp {{ number_format($transfer->jumlah, 0, ',', '.') }}
@@ -141,7 +141,7 @@
                                     </svg>
                                 </div>
                                 <p class="font-bold text-slate-500">Belum ada transfer dana</p>
-                                <p class="text-xs text-slate-400 mt-1">Transfer antar kas akan muncul di sini.</p>
+                                <p class="text-xs text-slate-400 mt-1">Riwayat pemindahan saldo akan muncul di sini.</p>
                             </td>
                         </tr>
                     @endforelse
@@ -157,9 +157,9 @@
                 $payload = json_encode([
                     'id' => $transfer->id,
                     'kas_asal' => $transfer->kasAsal->jenis_kas ?? '-',
-                    'status_asal' => ucfirst($transfer->kasAsal->status ?? '-'),
+                    'status_asal' => ($transfer->kasAsal->status ?? null) === 'cash' ? 'Tunai' : (($transfer->kasAsal->status ?? null) === 'ewallet' ? 'E-wallet atau rekening bank' : '-'),
                     'kas_tujuan' => $transfer->kasTujuan->jenis_kas ?? '-',
-                    'status_tujuan' => ucfirst($transfer->kasTujuan->status ?? '-'),
+                    'status_tujuan' => ($transfer->kasTujuan->status ?? null) === 'cash' ? 'Tunai' : (($transfer->kasTujuan->status ?? null) === 'ewallet' ? 'E-wallet atau rekening bank' : '-'),
                     'jumlah' => number_format($transfer->jumlah, 0, ',', '.'),
                     'biaya_transfer' => number_format($transfer->biaya_transfer ?? 0, 0, ',', '.'),
                     'total_keluar' => number_format($transfer->jumlah + ($transfer->biaya_transfer ?? 0), 0, ',', '.'),

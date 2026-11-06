@@ -12,7 +12,7 @@
 
         <div class="relative z-10 space-y-3">
             <div class="flex items-center justify-between">
-                <span class="text-xs text-slate-300 font-semibold uppercase tracking-wider">Total Likuiditas Kas</span>
+                <span class="text-xs text-slate-300 font-semibold uppercase tracking-wider">Total Saldo Kas</span>
                 <span class="inline-flex items-center gap-1.5 text-[10px] bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-0.5 rounded-md text-emerald-300 font-bold">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     {{ $kasir->nama_warung ?? 'Cabang Aktif' }}
@@ -20,7 +20,7 @@
             </div>
 
             <div>
-                <span class="text-xs text-slate-400 block font-medium">Saldo Gabungan Tunai & E-Wallet</span>
+                <span class="text-xs text-slate-400 block font-medium">Total saldo tunai, e-wallet, dan rekening bank</span>
                 <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white mt-0.5">
                     Rp {{ number_format($totalSaldo ?? 0, 0, ',', '.') }}
                 </h1>
@@ -97,7 +97,7 @@
                                 <div class="flex items-center gap-2">
                                     <span class="font-bold text-slate-800">Rp {{ number_format($detail->pecahan, 0, ',', '.') }}</span>
                                     <span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-bold text-[10px] border border-slate-200">
-                                        {{ number_format($detail->jumlah, 0, ',', '.') }} lbr
+                                        {{ number_format($detail->jumlah, 0, ',', '.') }} lembar
                                     </span>
                                 </div>
                                 <span class="font-extrabold text-slate-900">
@@ -119,14 +119,14 @@
         </div>
     @endif
 
-    {{-- Saldo Per Akun E-Wallet (HANYA status = ewallet) --}}
+    {{-- Saldo per akun digital dan rekening bank --}}
     <div class="space-y-2">
         <div class="flex items-center justify-between px-1">
             <h2 class="font-bold text-slate-700 text-xs uppercase tracking-wider flex items-center gap-1.5">
                 <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
                 </svg>
-                Saldo E-Wallet / Akun Bank
+                Saldo E-Wallet dan Rekening Bank
             </h2>
             @if(auth()->check() && auth()->user()->role === 'admin')
                 <a href="{{ route('kas.index') }}" class="text-[11px] text-emerald-600 font-bold hover:underline flex items-center gap-0.5">
@@ -142,7 +142,7 @@
                     <div class="flex items-center justify-between mb-1">
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate block">{{ $kas->jenis_kas }}</span>
                         <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-blue-50 text-blue-600">
-                            E-WALLET
+                            AKUN DIGITAL/BANK
                         </span>
                     </div>
                     <h3 class="font-extrabold text-slate-900 text-xs sm:text-sm truncate">
@@ -151,7 +151,7 @@
                 </div>
             @empty
                 <div class="col-span-full bg-white rounded-xl p-4 text-center border border-slate-200/80 text-slate-400 text-xs shadow-2xs">
-                    Belum ada akun E-Wallet / Bank yang ditambahkan.
+                    Belum ada e-wallet atau rekening bank yang ditambahkan.
                 </div>
             @endforelse
         </div>
@@ -167,7 +167,7 @@
                 Transaksi Terbaru
             </h2>
             <a href="{{ route('transaksi.index') }}" class="text-[11px] text-emerald-600 font-bold hover:underline flex items-center gap-0.5">
-                Lihat Semua
+                Lihat Semua Transaksi
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
             </a>
         </div>

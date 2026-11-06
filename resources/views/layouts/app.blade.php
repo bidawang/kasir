@@ -129,7 +129,7 @@
                             <span class="text-[9px] sm:text-[10px] font-extrabold tracking-widest text-primary-200 uppercase">Agent Kas</span>
                             @if($cabangAktif)
                                 <span class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Active
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Aktif
                                 </span>
                             @endif
                         </div>
@@ -192,13 +192,13 @@
         Kas
     </a>
 
-    {{-- Item Jualan --}}
+    {{-- Barang dan Layanan --}}
     <a href="{{ route('item-jualan.index') }}"
        class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('item-jualan.*') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l2.4 12.2a2 2 0 002 1.6h8.8a2 2 0 002-1.6L22 8H6M10 21h.01M18 21h.01"/>
         </svg>
-        Item
+        Barang
     </a>
 
     {{-- Biaya Admin --}}
@@ -219,7 +219,7 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2m12-13a4 4 0 11-8 0 4 4 0 018 0zm2 13h4v-2a4 4 0 00-3-3.87M18 3.13a4 4 0 010 7.75"/>
             </svg>
-            Kasir
+            Kelola Kasir
         </a>
         <a href="{{ route('cabang.index') }}" 
            class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('cabang.*') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
@@ -244,9 +244,9 @@
                     </a>
 
                     <button type="button" 
-                            onclick="event.preventDefault(); if(confirm('Yakin ingin keluar dari sistem?')) document.getElementById('logout-form').submit();"
+                            onclick="event.preventDefault(); if(confirm('Apakah Anda yakin ingin keluar?')) document.getElementById('logout-form').submit();"
                             class="hidden md:flex items-center justify-center p-2 rounded-xl text-blue-200 hover:text-white hover:bg-white/10 transition-colors ml-1"
-                            title="Keluar / Logout">
+                            title="Keluar">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
                         </svg>
@@ -332,7 +332,7 @@
                     <span class="text-[9px] sm:text-[10px] tracking-tight mt-0.5">Kas</span>
                 </a>
 
-                <!-- 4. Item Jualan -->
+                <!-- 4. Barang dan Layanan -->
                 <a href="{{ route('item-jualan.index') }}"
                    class="flex flex-col items-center justify-center py-1 transition-colors group {{ request()->routeIs('item-jualan.*') ? 'text-primary-600 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="{{ request()->routeIs('item-jualan.*') ? '2.5' : '2' }}" viewBox="0 0 24 24">
@@ -372,7 +372,7 @@
 
                 <!-- Keluar -->
                 <button type="button" 
-                        onclick="event.preventDefault(); if(confirm('Yakin ingin keluar dari sistem?')) document.getElementById('logout-form').submit();"
+                        onclick="event.preventDefault(); if(confirm('Apakah Anda yakin ingin keluar?')) document.getElementById('logout-form').submit();"
                         class="flex flex-col items-center justify-center py-1 text-slate-400 hover:text-rose-500 transition-colors group font-medium">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>

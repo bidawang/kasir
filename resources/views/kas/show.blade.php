@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Detail Kas')
+@section('title', 'Detail Akun Kas')
 
 @section('content')
 <div class="max-w-2xl mx-auto space-y-5">
@@ -8,7 +8,7 @@
     <!-- Header Section -->
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">Detail Kas</h1>
+            <h1 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">Detail Akun</h1>
             <p class="text-xs text-slate-500 font-medium">{{ $kas->jenis_kas ?? 'Kas ID ' . $kas->id }}</p>
         </div>
         <a href="{{ route('kas.index') }}"
@@ -68,7 +68,7 @@
                     <button type="submit" 
                             class="bg-primary-600 hover:bg-primary-700 active:scale-95 text-white px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold shadow-sm shadow-primary-500/25 transition-all duration-200 flex items-center gap-1.5">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
-                        <span>Update Detail Kas</span>
+                        <span>Simpan Rincian Kas</span>
                     </button>
                 </div>
             </form>

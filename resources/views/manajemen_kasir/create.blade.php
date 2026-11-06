@@ -7,7 +7,7 @@
     <h1 class="text-xl font-black text-slate-900">Tambah Akun Kasir</h1>
     @if($warungs->isEmpty())
         <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-            Buat cabang terlebih dahulu sebelum menambahkan kasir.
+            Anda perlu menambahkan cabang sebelum membuat akun kasir.
             <a href="{{ route('cabang.create') }}" class="font-bold underline">Tambah cabang</a>
         </div>
     @else

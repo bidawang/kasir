@@ -10,7 +10,7 @@
     <div class="flex items-center justify-between px-1">
         <div>
             <h1 class="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">Tambah Transaksi Baru</h1>
-            <p class="text-[11px] text-slate-500 font-medium">Setor atau tarik tunai dengan rincian pecahan</p>
+            <p class="text-[11px] text-slate-500 font-medium">Catat setoran atau penarikan tunai beserta jumlah tiap pecahan uang</p>
         </div>
         <a href="{{ route('transaksi.index') }}"
            class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1 shadow-xs">
@@ -162,7 +162,7 @@
                         <div class="flex items-center justify-between p-1.5 px-2 bg-white rounded-lg border border-slate-200 hover:border-amber-300 transition-all">
                             <div>
                                 <div class="text-[11px] font-bold text-slate-800" x-text="'Rp ' + formatIDR(item.pecahan)"></div>
-                                <div class="text-[9px] font-semibold" :class="item.stok > 0 ? 'text-slate-400' : 'text-rose-500'" x-text="'Stok: ' + item.stok + ' lbr'"></div>
+                                <div class="text-[9px] font-semibold" :class="item.stok > 0 ? 'text-slate-400' : 'text-rose-500'" x-text="'Stok: ' + item.stok + ' lembar'"></div>
                             </div>
                             
                             <div class="flex items-center gap-1">
@@ -210,7 +210,7 @@
     <div class="fixed bottom-3 left-3 right-3 max-w-xl mx-auto z-50">
         <div class="bg-slate-900/95 backdrop-blur-md text-white px-3.5 py-2.5 rounded-xl border border-slate-800 shadow-xl flex items-center justify-between gap-2">
             <div>
-                <div class="text-[9px] text-slate-400 uppercase tracking-wider font-bold">Total Transaksi Netto</div>
+                <div class="text-[9px] text-slate-400 uppercase tracking-wider font-bold">Total Bersih</div>
                 <div class="text-sm sm:text-base font-black text-emerald-400" x-text="'Rp ' + formatIDR(grandTotal)"></div>
             </div>
             
@@ -317,28 +317,28 @@
             handleSubmit(e) {
                 // Handle Validasi 1: Kas Belum Dipilih
                 if (!this.selectedKasId || !this.selectedKasTujuanId) {
-                    alert('Silakan pilih Kas Asal dan Kas Tujuan terlebih dahulu!');
+                    alert('Pilih akun kas asal dan tujuan terlebih dahulu.');
                     e.preventDefault();
                     return false;
                 }
 
                 // Handle Validasi 2: Kas Asal dan Kas Tujuan Sama
                 if (this.selectedKasId == this.selectedKasTujuanId) {
-                    alert('Kas Asal dan Kas Tujuan tidak boleh sama!');
+                    alert('Akun kas asal dan tujuan tidak boleh sama.');
                     e.preventDefault();
                     return false;
                 }
 
                 // Handle Validasi 3: Kembalian > Total Uang Masuk
                 if (this.totalKembalian > this.totalUang) {
-                    alert('Uang kembalian tidak boleh melebihi total uang utama yang diserahkan!');
+                    alert('Jumlah kembalian tidak boleh melebihi jumlah uang yang diterima atau diberikan.');
                     e.preventDefault();
                     return false;
                 }
 
                 // Handle Validasi 4: Grand Total Bernilai Minus
                 if (this.grandTotal < 0) {
-                    alert('Grand total transaksi tidak boleh minus!');
+                    alert('Jumlah akhir transaksi tidak boleh kurang dari Rp 0.');
                     e.preventDefault();
                     return false;
                 }
@@ -346,7 +346,7 @@
                 // Handle Validasi 5: Cek Stok Kembalian yang Diinput
                 for (let chg of this.changeDenominations) {
                     if (chg.jumlah > chg.stok) {
-                        alert(`Jumlah lembar pecahan Rp ${this.formatIDR(chg.pecahan)} melebihi stok yang tersedia di laci (${chg.stok} lbr)!`);
+                        alert(`Jumlah uang pecahan Rp ${this.formatIDR(chg.pecahan)} melebihi stok yang tersedia (${chg.stok} lembar).`);
                         e.preventDefault();
                         return false;
                     }

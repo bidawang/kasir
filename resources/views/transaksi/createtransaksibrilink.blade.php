@@ -22,7 +22,7 @@
                     </span>
                 </h1>
                 <p class="text-[11px] text-slate-500 font-medium mt-0.5">
-                    {{ $jenisTransaksi === 'masuk' ? 'Pemasukan saldo kas/e-wallet operasional' : 'Pengeluaran/biaya operasional usaha' }}
+                    {{ $jenisTransaksi === 'masuk' ? 'Catat uang yang masuk ke kas, e-wallet, atau rekening bank' : 'Catat pengeluaran atau biaya operasional usaha' }}
                 </p>
             </div>
         </div>
@@ -52,7 +52,7 @@
             {{-- Pilih Akun Kas --}}
             <div>
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Pilih Akun Kas / E-Wallet <span class="text-rose-500">*</span>
+                    Pilih akun kas, e-wallet, atau rekening bank <span class="text-rose-500">*</span>
                 </label>
                 <select name="id_kas" 
                         x-model="selectedKasId" 
@@ -102,7 +102,7 @@
                        required
                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-black text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all">
                 <template x-if="isCash">
-                    <p class="text-[10px] text-amber-600 font-semibold mt-1">* Nominal otomatis dihitung berdasarkan rincian pecahan fisik di bawah.</p>
+                    <p class="text-[10px] text-amber-600 font-semibold mt-1">*                     Nominal dihitung otomatis dari rincian pecahan uang di bawah.</p>
                 </template>
             </div>
 
@@ -126,8 +126,8 @@
                            @checked(old('is_profit'))
                            class="mt-0.5 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500">
                     <span>
-                        <span class="block text-xs font-bold text-emerald-800">Tandai sebagai keuntungan (profit)</span>
-                        <span class="block text-[11px] text-emerald-700 mt-0.5">Nominal kas masuk ini akan dihitung ke statistik keuntungan.</span>
+                        <span class="block text-xs font-bold text-emerald-800">Hitung sebagai keuntungan</span>
+                        <span class="block text-[11px] text-emerald-700 mt-0.5">Uang masuk ini akan ditambahkan ke total keuntungan.</span>
                     </span>
                 </label>
             @endif
@@ -166,7 +166,7 @@
                 </div>
 
                 <div class="pt-2 border-t border-slate-100 flex justify-between items-center text-xs font-black text-slate-900">
-                    <span>Total Fisik Calculated:</span>
+                    <span>Total Uang Tunai:</span>
                     <span x-text="'Rp ' + formatRupiah(calculatedCashTotal)"></span>
                 </div>
             </div>
@@ -231,7 +231,7 @@ function kasTransactionApp(kasList, jenis) {
         prepareSubmit(e) {
             if (this.isCash && this.totalNominal <= 0) {
                 e.preventDefault();
-                alert('Silakan isi jumlah lembar pecahan uang fisik terlebih dahulu!');
+                alert('Isi jumlah lembar atau koin yang digunakan terlebih dahulu.');
             }
         },
 
