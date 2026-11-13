@@ -64,6 +64,8 @@ class ItemJualanBiayaAdminTest extends TestCase
         $this->get(route('transaksi.penjualan-item.create'))
             ->assertOk()
             ->assertSeeInOrder(['Jenis Item', 'Pilih jenis item', 'Item Jualan'])
+            ->assertDontSee('Kas Tunai Penerima')
+            ->assertDontSee('name="id_kas"')
             ->assertSee('Uang pelanggan kurang')
             ->assertSee('Uang pelanggan pas')
             ->assertSee('Uang pelanggan lebih')
@@ -72,7 +74,6 @@ class ItemJualanBiayaAdminTest extends TestCase
             ->assertSee('Cari nama item');
         $this->post(route('transaksi.penjualan-item.store'), [
             'id_item_jualan' => $item->id,
-            'id_kas' => $kas->id,
             'harga_item' => 12000,
             'id_kas_sumber' => $wallet->id,
             'denominations_json' => json_encode([
@@ -149,7 +150,6 @@ class ItemJualanBiayaAdminTest extends TestCase
         $this->actingAs($user)->withSession(['id_warung' => $warung->id]);
         $this->post(route('transaksi.penjualan-item.store'), [
             'id_item_jualan' => $item->id,
-            'id_kas' => $kas->id,
             'denominations_json' => json_encode([['pecahan' => 10000, 'jumlah' => 1]]),
             'change_denominations_json' => json_encode([['pecahan' => 2000, 'jumlah' => 2]]),
             'change_total' => 4000,
@@ -192,7 +192,6 @@ class ItemJualanBiayaAdminTest extends TestCase
                 : [['pecahan' => 2000, 'jumlah' => 2]];
             $this->post(route('transaksi.penjualan-item.store'), [
                 'id_item_jualan' => $item->id,
-                'id_kas' => $kas->id,
                 'denominations_json' => json_encode([['pecahan' => 10000, 'jumlah' => 1]]),
                 'change_denominations_json' => json_encode($changeDenominations),
                 'change_total' => $change,
@@ -229,7 +228,6 @@ class ItemJualanBiayaAdminTest extends TestCase
         $this->actingAs($user)->withSession(['id_warung' => $warung->id]);
         $this->post(route('transaksi.penjualan-item.store'), [
             'id_item_jualan' => $item->id,
-            'id_kas' => $cash->id,
             'id_kas_sumber' => $wallet->id,
             'harga_item' => 10000,
             'biaya_admin_manual' => 500,
