@@ -109,6 +109,14 @@ class TransferKasController extends Controller
             'pecahan.*'        => 'nullable|integer|min:0',
         ]);
 
+        foreach (array_keys($request->input('pecahan', [])) as $pecahan) {
+            if (!in_array((int) $pecahan, DetailKas::DENOMINATIONS, true)) {
+                throw ValidationException::withMessages([
+                    'pecahan' => 'Daftar pecahan uang tidak valid.',
+                ]);
+            }
+        }
+
         DB::beginTransaction();
 
         try {
@@ -161,7 +169,7 @@ class TransferKasController extends Controller
 
                         $detailTujuan = DetailKas::firstOrCreate([
                             'id_kas_warung' => $kasTujuan->id,
-                            'pecahan'       => $nilaiPecahan,
+                            'pecahan'       => (string) $nilaiPecahan,
                         ], ['jumlah' => 0]);
 
                         $detailTujuan->jumlah += $lembar;

@@ -11,7 +11,7 @@ return new class extends Migration
     {
         Schema::create('transaksi', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_kas_warung')->constrained('kas')->onDelete('cascade');
+            $table->foreignId('id_kas_warung')->constrained('kas')->cascadeOnDelete();
             $table->unsignedBigInteger('total');
             $table->string('metode_pembayaran');
             $table->text('keterangan')->nullable();

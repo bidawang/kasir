@@ -3,22 +3,22 @@
 @section('title', 'Tambah Akun Kas')
 
 @section('content')
-<div class="max-w-xl mx-auto space-y-5">
+<div class="max-w-2xl mx-auto space-y-5">
 
     <!-- Header Section -->
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
+            <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                 Tambah Akun Kas
             </h1>
-            <p class="text-xs text-slate-500 font-medium">
+            <p class="text-sm text-slate-500 font-medium">
                 Masukkan nama akun dan saldo awal, misalnya kas tunai, e-wallet, atau rekening bank
             </p>
         </div>
 
         <a href="{{ route('kas.index') }}"
-           class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors flex items-center gap-1.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+           class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
             </svg>
             <span>Kembali</span>
@@ -27,7 +27,7 @@
 
     <!-- Form -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 sm:p-6">
-        <form action="{{ route('kas.store') }}" method="POST" class="space-y-4">
+        <form action="{{ route('kas.store') }}" method="POST" class="space-y-5">
             @csrf
 
             {{-- Ganti dengan id warung yang sesuai --}}
@@ -35,13 +35,13 @@
 
             <!-- Nama Akun -->
             <div>
-                <label for="jenis_kas" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">
+                <label for="jenis_kas" class="block text-sm font-semibold text-slate-700 mb-2">
                     Nama Akun
                 </label>
 
                 <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M2.25 18.75a60.07 60.07 0 0115.75 0M2.25 12h19.5m-19.5-6.75a60.07 60.07 0 0115.75 0M12 2.25v19.5"/>
                         </svg>
@@ -54,17 +54,17 @@
                         value="{{ old('jenis_kas') }}"
                         required
                         placeholder="Contoh: Kas Tunai, OVO, atau Bank BRI"
-                        class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border
+                        class="w-full pl-11 pr-4 py-3 bg-slate-50 border
                         @error('jenis_kas')
                             border-rose-300 focus:ring-rose-500 focus:border-rose-500
                         @else
                             border-slate-200 focus:border-primary-500 focus:ring-primary-500
                         @enderror
-                        rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 transition-all duration-200">
+                        rounded-xl text-sm sm:text-base font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 transition-all duration-200">
                 </div>
 
                 @error('jenis_kas')
-                    <p class="mt-1 text-xs text-rose-500 font-medium">
+                    <p class="mt-1.5 text-sm text-rose-500 font-medium">
                         {{ $message }}
                     </p>
                 @enderror
@@ -72,12 +72,12 @@
 
             <!-- Saldo -->
             <div>
-                <label for="saldo" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">
+                <label for="saldo" class="block text-sm font-semibold text-slate-700 mb-2">
                     Saldo Awal
                 </label>
 
                 <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 font-semibold text-xs">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 font-semibold text-sm">
                         Rp
                     </span>
 
@@ -90,17 +90,17 @@
                         step="1"
                         required
                         placeholder="0"
-                        class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border
+                        class="w-full pl-11 pr-4 py-3 bg-slate-50 border
                         @error('saldo')
                             border-rose-300 focus:ring-rose-500 focus:border-rose-500
                         @else
                             border-slate-200 focus:border-primary-500 focus:ring-primary-500
                         @enderror
-                        rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 transition-all duration-200">
+                        rounded-xl text-sm sm:text-base font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 transition-all duration-200">
                 </div>
 
                 @error('saldo')
-                    <p class="mt-1 text-xs text-rose-500 font-medium">
+                    <p class="mt-1.5 text-sm text-rose-500 font-medium">
                         {{ $message }}
                     </p>
                 @enderror
@@ -109,12 +109,12 @@
             <!-- Button -->
             <div class="pt-3 flex items-center justify-end gap-3">
                 <a href="{{ route('kas.index') }}"
-                   class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs sm:text-sm font-semibold hover:bg-slate-50 transition-colors">
+                   class="px-5 py-3 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors min-h-12 flex items-center">
                     Batal
                 </a>
 
                 <button type="submit"
-                        class="bg-primary-600 hover:bg-primary-700 active:scale-95 text-white px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold shadow-sm shadow-primary-500/25 transition-all duration-200">
+                        class="bg-primary-600 hover:bg-primary-700 active:scale-95 text-white px-6 py-3 rounded-xl text-sm font-semibold shadow-sm shadow-primary-500/25 transition-all duration-200 min-h-12">
                     Simpan Akun
                 </button>
             </div>

@@ -6,29 +6,29 @@
 <div class="space-y-4 max-w-2xl mx-auto pb-10 text-slate-800">
 
     {{-- Ringkasan Saldo Utama --}}
-    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-5 text-white shadow-lg border border-slate-800">
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 text-white shadow-lg border border-slate-800">
         <!-- Background Decorative Blur -->
         <div class="absolute -right-8 -bottom-8 w-36 h-36 bg-emerald-500/15 rounded-full blur-2xl pointer-events-none"></div>
 
         <div class="relative z-10 space-y-3">
             <div class="flex items-center justify-between">
-                <span class="text-xs text-slate-300 font-semibold uppercase tracking-wider">Total Saldo Kas</span>
-                <span class="inline-flex items-center gap-1.5 text-[10px] bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-0.5 rounded-md text-emerald-300 font-bold">
+                <span class="text-sm text-slate-300 font-semibold uppercase tracking-wider">Total Saldo Kas</span>
+                <span class="inline-flex items-center gap-1.5 text-xs bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-0.5 rounded-md text-emerald-300 font-bold">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     {{ $kasir->nama_warung ?? 'Cabang Aktif' }}
                 </span>
             </div>
 
             <div>
-                <span class="text-xs text-slate-400 block font-medium">Total saldo tunai, e-wallet, dan rekening bank</span>
-                <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white mt-0.5">
+                <span class="text-sm text-slate-400 block font-medium">Total saldo tunai, e-wallet, dan rekening bank</span>
+                <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white mt-1">
                     Rp {{ number_format($totalSaldo ?? 0, 0, ',', '.') }}
                 </h1>
             </div>
 
-            <div class="grid grid-cols-2 gap-2.5 pt-3 border-t border-slate-800">
+            <div class="grid grid-cols-2 gap-3 pt-4 border-t border-slate-800">
                 <div class="bg-white/5 backdrop-blur-md rounded-xl p-2.5 border border-white/10">
-                    <p class="text-[10px] text-slate-300 font-semibold flex items-center gap-1 uppercase tracking-wider">
+                    <p class="text-xs text-slate-300 font-semibold flex items-center gap-1 uppercase tracking-wider">
                         <svg class="w-3 h-3 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19.5v-15m0 0l-6 6m6-6l6 6"/></svg>
                         Pemasukan Hari Ini
                     </p>
@@ -38,7 +38,7 @@
                 </div>
 
                 <div class="bg-white/5 backdrop-blur-md rounded-xl p-2.5 border border-white/10">
-                    <p class="text-[10px] text-slate-300 font-semibold flex items-center gap-1 uppercase tracking-wider">
+                    <p class="text-xs text-slate-300 font-semibold flex items-center gap-1 uppercase tracking-wider">
                         <svg class="w-3 h-3 text-rose-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m0 0l6-6m-6 6l-6-6"/></svg>
                         Pengeluaran Hari Ini
                     </p>
@@ -64,16 +64,16 @@
                     <div class="truncate">
                         <h2 class="font-bold text-slate-900 text-xs sm:text-sm group-hover:text-emerald-700 transition-colors flex items-center gap-1.5">
                             Kas Tunai Fisik
-                            <span class="text-[9px] font-extrabold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded uppercase">Fisik</span>
+                            <span class="text-xs font-extrabold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded uppercase">Fisik</span>
                         </h2>
-                        <p class="text-[11px] text-slate-500 font-medium truncate">
+                        <p class="text-sm text-slate-500 font-medium truncate">
                             Saldo: <span class="text-slate-900 font-bold">Rp {{ number_format($kasTunai->saldo ?? 0, 0, ',', '.') }}</span>
                         </p>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-2 shrink-0 ml-2">
-                    <span class="text-[10px] font-bold text-slate-400 hidden sm:inline" x-text="open ? 'Sembunyikan' : 'Rincian Pecahan'"></span>
+                    <span class="text-xs font-bold text-slate-400 hidden sm:inline" x-text="open ? 'Sembunyikan' : 'Rincian Pecahan'"></span>
                     <div class="w-6 h-6 rounded-md bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-slate-200 transition-colors">
                         <svg class="w-3.5 h-3.5 transition-transform duration-300" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
@@ -96,7 +96,7 @@
                             <div class="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-slate-200/70 text-xs shadow-2xs">
                                 <div class="flex items-center gap-2">
                                     <span class="font-bold text-slate-800">Rp {{ number_format($detail->pecahan, 0, ',', '.') }}</span>
-                                    <span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-bold text-[10px] border border-slate-200">
+                                    <span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-bold text-xs border border-slate-200">
                                         {{ number_format($detail->jumlah, 0, ',', '.') }} lembar
                                     </span>
                                 </div>
@@ -129,7 +129,7 @@
                 Saldo E-Wallet dan Rekening Bank
             </h2>
             @if(auth()->check() && auth()->user()->role === 'admin')
-                <a href="{{ route('kas.index') }}" class="text-[11px] text-emerald-600 font-bold hover:underline flex items-center gap-0.5">
+                <a href="{{ route('kas.index') }}" class="text-sm text-emerald-600 font-bold hover:underline flex items-center gap-0.5">
                     Kelola Kas
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
                 </a>
@@ -140,8 +140,8 @@
             @forelse($saldoEwallet as $kas)
                 <div class="bg-white rounded-xl p-3 border border-slate-200/80 shadow-2xs hover:border-slate-300 transition-all">
                     <div class="flex items-center justify-between mb-1">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate block">{{ $kas->jenis_kas }}</span>
-                        <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-blue-50 text-blue-600">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider truncate block">{{ $kas->jenis_kas }}</span>
+                        <span class="text-xs font-bold px-1.5 py-0.2 rounded bg-blue-50 text-blue-600">
                             AKUN DIGITAL/BANK
                         </span>
                     </div>
@@ -166,7 +166,7 @@
                 </svg>
                 Transaksi Terbaru
             </h2>
-            <a href="{{ route('transaksi.index') }}" class="text-[11px] text-emerald-600 font-bold hover:underline flex items-center gap-0.5">
+            <a href="{{ route('transaksi.index') }}" class="text-sm text-emerald-600 font-bold hover:underline flex items-center gap-0.5">
                 Lihat Semua Transaksi
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
             </a>
@@ -187,7 +187,7 @@
                             <h3 class="font-bold text-slate-800 text-xs truncate">
                                 {{ $transaksi->keterangan ?? 'Transaksi Kas' }}
                             </h3>
-                            <p class="text-[10px] text-slate-400 font-medium">
+                            <p class="text-xs text-slate-400 font-medium">
                                 {{ $transaksi->created_at->diffForHumans() }}
                             </p>
                         </div>
@@ -197,7 +197,7 @@
                         <p class="font-extrabold text-xs {{ $transaksi->jenis == 'masuk' ? 'text-emerald-600' : 'text-rose-600' }}">
                             {{ $transaksi->jenis == 'masuk' ? '+' : '-' }} Rp {{ number_format($transaksi->total, 0, ',', '.') }}
                         </p>
-                        <span class="inline-block text-[9px] font-bold bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded border border-slate-200/60 mt-0.5">
+                        <span class="inline-block text-xs font-bold bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded border border-slate-200/60 mt-0.5">
                             {{ $transaksi->kas->jenis_kas ?? '-' }}
                         </span>
                     </div>

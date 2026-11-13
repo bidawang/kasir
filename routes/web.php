@@ -11,6 +11,7 @@ use App\Http\Controllers\TransferKasController;
 use App\Http\Controllers\ItemJualanController;
 use App\Http\Controllers\BiayaAdminController;
 use App\Http\Controllers\ManajemenKasirController;
+use App\Http\Controllers\LaporanHarianController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,9 +41,34 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::middleware(['auth'])->group(function () {
 
     // Dashboard and reporting are reserved for administrators and owners.
-    Route::get('/', [DashboardController::class, 'index'])
-        ->middleware('role:admin,owner')
-        ->name('dashboard');
+// ==============================
+// ROOT / HOME
+// ==============================
+Route::get('/', function () {
+    if (auth()->check()) {
+        $user = auth()->user();
+
+        // Cek status keaktifan user (opsional, menyesuaikan middleware Anda)
+        if ($user->status !== 'aktif') {
+            auth()->logout();
+            request()->session()->invalidate();
+            request()->session()->regenerateToken();
+            return redirect()->route('login')->withErrors(['email' => 'Akun Anda tidak aktif.']);
+        }
+
+        // Cek role menggunakan helper/method yang sesuai di model Anda
+        // (Contoh menggunakan in_array atau method bawaan package role Anda)
+        if (in_array($user->role, ['admin', 'owner'], true)) {
+            return app(DashboardController::class)->index();
+        }
+        
+        // Handle jika role lain yang akses root
+        abort(403, 'Anda tidak memiliki hak akses ke halaman ini.');
+    }
+    
+    // Jika BELUM login, lempar ke halaman /login
+    return redirect()->route('login');
+})->name('dashboard'); // <-- Berikan name dashboard di sini
 
     // Cashiers can create transactions and review their own transaction history.
     Route::middleware('role:admin,kasir')->group(function () {
@@ -57,6 +83,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/transaksi/kas-masuk', [TransaksiController::class, 'kasMasuk'])->name('transaksi.kas.masuk');
         Route::get('/transaksi/kas-keluar', [TransaksiController::class, 'kasKeluar'])->name('transaksi.kas.keluar');
         Route::post('/transaksi/kas-store', [TransaksiController::class, 'storeKas'])->name('transaksi.kas.store');
+    });
+
+    Route::middleware('role:admin,owner,kasir')->group(function () {
+        Route::get('/laporan-harian', [LaporanHarianController::class, 'index'])
+            ->name('laporan-harian.index');
+        Route::post('/laporan-harian', [LaporanHarianController::class, 'store'])
+            ->name('laporan-harian.store');
     });
 
     // Cash, inventory setup, transfers, and reports are not cashier pages.

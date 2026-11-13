@@ -2,88 +2,14 @@
 <html lang="id" class="h-full bg-slate-100">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="color-scheme" content="light dark">
     <title>{{ $title ?? 'Agent Kas' }}</title>
 
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-                    },
-                    colors: {
-                        primary: {
-                            50: "#eef6ff",
-                            100: "#d6e9fe",
-                            200: "#b5d8fe",
-                            300: "#84bffd",
-                            400: "#499efb",
-                            500: "#1e82f7",
-                            600: "#0b63ce",
-                            700: "#084fa6",
-                            800: "#094287",
-                            900: "#0d376d",
-                            950: "#082347",
-                        }
-                    },
-                    boxShadow: {
-                        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02)',
-                        'mobile-nav': '0 -2px 10px rgba(0, 0, 0, 0.05)'
-                    }
-                }
-            }
-        }
-    </script>
-
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
-    <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        .pb-safe {
-            padding-bottom: env(safe-area-inset-bottom, 0px);
-        }
-        @media (prefers-color-scheme: dark) {
-            body, html { background-color: #0f172a !important; color: #e2e8f0; }
-            [class~="bg-white"], [class~="bg-white/95"] { background-color: #1e293b !important; }
-            [class~="bg-slate-50"], [class~="bg-slate-100"] { background-color: #0f172a !important; }
-            [class~="text-slate-900"], [class~="text-slate-800"] { color: #f1f5f9 !important; }
-            [class~="text-slate-700"], [class~="text-slate-600"] { color: #cbd5e1 !important; }
-            [class~="text-slate-500"], [class~="text-slate-400"] { color: #94a3b8 !important; }
-            [class~="border-slate-100"], [class~="border-slate-200"], [class~="border-slate-300"] { border-color: #334155 !important; }
-            [class~="divide-slate-100"] > :not([hidden]) ~ :not([hidden]) { border-color: #334155 !important; }
-            [class~="bg-primary-50"] { background-color: #172554 !important; }
-            [class~="text-primary-700"], [class~="text-primary-800"] { color: #bfdbfe !important; }
-            [class~="bg-emerald-50"], [class~="bg-emerald-100"] { background-color: #064e3b !important; }
-            [class~="text-emerald-700"], [class~="text-emerald-800"] { color: #a7f3d0 !important; }
-            [class~="bg-rose-50"], [class~="bg-rose-100"] { background-color: #4c0519 !important; }
-            [class~="text-rose-700"], [class~="text-rose-800"] { color: #fecdd3 !important; }
-            [class~="bg-amber-50"], [class~="bg-amber-100"] { background-color: #451a03 !important; }
-            [class~="text-amber-700"], [class~="text-amber-800"] { color: #fde68a !important; }
-            input, select, textarea { color-scheme: dark; }
-            input:not([type="checkbox"]):not([type="radio"]), select, textarea {
-                background-color: #0f172a;
-                color: #f1f5f9;
-                border-color: #475569;
-            }
-            ::placeholder { color: #94a3b8; opacity: 1; }
-        }
-    </style>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased selection:bg-primary-500 selection:text-white flex flex-col min-h-screen">
 
@@ -126,26 +52,26 @@
 
                     <div class="min-w-0 leading-tight">
                         <div class="flex items-center gap-1.5">
-                            <span class="text-[9px] sm:text-[10px] font-extrabold tracking-widest text-primary-200 uppercase">Agent Kas</span>
+                            <span class="text-xs font-extrabold tracking-widest text-primary-200 uppercase">Agent Kas</span>
                             @if($cabangAktif)
-                                <span class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                <span class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Aktif
                                 </span>
                             @endif
                         </div>
-                        <h1 class="text-xs sm:text-sm md:text-base font-bold text-white truncate max-w-[110px] sm:max-w-[200px] md:max-w-xs">
+                        <h1 class="text-sm sm:text-base font-bold text-white truncate max-w-[140px] sm:max-w-xs">
                             {{ $cabangAktif?->nama_warung ?? 'Pilih Cabang' }}
                         </h1>
                     </div>
                 </div>
 
                 <!-- Center Nav Desktop (Tablet / PC View) -->
-<nav class="hidden md:flex items-center gap-1 bg-white/10 p-1 rounded-xl backdrop-blur-sm border border-white/10">
+<nav class="hidden lg:flex items-center gap-1 bg-white/10 p-1 rounded-xl backdrop-blur-sm border border-white/10">
 
     {{-- Beranda --}}
     @if($isAdminRole)
     <a href="{{ route('dashboard') }}" 
-       class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('dashboard') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+       class="px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('dashboard') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
 
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round"
@@ -159,7 +85,7 @@
 
     {{-- Transaksi --}}
     <a href="{{ route('transaksi.menu') }}"
-       class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ ($isTransaksiActive && !request()->routeIs('transaksi.index')) ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+       class="px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 {{ ($isTransaksiActive && !request()->routeIs('transaksi.index')) ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 5.25h15m-15 5.25h15"/>
         </svg>
@@ -168,7 +94,7 @@
 
     {{-- Riwayat --}}
     <a href="{{ route('transaksi.index') }}" 
-       class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('transaksi.index') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+       class="px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('transaksi.index') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
 
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round"
@@ -182,7 +108,7 @@
     @if($isAdminRole)
     {{-- Kas --}}
     <a href="{{ route('kas.index') }}" 
-       class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('kas.*') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+       class="px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('kas.*') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
 
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round"
@@ -194,7 +120,7 @@
 
     {{-- Barang dan Layanan --}}
     <a href="{{ route('item-jualan.index') }}"
-       class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('item-jualan.*') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+       class="px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('item-jualan.*') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l2.4 12.2a2 2 0 002 1.6h8.8a2 2 0 002-1.6L22 8H6M10 21h.01M18 21h.01"/>
         </svg>
@@ -203,7 +129,7 @@
 
     {{-- Biaya Admin --}}
     <a href="{{ route('biaya-admin.index') }}"
-       class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('biaya-admin.*') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+       class="px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('biaya-admin.*') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m4-9H9.5a2.5 2.5 0 000 5h5a2.5 2.5 0 010 5H8"/>
             <circle cx="12" cy="12" r="9"/>
@@ -215,14 +141,14 @@
     {{-- Cabang --}}
     @if(in_array($userRole, ['admin', 'owner']))
         <a href="{{ route('manajemen-kasir.index') }}"
-           class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('manajemen-kasir.*') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+           class="px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('manajemen-kasir.*') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2m12-13a4 4 0 11-8 0 4 4 0 018 0zm2 13h4v-2a4 4 0 00-3-3.87M18 3.13a4 4 0 010 7.75"/>
             </svg>
             Kelola Kasir
         </a>
         <a href="{{ route('cabang.index') }}" 
-           class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('cabang.*') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+           class="px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 {{ request()->routeIs('cabang.*') ? 'bg-white text-primary-900 shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
 
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round"
@@ -238,14 +164,18 @@
 
                 <!-- Right: Shortcut Transaksi & Logout -->
                 <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                    <a href="{{ route('laporan-harian.index') }}"
+                       class="bg-white/15 hover:bg-white/25 active:scale-95 text-white px-3 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center gap-1.5">
+                        <span>Laporan Kas</span>
+                    </a>
                     <a href="{{ route('transaksi.menu') }}"
-                       class="bg-white/15 hover:bg-white/25 active:scale-95 text-white px-3 py-2 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5">
+                       class="bg-white/15 hover:bg-white/25 active:scale-95 text-white px-3 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center gap-1.5">
                         <span>Transaksi</span>
                     </a>
 
                     <button type="button" 
                             onclick="event.preventDefault(); if(confirm('Apakah Anda yakin ingin keluar?')) document.getElementById('logout-form').submit();"
-                            class="hidden md:flex items-center justify-center p-2 rounded-xl text-blue-200 hover:text-white hover:bg-white/10 transition-colors ml-1"
+                            class="hidden lg:flex items-center justify-center p-2 rounded-xl text-blue-200 hover:text-white hover:bg-white/10 transition-colors ml-1"
                             title="Keluar">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
@@ -259,14 +189,14 @@
             @if($isAdminRole && $listWarungs->count() > 1)
                 <div class="pb-2 pt-0.5 border-t border-white/10">
                     <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-                        <span class="text-[9px] font-bold text-primary-200 uppercase tracking-wider shrink-0 mr-1">Cabang:</span>
+                        <span class="text-xs font-bold text-primary-200 uppercase tracking-wider shrink-0 mr-1">Cabang:</span>
                         
                         @foreach($listWarungs as $warung)
                             @php $isActive = session('id_warung') == $warung->id; @endphp
                             <form method="POST" action="{{ route('cabang.pilih', $warung->id) }}" class="shrink-0">
                                 @csrf
                                 <button type="submit"
-                                        class="px-2.5 py-0.5 rounded-md text-[11px] transition-all flex items-center gap-1
+                                        class="px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1
                                         {{ $isActive 
                                             ? 'bg-white text-primary-900 font-bold shadow-sm' 
                                             : 'bg-white/10 text-blue-100 hover:bg-white/20 hover:text-white border border-white/10 font-medium' }}">
@@ -284,103 +214,50 @@
     </header>
 
     <!-- CONTENT UTAMA -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-6 pb-28 md:pb-8">
+    <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-28 lg:pb-8">
         @yield('content')
     </main>
 
-    <!-- BOTTOM NAVIGATION (Hanya Tampil di Mobile/Tablet < md) -->
-    <nav aria-label="Menu Navigasi Bawah" class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shadow-mobile-nav pb-safe">
-        <div class="max-w-md mx-auto px-1">
-            <div class="grid {{ $isAdminRole ? 'grid-cols-9' : 'grid-cols-3' }} items-center h-13">
-
-                <!-- 1. Beranda -->
-                @if($isAdminRole)
-                <a href="{{ route('dashboard') }}"
-                   class="flex flex-col items-center justify-center py-1 transition-colors group {{ request()->routeIs('dashboard') ? 'text-primary-600 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="{{ request()->routeIs('dashboard') ? '2.5' : '2' }}" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v4.875h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>
-                    </svg>
-                    <span class="text-[9px] sm:text-[10px] tracking-tight mt-0.5">Beranda</span>
-                </a>
-                @endif
-
-                <!-- 2. Menu Transaksi -->
-                <a href="{{ route('transaksi.menu') }}"
-                   class="flex flex-col items-center justify-center py-1 transition-colors group {{ $isTransaksiActive && !request()->routeIs('transaksi.index') ? 'text-primary-600 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="{{ $isTransaksiActive && !request()->routeIs('transaksi.index') ? '2.5' : '2' }}" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.66 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.66m-5.801 0c-3.04.15-5.5 2.66-5.5 5.75v9.5a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 18.25v-9.5c0-3.09-2.46-5.6-5.5-5.75m-5.801 0a48.108 48.108 0 015.801 0"/>
-                    </svg>
-                    <span class="text-[9px] sm:text-[10px] tracking-tight mt-0.5">Transaksi</span>
-                </a>
-
-                <!-- Riwayat Transaksi -->
-                <a href="{{ route('transaksi.index') }}"
-                   class="flex flex-col items-center justify-center py-1 transition-colors group {{ request()->routeIs('transaksi.index') ? 'text-primary-600 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="{{ request()->routeIs('transaksi.index') ? '2.5' : '2' }}" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.66 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.66m-5.801 0c-3.04.15-5.5 2.66-5.5 5.75v9.5a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 18.25v-9.5c0-3.09-2.46-5.6-5.5-5.75m-5.801 0a48.108 48.108 0 015.801 0"/>
-                    </svg>
-                    <span class="text-[9px] sm:text-[10px] tracking-tight mt-0.5">Riwayat</span>
-                </a>
-
-                @if($isAdminRole)
-                <!-- 3. Kas -->
-                <a href="{{ route('kas.index') }}"
-                   class="flex flex-col items-center justify-center py-1 transition-colors group {{ request()->routeIs('kas.*') ? 'text-primary-600 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="{{ request()->routeIs('kas.*') ? '2.5' : '2' }}" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3"/>
-                    </svg>
-                    <span class="text-[9px] sm:text-[10px] tracking-tight mt-0.5">Kas</span>
-                </a>
-
-                <!-- 4. Barang dan Layanan -->
-                <a href="{{ route('item-jualan.index') }}"
-                   class="flex flex-col items-center justify-center py-1 transition-colors group {{ request()->routeIs('item-jualan.*') ? 'text-primary-600 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="{{ request()->routeIs('item-jualan.*') ? '2.5' : '2' }}" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l2.4 12.2a2 2 0 002 1.6h8.8a2 2 0 002-1.6L22 8H6M10 21h.01M18 21h.01"/>
-                    </svg>
-                    <span class="text-[9px] sm:text-[10px] tracking-tight mt-0.5">Item</span>
-                </a>
-
-                <!-- 5. Biaya Admin -->
-                <a href="{{ route('biaya-admin.index') }}"
-                   class="flex flex-col items-center justify-center py-1 transition-colors group {{ request()->routeIs('biaya-admin.*') ? 'text-primary-600 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="{{ request()->routeIs('biaya-admin.*') ? '2.5' : '2' }}" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m4-9H9.5a2.5 2.5 0 000 5h5a2.5 2.5 0 010 5H8"/>
-                        <circle cx="12" cy="12" r="9"/>
-                    </svg>
-                    <span class="text-[9px] sm:text-[10px] tracking-tight mt-0.5">Biaya Admin</span>
-                </a>
-                @endif
-
-                <!-- 6. Cabang (Admin / Owner Only) -->
-                @if($isAdminRole)
-                    <a href="{{ route('manajemen-kasir.index') }}"
-                       class="flex flex-col items-center justify-center py-1 transition-colors group {{ request()->routeIs('manajemen-kasir.*') ? 'text-primary-600 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
-                        <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2m12-13a4 4 0 11-8 0 4 4 0 018 0zm2 13h4v-2a4 4 0 00-3-3.87M18 3.13a4 4 0 010 7.75"/>
-                        </svg>
-                        <span class="text-[9px] sm:text-[10px] tracking-tight mt-0.5">Kasir</span>
-                    </a>
-                    <a href="{{ route('cabang.index') }}"
-                       class="flex flex-col items-center justify-center py-1 transition-colors group {{ request()->routeIs('cabang.*') ? 'text-primary-600 font-bold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
-                        <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="{{ request()->routeIs('cabang.*') ? '2.5' : '2' }}" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.25m16.5 0h2.25m-15 0v-7.5A2.25 2.25 0 016 11.25h3a2.25 2.25 0 012.25 2.25V21m-6 0h6"/>
-                        </svg>
-                        <span class="text-[9px] sm:text-[10px] tracking-tight mt-0.5">Cabang</span>
-                    </a>
-                @endif
-
-                <!-- Keluar -->
-                <button type="button" 
-                        onclick="event.preventDefault(); if(confirm('Apakah Anda yakin ingin keluar?')) document.getElementById('logout-form').submit();"
-                        class="flex flex-col items-center justify-center py-1 text-slate-400 hover:text-rose-500 transition-colors group font-medium">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-active:scale-90" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
-                    </svg>
-                    <span class="text-[9px] sm:text-[10px] tracking-tight mt-0.5">Keluar</span>
-                </button>
-
+    <!-- BOTTOM NAVIGATION (HP dan tablet) -->
+    <nav aria-label="Menu Navigasi Bawah" class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shadow-mobile-nav pb-safe" x-data="{ menu: false }">
+        @if($isAdminRole)
+        <div x-show="menu" x-cloak @click.outside="menu = false" class="absolute bottom-full left-3 right-3 mb-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+            <div class="grid grid-cols-2 gap-1">
+                <a href="{{ route('kas.index') }}" class="rounded-xl px-3 py-3 text-sm font-semibold {{ request()->routeIs('kas.*') ? 'bg-primary-50 text-primary-800' : 'text-slate-700 hover:bg-slate-50' }}">Kas</a>
+                <a href="{{ route('item-jualan.index') }}" class="rounded-xl px-3 py-3 text-sm font-semibold {{ request()->routeIs('item-jualan.*') ? 'bg-primary-50 text-primary-800' : 'text-slate-700 hover:bg-slate-50' }}">Barang</a>
+                <a href="{{ route('biaya-admin.index') }}" class="rounded-xl px-3 py-3 text-sm font-semibold {{ request()->routeIs('biaya-admin.*') ? 'bg-primary-50 text-primary-800' : 'text-slate-700 hover:bg-slate-50' }}">Biaya Admin</a>
+                <a href="{{ route('manajemen-kasir.index') }}" class="rounded-xl px-3 py-3 text-sm font-semibold {{ request()->routeIs('manajemen-kasir.*') ? 'bg-primary-50 text-primary-800' : 'text-slate-700 hover:bg-slate-50' }}">Kelola Kasir</a>
+                <a href="{{ route('cabang.index') }}" class="rounded-xl px-3 py-3 text-sm font-semibold {{ request()->routeIs('cabang.*') ? 'bg-primary-50 text-primary-800' : 'text-slate-700 hover:bg-slate-50' }}">Cabang</a>
+                <button type="button" onclick="event.preventDefault(); if(confirm('Apakah Anda yakin ingin keluar?')) document.getElementById('logout-form').submit();" class="rounded-xl px-3 py-3 text-left text-sm font-semibold text-rose-700 hover:bg-rose-50">Keluar</button>
             </div>
+        </div>
+        @endif
+        <div class="mx-auto grid {{ $isAdminRole ? 'grid-cols-4' : 'grid-cols-4' }} max-w-lg">
+            @if($isAdminRole)
+            <a href="{{ route('dashboard') }}" class="flex min-h-16 flex-col items-center justify-center gap-1 {{ request()->routeIs('dashboard') ? 'text-primary-700 font-bold' : 'text-slate-500 font-medium' }}">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v4.875h4.125c.621 0 1.125-.504 1.125-1.125V9.75"/></svg>
+                <span class="text-xs">Beranda</span>
+            </a>
+            @endif
+            <a href="{{ route('transaksi.menu') }}" class="flex min-h-16 flex-col items-center justify-center gap-1 {{ $isTransaksiActive && !request()->routeIs('transaksi.index') ? 'text-primary-700 font-bold' : 'text-slate-500 font-medium' }}">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 5.25h15m-15 5.25h15"/></svg>
+                <span class="text-xs">Transaksi</span>
+            </a>
+            <a href="{{ route('transaksi.index') }}" class="flex min-h-16 flex-col items-center justify-center gap-1 {{ request()->routeIs('transaksi.index') ? 'text-primary-700 font-bold' : 'text-slate-500 font-medium' }}">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <span class="text-xs">Riwayat</span>
+            </a>
+            @if($isAdminRole)
+            <button type="button" @click="menu = !menu" class="flex min-h-16 flex-col items-center justify-center gap-1 text-slate-500 font-medium" :class="menu ? 'text-primary-700 font-bold' : ''">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+                <span class="text-xs">Menu</span>
+            </button>
+            @else
+            <button type="button" onclick="event.preventDefault(); if(confirm('Apakah Anda yakin ingin keluar?')) document.getElementById('logout-form').submit();" class="flex min-h-16 flex-col items-center justify-center gap-1 text-slate-500 font-medium">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
+                <span class="text-xs">Keluar</span>
+            </button>
+            @endif
         </div>
     </nav>
 

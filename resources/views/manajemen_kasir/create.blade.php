@@ -3,19 +3,19 @@
 @section('title', 'Tambah Kasir')
 
 @section('content')
-<div class="max-w-xl mx-auto space-y-5">
-    <h1 class="text-xl font-black text-slate-900">Tambah Akun Kasir</h1>
+<div class="max-w-2xl mx-auto space-y-5">
+    <h1 class="text-2xl font-black text-slate-900">Tambah Akun Kasir</h1>
     @if($warungs->isEmpty())
         <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
             Anda perlu menambahkan cabang sebelum membuat akun kasir.
             <a href="{{ route('cabang.create') }}" class="font-bold underline">Tambah cabang</a>
         </div>
     @else
-        <form method="POST" action="{{ route('manajemen-kasir.store') }}" class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5">
+        <form method="POST" action="{{ route('manajemen-kasir.store') }}" class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
             @csrf
             @include('manajemen_kasir._form', ['submitLabel' => 'Simpan Kasir'])
         </form>
     @endif
-    <a href="{{ route('manajemen-kasir.index') }}" class="text-sm font-semibold text-slate-600 hover:text-slate-900">Kembali ke daftar kasir</a>
+    <a href="{{ route('manajemen-kasir.index') }}" class="text-sm sm:text-base font-semibold text-slate-600 hover:text-slate-900">Kembali ke daftar kasir</a>
 </div>
 @endsection

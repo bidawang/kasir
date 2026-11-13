@@ -12,6 +12,7 @@ use App\Models\Kasir;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class TransaksiController extends Controller
@@ -210,7 +211,7 @@ public function storePenjualanItem(Request $request)
         $total = $hargaItem + $biaya;
         $received = json_decode($validated['denominations_json'], true);
         $change = json_decode($validated['change_denominations_json'] ?? '[]', true);
-        $allowedDenominations = [100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000];
+        $allowedDenominations = DetailKas::DENOMINATIONS;
         $totalReceived = $this->denominationTotal($received, $allowedDenominations, 'denominations_json');
         $totalChange = $this->denominationTotal($change, $allowedDenominations, 'change_denominations_json');
 
@@ -333,26 +334,15 @@ private function activeWarungId(): ?int
 public function setor()
 {
     $idWarung = $this->activeWarungId();
-
     if (!$idWarung) {
         return redirect()
             ->route('cabang.index')
             ->with('error', 'Silakan pilih cabang terlebih dahulu.');
     }
-
-    // Ambil Kas Asal (Kas Tunai/Fisik) beserta detail pecahan yang terurut
+    // Ambil kas fisik yang menjadi sumber saldo tunai.
     $kasAsal = Kas::where('id_warung', $idWarung)
         ->where('status', 'cash')
-        ->with(['detailKas' => function ($query) {
-            $query->orderBy('pecahan', 'desc');
-        }])
         ->first();
-
-    // Pastikan relasi detailKas / detail_kas ter-load dengan rapi untuk JavaScript (AlpineJS)
-    if ($kasAsal) {
-        // Menyediakan fallback nama properti agar AlpineJS dapat membaca detail_kas maupun detailKas tanpa error
-        $kasAsal->setRelation('detail_kas', $kasAsal->detailKas);
-    }
 
     // Ambil daftar Kas Tujuan (khusus e-wallet)
     $kasTujuanList = Kas::where('id_warung', $idWarung)
@@ -377,18 +367,10 @@ public function tarik()
             ->with('error', 'Silakan pilih cabang terlebih dahulu.');
     }
 
-    // Ambil Kas Asal (Kas Tunai/Fisik tempat uang fisik ditarik) beserta detail pecahan terurut
+    // Ambil kas fisik yang menjadi sumber saldo tunai.
     $kasAsal = Kas::where('id_warung', $idWarung)
         ->where('status', 'cash')
-        ->with(['detailKas' => function ($query) {
-            $query->orderBy('pecahan', 'desc');
-        }])
         ->first();
-
-    // Pastikan relasi detailKas / detail_kas ter-load dengan rapi untuk JavaScript (AlpineJS)
-    if ($kasAsal) {
-        $kasAsal->setRelation('detail_kas', $kasAsal->detailKas);
-    }
 
     // Ambil daftar Kas Sumber / E-Wallet yang bisa dipilih oleh pelanggan
     $kasSumberList = Kas::where('id_warung', $idWarung)
@@ -418,33 +400,14 @@ public function tarik()
         'jenis'                     => 'required|in:masuk,keluar',
         'id_kas'                    => 'required|integer|exists:kas,id',
         'id_kas_tujuan'             => 'required|integer|exists:kas,id',
-        'total'                     => 'required|integer|min:0',
+        'nominal'                   => 'required|integer|min:1',
+        'total'                     => 'required|integer|min:1',
         'biaya_admin_manual'        => 'nullable|integer|min:0',
         'biaya_admin_toko'          => 'nullable|integer|min:0',
-        'change_total'              => 'required|integer|min:0',
-        'denominations_json'        => 'required|json',
-        'change_denominations_json' => 'nullable|json',
         'keterangan'                => 'nullable|string',
     ]);
 
-    $denominations       = json_decode($request->denominations_json, true) ?? [];
-    $changeDenominations = json_decode($request->change_denominations_json, true) ?? [];
-
-    // Hitung total nilai nominal dari pecahan fisik utama & kembalian
-    $allowedDenominations = [100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000];
-    $totalUangFisik = $this->denominationTotal($denominations, $allowedDenominations, 'denominations_json');
-    $totalChangeFisik = $this->denominationTotal($changeDenominations, $allowedDenominations, 'change_denominations_json');
-    if ((int) $request->change_total !== $totalChangeFisik) {
-        throw ValidationException::withMessages([
-            'change_total' => 'Total kembalian tidak sesuai dengan rincian pecahan uang.',
-        ]);
-    }
-    $nominalTransaksi = $totalUangFisik - $totalChangeFisik;
-    if ($nominalTransaksi <= 0) {
-        throw ValidationException::withMessages([
-            'denominations_json' => 'Nominal bersih transaksi harus lebih dari 0.',
-        ]);
-    }
+    $nominalTransaksi = (int) $request->nominal;
 
     DB::beginTransaction();
 
@@ -510,48 +473,8 @@ public function tarik()
         // SKENARIO A: SETOR TUNAI (JENIS = MASUK)
         // ==========================================
         if ($request->jenis === 'masuk') {
-            
-            // A1. Uang Fisik Utama Diserahkan Customer -> TAMBAH STOK FISIK
-            foreach ($denominations as $denom) {
-                $pecahan = (int) ($denom['pecahan'] ?? 0);
-                $jumlah  = (int) ($denom['jumlah'] ?? 0);
-                if ($pecahan <= 0 || $jumlah <= 0) continue;
-
-                DetailTransaksi::create([
-                    'id_transaksi_kas' => $transaksi->id,
-                    'pecahan'          => $pecahan,
-                    'jumlah'           => $jumlah,
-                ]);
-
-                $detailKas = DetailKas::firstOrCreate(
-                    ['id_kas_warung' => $kasAsal->id, 'pecahan' => $pecahan],
-                    ['jumlah' => 0]
-                );
-                $detailKas->jumlah += $jumlah;
-                $detailKas->save();
-            }
-
-            // A2. Uang Kembalian Diberikan ke Customer -> KURANGI STOK FISIK
-            foreach ($changeDenominations as $cDenom) {
-                $pecahan = (int) ($cDenom['pecahan'] ?? 0);
-                $jumlah  = (int) ($cDenom['jumlah'] ?? 0);
-                if ($pecahan <= 0 || $jumlah <= 0) continue;
-
-                $detailKas = DetailKas::where('id_kas_warung', $kasAsal->id)
-                    ->where('pecahan', $pecahan)
-                    ->first();
-
-                if (!$detailKas || $detailKas->jumlah < $jumlah) {
-                    throw new \Exception('Stok kembalian pecahan Rp ' . number_format($pecahan, 0, ',', '.') . ' tidak cukup!');
-                }
-
-                $detailKas->jumlah -= $jumlah;
-                $detailKas->save();
-            }
-
-            // A3. Update Saldo Kas Fisik & E-Wallet
-            // Kas Fisik bertambah sebesar Net Fisik (Diterima - Kembalian)
-            $kasAsal->saldo += ($totalUangFisik - $totalChangeFisik);
+            // Kas fisik bertambah sebesar nominal setoran.
+            $kasAsal->saldo += $nominalTransaksi;
             
             // E-Wallet Agen berkurang sebesar Nominal Netto Transfer ke Customer
             $kasTujuan->saldo -= $totalTransaksi;
@@ -562,53 +485,12 @@ public function tarik()
         // ==========================================
         else {
             // Validasi Kecukupan Saldo Kas Fisik Keseluruhan
-            if ($kasAsal->saldo < $totalUangFisik) {
+            if ($kasAsal->saldo < $nominalTransaksi) {
                 throw new \Exception("Total uang tunai fisik di {$kasAsal->jenis_kas} tidak cukup!");
             }
 
-            // B1. Uang Fisik Utama Diberikan ke Customer -> KURANGI STOK FISIK
-            foreach ($denominations as $denom) {
-                $pecahan = (int) ($denom['pecahan'] ?? 0);
-                $jumlah  = (int) ($denom['jumlah'] ?? 0);
-                if ($pecahan <= 0 || $jumlah <= 0) continue;
-
-                DetailTransaksi::create([
-                    'id_transaksi_kas' => $transaksi->id,
-                    'pecahan'          => $pecahan,
-                    'jumlah'           => $jumlah,
-                ]);
-
-                $detailKas = DetailKas::firstOrCreate(
-                    ['id_kas_warung' => $kasAsal->id, 'pecahan' => $pecahan],
-                    ['jumlah' => 0]
-                );
-
-                if ($detailKas->jumlah < $jumlah) {
-                    throw new \Exception('Stok uang fisik pecahan Rp ' . number_format($pecahan, 0, ',', '.') . ' tidak cukup!');
-                }
-
-                $detailKas->jumlah -= $jumlah;
-                $detailKas->save();
-            }
-
-            // B2. Uang Kembalian/Tunai Diterima dari Customer -> TAMBAH STOK FISIK
-            foreach ($changeDenominations as $cDenom) {
-                $pecahan = (int) ($cDenom['pecahan'] ?? 0);
-                $jumlah  = (int) ($cDenom['jumlah'] ?? 0);
-                if ($pecahan <= 0 || $jumlah <= 0) continue;
-
-                $detailKas = DetailKas::firstOrCreate(
-                    ['id_kas_warung' => $kasAsal->id, 'pecahan' => $pecahan],
-                    ['jumlah' => 0]
-                );
-
-                $detailKas->jumlah += $jumlah; // Tambah stok fisik
-                $detailKas->save();
-            }
-
-            // B3. Update Saldo Kas Fisik & E-Wallet
-            // Kas Fisik berkurang sebesar Net Fisik Keluar (Uang Keluar - Uang Diterima Kembali)
-            $kasAsal->saldo -= ($totalUangFisik - $totalChangeFisik);
+            // Kas fisik berkurang sebesar nominal penarikan.
+            $kasAsal->saldo -= $nominalTransaksi;
 
             // E-Wallet Agen bertambah sebesar Total Transfer Digital yang masuk dari Customer
             $kasTujuan->saldo += $totalTransaksi;
@@ -683,7 +565,15 @@ public function storePengeluaran(Request $request)
         'denominations_json' => 'nullable|string',
     ]);
 
-    $denominations = json_decode($request->denominations_json, true) ?? [];
+    $denominations = json_decode($request->denominations_json ?? '[]', true);
+    Validator::make(
+        ['denominations' => $denominations],
+        [
+            'denominations' => 'required|array',
+            'denominations.*.pecahan' => ['required', 'integer', Rule::in(DetailKas::DENOMINATIONS)],
+            'denominations.*.jumlah' => 'required|integer|min:0',
+        ]
+    )->validate();
 
     DB::beginTransaction();
 
@@ -719,7 +609,7 @@ public function storePengeluaran(Request $request)
 
                 DetailTransaksi::create([
                     'id_transaksi_kas' => $transaksi->id,
-                    'pecahan'          => $pecahan,
+                    'pecahan'          => (string) $pecahan,
                     'jumlah'           => $jumlah,
                 ]);
 
@@ -846,7 +736,7 @@ public function storePengeluaran(Request $request)
             ['denominations' => $denominations],
             [
                 'denominations' => 'required|array',
-                'denominations.*.pecahan' => 'required|integer|min:1',
+                'denominations.*.pecahan' => ['required', 'integer', Rule::in(DetailKas::DENOMINATIONS)],
                 'denominations.*.jumlah' => 'required|integer|min:0',
             ]
         )->validate();
@@ -900,12 +790,12 @@ public function storePengeluaran(Request $request)
                     // Simpan Detail Transaksi
                     DetailTransaksi::create([
                         'id_transaksi_kas' => $transaksi->id,
-                        'pecahan'          => $pecahan,
+                        'pecahan'          => (string) $pecahan,
                         'jumlah'           => $jumlah,
                     ]);
 
                     $detailKas = DetailKas::firstOrCreate(
-                        ['id_kas_warung' => $kas->id, 'pecahan' => $pecahan],
+                        ['id_kas_warung' => $kas->id, 'pecahan' => (string) $pecahan],
                         ['jumlah' => 0]
                     );
 

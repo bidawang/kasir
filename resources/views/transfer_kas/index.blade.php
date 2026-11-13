@@ -54,20 +54,20 @@
     <form method="GET" action="{{ route('transfer-kas.index') }}" class="bg-white rounded-2xl border border-slate-200 shadow-soft p-4">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-                <label class="block text-xs font-bold text-slate-600 mb-1.5">Dari Tanggal</label>
-                <input type="date" name="start_date" value="{{ request('start_date') }}" class="w-full rounded-xl border-slate-200 text-sm focus:border-primary-500 focus:ring-primary-500">
+                <label class="block text-sm font-bold text-slate-600 mb-2">Dari Tanggal</label>
+                <input type="date" name="start_date" value="{{ request('start_date') }}" class="w-full rounded-xl border-slate-200 text-base p-2.5 focus:border-primary-500 focus:ring-primary-500">
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-slate-600 mb-1.5">Sampai Tanggal</label>
-                <input type="date" name="end_date" value="{{ request('end_date') }}" class="w-full rounded-xl border-slate-200 text-sm focus:border-primary-500 focus:ring-primary-500">
+                <label class="block text-sm font-bold text-slate-600 mb-2">Sampai Tanggal</label>
+                <input type="date" name="end_date" value="{{ request('end_date') }}" class="w-full rounded-xl border-slate-200 text-base p-2.5 focus:border-primary-500 focus:ring-primary-500">
             </div>
 
             <div class="flex items-end gap-2">
-                <button type="submit" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white rounded-xl py-2.5 text-sm font-bold transition">
+                <button type="submit" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white rounded-xl py-3 text-base font-bold transition min-h-12">
                     Tampilkan
                 </button>
-                <a href="{{ route('transfer-kas.index') }}" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold transition">
+                <a href="{{ route('transfer-kas.index') }}" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-base font-bold transition flex items-center min-h-12">
                     Hapus Filter
                 </a>
             </div>
@@ -168,48 +168,53 @@
                 ]);
             @endphp
             <div @click="selectedData = {{ $payload }}; openDetail = true"
-                 class="bg-white rounded-2xl border border-slate-200 shadow-soft p-4 active:scale-[0.99] transition cursor-pointer">
+                 class="bg-white rounded-2xl border border-slate-200 shadow-soft p-5 active:scale-[0.99] transition cursor-pointer">
 
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-[11px] text-slate-400">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-sm text-slate-400">
                         {{ $transfer->created_at?->format('d/m/Y H:i') }}
                     </span>
-                    <span class="text-[11px] font-bold bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg">
+                    <span class="text-sm font-bold bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg">
                         Berhasil
                     </span>
                 </div>
 
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-4">
                     <div class="flex-1 min-w-0">
-                        <div class="text-xs text-slate-400 mb-1">Dari</div>
-                        <div class="font-bold text-slate-800 truncate">{{ $transfer->kasAsal->jenis_kas ?? '-' }}</div>
+                        <div class="text-sm text-slate-400 mb-1">Dari</div>
+                        <div class="font-bold text-slate-800 text-base truncate">{{ $transfer->kasAsal->jenis_kas ?? '-' }}</div>
                     </div>
-                    <div class="shrink-0 text-primary-500">→</div>
+                    <div class="shrink-0 text-primary-500 text-2xl">→</div>
                     <div class="flex-1 min-w-0 text-right">
-                        <div class="text-xs text-slate-400 mb-1">Ke</div>
-                        <div class="font-bold text-slate-800 truncate">{{ $transfer->kasTujuan->jenis_kas ?? '-' }}</div>
+                        <div class="text-sm text-slate-400 mb-1">Ke</div>
+                        <div class="font-bold text-slate-800 text-base truncate">{{ $transfer->kasTujuan->jenis_kas ?? '-' }}</div>
                     </div>
                 </div>
 
-                <div class="border-t border-slate-100 mt-3 pt-3 flex items-end justify-between">
+                <div class="border-t border-slate-100 mt-4 pt-4 flex items-end justify-between">
                     <div>
-                        <div class="text-[10px] text-slate-400">Jumlah Transfer</div>
-                        <div class="font-extrabold text-primary-600">
+                        <div class="text-sm text-slate-400">Jumlah Transfer</div>
+                        <div class="font-extrabold text-primary-600 text-lg">
                             Rp {{ number_format($transfer->jumlah, 0, ',', '.') }}
                         </div>
                     </div>
                     <div class="text-right">
-                        <div class="text-[10px] text-slate-400">Biaya</div>
-                        <div class="text-xs font-semibold text-slate-600">
+                        <div class="text-sm text-slate-400">Biaya</div>
+                        <div class="text-sm font-semibold text-slate-600">
                             Rp {{ number_format($transfer->biaya_transfer ?? 0, 0, ',', '.') }}
                         </div>
                     </div>
                 </div>
             </div>
         @empty
-            <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center">
-                <p class="font-bold text-slate-500">Belum ada transfer dana</p>
-                <p class="text-xs text-slate-400 mt-1">Belum ada pemindahan dana pada cabang ini.</p>
+            <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center space-y-2">
+                <div class="text-slate-300 mb-2">
+                    <svg class="w-10 h-10 mx-auto" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h10m0 0v10m0-10L7 17"/>
+                    </svg>
+                </div>
+                <p class="font-bold text-slate-500 text-base">Belum ada transfer dana</p>
+                <p class="text-sm text-slate-400">Belum ada pemindahan dana pada cabang ini.</p>
             </div>
         @endforelse
     </div>
@@ -258,7 +263,7 @@
                 {{-- Detail Kas asal & tujuan --}}
                 <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
                     <div>
-                        <div class="text-[11px] text-slate-400 mb-1">Dari</div>
+                        <div class="text-sm text-slate-400 mb-1">Dari</div>
                         <div class="font-extrabold text-slate-800" x-text="selectedData.kas_asal"></div>
                         <div class="text-xs text-slate-400 mt-1" x-text="selectedData.status_asal"></div>
                     </div>
@@ -266,7 +271,7 @@
                     <div class="text-primary-600 text-xl font-bold">→</div>
 
                     <div class="text-right">
-                        <div class="text-[11px] text-slate-400 mb-1">Ke</div>
+                        <div class="text-sm text-slate-400 mb-1">Ke</div>
                         <div class="font-extrabold text-slate-800" x-text="selectedData.kas_tujuan"></div>
                         <div class="text-xs text-slate-400 mt-1" x-text="selectedData.status_tujuan"></div>
                     </div>

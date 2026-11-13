@@ -34,7 +34,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-slate-50/70 border-b border-slate-100 text-[11px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                            <tr class="bg-slate-50/70 border-b border-slate-100 text-sm sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">
                                 <th class="py-3.5 px-4">Pecahan</th>
                                 <th class="py-3.5 px-4 text-center">Jumlah Lembar</th>
                                 <th class="py-3.5 px-4 text-end">Total</th>

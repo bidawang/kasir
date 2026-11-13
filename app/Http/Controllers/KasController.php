@@ -117,11 +117,11 @@ public function index()
             'jenis_kas' => 'required|string|max:100',
             'saldo' => 'required|numeric|min:0',
         ]);
-
         Kas::create([
             'id_warung' => $idWarung,
             'jenis_kas' => $request->jenis_kas,
             'saldo' => $request->saldo,
+            'status' => 'ewallet', // Default status untuk kas baru
         ]);
 
         return redirect()
@@ -229,7 +229,9 @@ public function index()
 
         $request->validate([
             'pecahan' => 'required|array',
+            'pecahan.*' => 'required|integer|in:' . implode(',', DetailKas::DENOMINATIONS),
             'jumlah' => 'required|array',
+            'jumlah.*' => 'required|integer|min:0',
         ]);
 
         foreach ($request->pecahan as $index => $pecahan) {

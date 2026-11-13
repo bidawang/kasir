@@ -53,7 +53,7 @@ return new class extends Migration
 
         foreach (['detail_kas', 'detail_transaksi'] as $tableName) {
             Schema::table($tableName, function (Blueprint $table) {
-                $table->enum('pecahan', ['1000', '2000', '5000', '10000', '20000', '50000', '100000'])->change();
+                $table->enum('pecahan', ['100', '200', '500', '1000', '2000', '5000', '10000', '20000', '50000', '100000'])->change();
             });
         }
     }

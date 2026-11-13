@@ -343,14 +343,17 @@ class ItemJualanBiayaAdminTest extends TestCase
         ]);
 
         $this->actingAs($user)->withSession(['id_warung' => $warung->id]);
+        $this->get(route('transaksi.setor'))
+            ->assertOk()
+            ->assertSee('Nominal Setoran')
+            ->assertSee('name="nominal"', false)
+            ->assertDontSee('denominations_json');
         $this->post(route('transaksi.store'), [
             'jenis' => 'masuk',
             'id_kas' => $cash->id,
             'id_kas_tujuan' => $wallet->id,
+            'nominal' => 10000,
             'total' => 9000,
-            'denominations_json' => json_encode([['pecahan' => 10000, 'jumlah' => 1]]),
-            'change_denominations_json' => '[]',
-            'change_total' => 0,
         ])->assertRedirect(route('transaksi.index'));
 
         $this->assertSame(10000, $cash->fresh()->saldo);
@@ -363,6 +366,38 @@ class ItemJualanBiayaAdminTest extends TestCase
             'id_kas_warung' => $cash->id,
             'id_kas_sumber' => $wallet->id,
         ]);
+    }
+
+    public function test_cash_transaction_saves_its_actor_and_denomination_details(): void
+    {
+        [$user, $warung] = $this->signInForWarung();
+        $cash = Kas::create([
+            'id_warung' => $warung->id,
+            'jenis_kas' => 'Tunai',
+            'status' => 'cash',
+            'saldo' => 0,
+        ]);
+
+        $this->actingAs($user)->withSession(['id_warung' => $warung->id])
+            ->post(route('transaksi.kas.store'), [
+                'jenis' => 'masuk',
+                'id_kas' => $cash->id,
+                'total' => 100,
+                'keterangan' => 'Modal kas',
+                'denominations_json' => json_encode([
+                    ['pecahan' => 100, 'jumlah' => 1],
+                ]),
+            ])
+            ->assertRedirect(route('transaksi.index'));
+
+        $transaksi = Transaksi::where('id_kas_warung', $cash->id)->firstOrFail();
+        $this->assertSame($user->id, $transaksi->id_user);
+        $this->assertDatabaseHas('detail_transaksi', [
+            'id_transaksi_kas' => $transaksi->id,
+            'pecahan' => 100,
+            'jumlah' => 1,
+        ]);
+        $this->assertSame(100, $cash->fresh()->saldo);
     }
 
     public function test_tarik_uses_bank_fee_range_to_calculate_wallet_credit(): void
@@ -395,14 +430,17 @@ class ItemJualanBiayaAdminTest extends TestCase
         ]);
 
         $this->actingAs($user)->withSession(['id_warung' => $warung->id]);
+        $this->get(route('transaksi.tarik'))
+            ->assertOk()
+            ->assertSee('Nominal Penarikan')
+            ->assertSee('name="nominal"', false)
+            ->assertDontSee('denominations_json');
         $this->post(route('transaksi.store'), [
             'jenis' => 'keluar',
             'id_kas' => $cash->id,
             'id_kas_tujuan' => $wallet->id,
+            'nominal' => 10000,
             'total' => 11000,
-            'denominations_json' => json_encode([['pecahan' => 10000, 'jumlah' => 1]]),
-            'change_denominations_json' => '[]',
-            'change_total' => 0,
         ])->assertRedirect(route('transaksi.index'));
 
         $this->assertSame(0, $cash->fresh()->saldo);

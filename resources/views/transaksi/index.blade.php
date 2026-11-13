@@ -24,7 +24,7 @@
                 <div class="text-2xl font-black tracking-tight">
                     Rp {{ number_format($summary->total_keuntungan ?? 0, 0, ',', '.') }}
                 </div>
-                <div class="text-[11px] text-emerald-100 mt-1 font-medium">Biaya admin dan kas masuk yang dihitung sebagai keuntungan</div>
+                <div class="text-sm text-emerald-100 mt-1 font-medium">Biaya admin dan kas masuk yang dihitung sebagai keuntungan</div>
             </div>
 
             <div class="bg-white rounded-2xl p-4 border border-slate-200/85 shadow-sm">
@@ -37,7 +37,7 @@
                 <div class="text-xl font-bold text-slate-900">
                     Rp {{ number_format($summary->total_setor ?? 0, 0, ',', '.') }}
                 </div>
-                <div class="text-[11px] text-slate-400 mt-1">Uang Masuk</div>
+                <div class="text-sm text-slate-400 mt-1">Uang Masuk</div>
             </div>
 
             <div class="bg-white rounded-2xl p-4 border border-slate-200/85 shadow-sm">
@@ -50,7 +50,7 @@
                 <div class="text-xl font-bold text-slate-900">
                     Rp {{ number_format($summary->total_tarik ?? 0, 0, ',', '.') }}
                 </div>
-                <div class="text-[11px] text-slate-400 mt-1">Uang Keluar</div>
+                <div class="text-sm text-slate-400 mt-1">Uang Keluar</div>
             </div>
 
             <div class="bg-white rounded-2xl p-4 border border-slate-200/85 shadow-sm">
@@ -63,7 +63,7 @@
                 <div class="text-xl font-bold text-slate-900">
                     {{ number_format($summary->total_transaksi ?? 0, 0, ',', '.') }} <span class="text-xs text-slate-400 font-normal">transaksi</span>
                 </div>
-                <div class="text-[11px] text-slate-400 mt-1">Semua aktivitas</div>
+                <div class="text-sm text-slate-400 mt-1">Semua aktivitas</div>
             </div>
         </div>
 
@@ -112,7 +112,7 @@
         <!-- Header Info Filter Tanggal -->
         <div class="flex items-center justify-between px-1">
             <div class="flex items-center gap-2">
-                <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Rincian Transaksi</h3>
+                <h3 class="text-base font-bold text-slate-900 uppercase tracking-wider">Rincian Transaksi</h3>
                 @if(request('start_date') && request('start_date') == request('end_date'))
                     <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
                         <span>Tanggal: <strong>{{ \Carbon\Carbon::parse(request('start_date'))->translatedFormat('d M Y') }}</strong></span>
@@ -121,7 +121,7 @@
                 @endif
             </div>
             @if(request()->hasAny(['start_date', 'end_date']))
-                <a href="{{ route('transaksi.index') }}" class="text-xs text-slate-500 hover:text-slate-800 underline transition-colors">
+                <a href="{{ route('transaksi.index') }}" class="text-sm text-slate-500 hover:text-slate-800 underline transition-colors">
                     Tampilkan Semua Transaksi
                 </a>
             @endif
@@ -133,9 +133,9 @@
                 <div class="bg-white rounded-2xl border border-slate-200/85 shadow-sm overflow-hidden transition-all duration-200 hover:border-slate-300">
                     <div @click="expanded = expanded === {{ $item->id }} ? null : {{ $item->id }}"
                          class="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/50 transition-colors select-none">
-                        <div class="space-y-1 pr-3">
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold text-xs sm:text-sm text-slate-900 tracking-tight">
+                        <div class="space-y-1.5 pr-3">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="font-bold text-sm sm:text-base text-slate-900 tracking-tight">
                                     {{ $item->keterangan ?: 'Tanpa Keterangan' }}
                                 </span>
                                 @php
@@ -152,12 +152,12 @@
                                         default => $item->kategoriTransaksi->nama_kategori ?? ucfirst($item->jenis),
                                     };
                                 @endphp
-                                <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200">
+                                <span class="text-xs sm:text-sm font-extrabold px-2.5 py-1 rounded-md bg-purple-50 text-purple-700 border border-purple-200">
                                     {{ $labelKategori }}
                                 </span>
                             </div>
-                            <div class="flex items-center gap-2 text-[11px] sm:text-xs text-slate-500 font-medium">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-semibold">
+                            <div class="flex items-center gap-2 text-sm text-slate-500 font-medium flex-wrap">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 font-semibold">
                                     {{ $item->kas->jenis_kas ?? 'Tanpa Kas' }} · {{ ($item->kas->status ?? $item->metode_pembayaran) === 'cash' ? 'Tunai' : 'E-wallet atau rekening bank' }}
                                 </span>
                                 <span>•</span>
@@ -166,75 +166,75 @@
                         </div>
                         <div class="flex items-center gap-4 shrink-0">
                             <div class="text-right">
-                                <span class="block text-xs sm:text-sm font-extrabold {{ $item->jenis == 'masuk' ? 'text-emerald-600' : 'text-rose-600' }}">
+                                <span class="block text-base sm:text-lg font-extrabold {{ $item->jenis == 'masuk' ? 'text-emerald-600' : 'text-rose-600' }}">
                                     {{ $item->jenis == 'masuk' ? '+' : '-' }} Rp {{ number_format($item->total, 0, ',', '.') }}
                                 </span>
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                <span class="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-400">
                                     {{ $labelAktivitas }}
                                 </span>
                             </div>
-                            <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="expanded === {{ $item->id }} ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                            <svg class="w-5 h-5 text-slate-400 transition-transform duration-200" :class="expanded === {{ $item->id }} ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
                         </div>
                     </div>
 
                     <!-- Accordion Body -->
                     <div x-show="expanded === {{ $item->id }}" x-transition x-cloak class="px-4 pb-4 sm:px-5 sm:pb-5 pt-0 border-t border-slate-100 space-y-4">
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 text-xs">
-                            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                                <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Jenis Aktivitas</span>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 text-sm">
+                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                <span class="block text-xs font-bold uppercase tracking-wider text-slate-400">Jenis Aktivitas</span>
                                 <span class="font-bold text-slate-700">{{ $labelAktivitas }}</span>
                             </div>
-                            <div class="bg-emerald-50/60 p-2.5 rounded-xl border border-emerald-100">
-                                <span class="block text-[10px] font-bold uppercase tracking-wider text-emerald-700">Keuntungan ({{ $item->is_profit ? 'Kas masuk' : 'Biaya admin' }})</span>
+                            <div class="bg-emerald-50/60 p-3 rounded-xl border border-emerald-100">
+                                <span class="block text-xs font-bold uppercase tracking-wider text-emerald-700">Keuntungan</span>
                                 <span class="font-extrabold text-emerald-700">Rp {{ number_format($item->is_profit ? $item->total : ($item->biaya_admin ?? 0), 0, ',', '.') }}</span>
                             </div>
-                            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 col-span-2">
-                                <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Cabang dan Kas</span>
+                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 col-span-2">
+                                <span class="block text-xs font-bold uppercase tracking-wider text-slate-400">Cabang dan Kas</span>
                                 <span class="font-bold text-slate-700 truncate block">{{ $item->kas->jenis_kas ?? '-' }} <span class="font-normal text-slate-500">({{ $item->kas->warung->nama_warung ?? '-' }})</span></span>
                             </div>
                         </div>
 
                         @if($item->kategori === 'penjualan_item')
-                            <div class="grid grid-cols-2 gap-3 text-xs">
-                                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                                    <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Harga Item</span>
+                            <div class="grid grid-cols-2 gap-3 text-sm">
+                                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                    <span class="block text-xs font-bold uppercase tracking-wider text-slate-400">Harga Item</span>
                                     <span class="font-bold text-slate-700">Rp {{ number_format($item->harga_item ?? 0, 0, ',', '.') }}</span>
                                 </div>
                                 @if($item->kasSumber)
-                                    <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                                        <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Akun Sumber</span>
+                                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                        <span class="block text-xs font-bold uppercase tracking-wider text-slate-400">Akun Sumber</span>
                                         <span class="font-bold text-slate-700">{{ $item->kasSumber->jenis_kas }} · {{ $item->kasSumber->status === 'cash' ? 'Tunai' : 'E-wallet atau rekening bank' }}</span>
                                     </div>
                                 @endif
-                                <div class="bg-emerald-50/60 p-2.5 rounded-xl border border-emerald-100">
-                                    <span class="block text-[10px] font-bold uppercase tracking-wider text-emerald-700">Total Dibayar</span>
+                                <div class="bg-emerald-50/60 p-3 rounded-xl border border-emerald-100">
+                                    <span class="block text-xs font-bold uppercase tracking-wider text-emerald-700">Total Dibayar</span>
                                     <span class="font-extrabold text-emerald-700">Rp {{ number_format($item->total, 0, ',', '.') }}</span>
                                 </div>
                             </div>
                         @else
                             <!-- Detail Pecahan -->
                             <div class="space-y-2">
-                                <h6 class="text-xs font-bold uppercase tracking-wider text-slate-500">Rincian Pecahan Uang:</h6>
+                                <h6 class="text-sm font-bold uppercase tracking-wider text-slate-500">Rincian Pecahan Uang:</h6>
                                 @if($item->detailTransaksi && $item->detailTransaksi->count())
                                     <div class="bg-slate-50/70 p-3 rounded-xl border border-slate-200/80 space-y-2">
                                         @foreach($item->detailTransaksi as $detail)
-                                            <div class="flex items-center justify-between text-xs font-medium text-slate-700">
+                                            <div class="flex items-center justify-between text-sm font-medium text-slate-700">
                                                 <span>Rp {{ number_format($detail->pecahan, 0, ',', '.') }} <span class="text-slate-400">×</span> {{ $detail->jumlah }} lembar</span>
                                                 <span class="font-bold text-slate-900">= Rp {{ number_format($detail->pecahan * $detail->jumlah, 0, ',', '.') }}</span>
                                             </div>
                                         @endforeach
                                     </div>
                                 @else
-                                    <p class="text-xs text-slate-400 italic">Tidak ada detail pecahan.</p>
+                                    <p class="text-sm text-slate-400 italic">Tidak ada detail pecahan.</p>
                                 @endif
                             </div>
-                        @endif {{-- ← @endif yang sebelumnya hilang --}}
+                        @endif
                     </div>
                 </div>
             @empty
-                <div class="bg-white rounded-2xl p-8 text-center border border-slate-200/85 space-y-2">
-                    <svg class="w-10 h-10 text-slate-300 mx-auto" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12l-3-3m0 0l-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
-                    <p class="text-xs sm:text-sm font-semibold text-slate-500">Belum ada transaksi pada periode ini.</p>
+                <div class="bg-white rounded-2xl p-10 text-center border border-slate-200/85 space-y-3">
+                    <svg class="w-12 h-12 text-slate-300 mx-auto" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12l-3-3m0 0l-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                    <p class="text-base font-semibold text-slate-500">Belum ada transaksi pada periode ini.</p>
                 </div>
             @endforelse
         </div>
@@ -242,32 +242,32 @@
 
     <!-- Pagination View -->
     @if ($transaksi->hasPages())
-        <div class="bg-white rounded-2xl p-4 border border-slate-200/85 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
+        <div class="bg-white rounded-2xl p-4 border border-slate-200/85 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-slate-600">
             <div>
                 Menampilkan <span class="font-bold text-slate-900">{{ $transaksi->firstItem() }}</span> - <span class="font-bold text-slate-900">{{ $transaksi->lastItem() }}</span> dari <span class="font-bold text-slate-900">{{ $transaksi->total() }}</span> data
             </div>
-            <div class="flex items-center gap-1">
+            <div class="flex items-center gap-1.5">
                 {{-- Previous Link --}}
                 @if ($transaksi->onFirstPage())
-                    <span class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-400 cursor-not-allowed font-medium">« Sebelumnya</span>
+                    <span class="px-3.5 py-2 rounded-lg bg-slate-100 text-slate-400 cursor-not-allowed font-medium">« Sebelumnya</span>
                 @else
-                    <a href="{{ $transaksi->previousPageUrl() }}" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-all">« Sebelumnya</a>
+                    <a href="{{ $transaksi->previousPageUrl() }}" class="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-all">« Sebelumnya</a>
                 @endif
 
                 {{-- Page Numbers --}}
                 @foreach ($transaksi->getUrlRange(1, $transaksi->lastPage()) as $page => $url)
                     @if ($page == $transaksi->currentPage())
-                        <span class="px-3 py-1.5 rounded-lg bg-slate-900 text-white font-bold">{{ $page }}</span>
+                        <span class="px-3.5 py-2 rounded-lg bg-slate-900 text-white font-bold">{{ $page }}</span>
                     @else
-                        <a href="{{ $url }}" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-all">{{ $page }}</a>
+                        <a href="{{ $url }}" class="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-all">{{ $page }}</a>
                     @endif
                 @endforeach
 
                 {{-- Next Link --}}
                 @if ($transaksi->hasMorePages())
-                    <a href="{{ $transaksi->nextPageUrl() }}" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-all">Berikutnya »</a>
+                    <a href="{{ $transaksi->nextPageUrl() }}" class="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-all">Berikutnya »</a>
                 @else
-                    <span class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-400 cursor-not-allowed font-medium">Berikutnya »</span>
+                    <span class="px-3.5 py-2 rounded-lg bg-slate-100 text-slate-400 cursor-not-allowed font-medium">Berikutnya »</span>
                 @endif
             </div>
         </div>
@@ -277,7 +277,6 @@
 
 @if(in_array(auth()->user()->role, ['admin', 'owner']))
     <!-- Chart Script (hanya dimuat untuk owner) -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const canvas = document.getElementById('brilinkChart');
