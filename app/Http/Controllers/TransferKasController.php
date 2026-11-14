@@ -97,6 +97,13 @@ class TransferKasController extends Controller
                 ->with('error', 'Silakan pilih cabang terlebih dahulu.');
         }
 
+        foreach (['jumlah', 'biaya_transfer'] as $field) {
+            if ($request->filled($field)) {
+                $cleaned = preg_replace('/[^0-9]/', '', (string) $request->$field);
+                $request->merge([$field => $cleaned !== '' ? (int) $cleaned : 0]);
+            }
+        }
+
         $request->validate([
             'tipe_tujuan'      => 'required|in:sesama,lain',
             'id_warung_tujuan' => 'required_if:tipe_tujuan,lain|nullable|integer|exists:kasir,id',

@@ -1,5 +1,4 @@
 <?php
-// app/Models/Kas.php
 
 namespace App\Models;
 
@@ -18,12 +17,16 @@ class Kas extends Model
         'jenis_kas',
         'saldo',
         'status',
+        'nomor_rekening',
+        'atas_nama',
+        'is_primary',
     ];
 
     protected function casts(): array
     {
         return [
             'saldo' => 'integer',
+            'is_primary' => 'boolean',
         ];
     }
 

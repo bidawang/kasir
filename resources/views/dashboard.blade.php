@@ -50,6 +50,49 @@
         </div>
     </div>
 
+    {{-- Menu Cepat Layanan Utama --}}
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <a href="{{ route('transaksi.menu') }}" class="p-3 rounded-2xl bg-white border border-slate-200/80 hover:border-primary-400 hover:shadow-xs transition flex flex-col justify-between gap-2 shadow-2xs group">
+            <div class="w-8 h-8 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            </div>
+            <div>
+                <span class="block text-xs font-black text-slate-900 group-hover:text-primary-600 transition-colors">Transaksi Baru</span>
+                <span class="text-[10px] text-slate-400">Setor, tarik & transfer</span>
+            </div>
+        </a>
+
+        <a href="{{ route('laporan-harian.index') }}" class="p-3 rounded-2xl bg-white border border-emerald-200 hover:border-emerald-400 hover:shadow-xs transition flex flex-col justify-between gap-2 shadow-2xs group">
+            <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div>
+                <span class="block text-xs font-black text-slate-900 group-hover:text-emerald-700 transition-colors">Laporan Harian</span>
+                <span class="text-[10px] text-emerald-600 font-semibold">Tutup buku kas fisik</span>
+            </div>
+        </a>
+
+        <a href="{{ route('transaksi.index') }}" class="p-3 rounded-2xl bg-white border border-slate-200/80 hover:border-primary-400 hover:shadow-xs transition flex flex-col justify-between gap-2 shadow-2xs group">
+            <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <div>
+                <span class="block text-xs font-black text-slate-900 group-hover:text-primary-600 transition-colors">Riwayat Kas</span>
+                <span class="text-[10px] text-slate-400">Arus masuk & keluar</span>
+            </div>
+        </a>
+
+        <a href="{{ route('manajemen-kasir.index') }}" class="p-3 rounded-2xl bg-white border border-slate-200/80 hover:border-primary-400 hover:shadow-xs transition flex flex-col justify-between gap-2 shadow-2xs group">
+            <div class="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+            </div>
+            <div>
+                <span class="block text-xs font-black text-slate-900 group-hover:text-purple-700 transition-colors">Kelola Kasir</span>
+                <span class="text-[10px] text-slate-400">Akun kasir & staf</span>
+            </div>
+        </a>
+    </div>
+
     {{-- Detail Kas Tunai Fisik (status = cash) --}}
     @if($kasTunai)
         <div x-data="{ open: false }" class="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden transition-all duration-200">

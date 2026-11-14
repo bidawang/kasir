@@ -14,8 +14,8 @@
             </svg>
         </a>
         <div class="min-w-0">
-            <h2 class="text-lg sm:text-xl font-extrabold text-slate-800 leading-snug">Tambah Cabang</h2>
-            <p class="text-sm text-slate-500 truncate">Tambahkan cabang baru untuk usaha Anda</p>
+            <h2 class="text-lg sm:text-xl font-extrabold text-slate-800 leading-snug">Tambah Cabang / Agen</h2>
+            <p class="text-sm text-slate-500 truncate">Tambahkan cabang baru dan atur Bank Utama operasional</p>
         </div>
     </div>
 
@@ -41,24 +41,110 @@
           class="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-sm space-y-5">
         @csrf
 
+        <!-- NAMA CABANG -->
         <div>
             <label for="nama_warung" class="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-2">
-                Nama Cabang <span class="text-rose-500">*</span>
+                Nama Cabang / Toko <span class="text-rose-500">*</span>
             </label>
+            <input
+                type="text"
+                id="nama_warung"
+                name="nama_warung"
+                value="{{ old('nama_warung') }}"
+                placeholder="Contoh: Toko Berkah / Agen BRILink Sentosa"
+                required
+                autofocus
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none text-sm sm:text-base text-slate-800 transition font-medium placeholder:text-slate-400"
+            >
+        </div>
 
-            <div class="relative">
+        <!-- BANK UTAMA OPERASIONAL -->
+        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-4">
+            <div>
+                <label for="bank_utama" class="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Bank Utama Operasional <span class="text-rose-500">*</span>
+                </label>
+                <p class="text-xs text-slate-500 mb-2">Pilih bank utama yang digunakan sebagai acuan transfer sesama dan tarik tunai.</p>
+                <select
+                    id="bank_utama"
+                    name="bank_utama"
+                    required
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none text-sm font-semibold text-slate-800 transition"
+                >
+                    @if(isset($banks) && $banks->isNotEmpty())
+                        @foreach($banks as $b)
+                            <option value="{{ $b->kode }}" {{ old('bank_utama', 'BRI') === $b->kode ? 'selected' : '' }}>
+                                {{ $b->nama }} ({{ $b->kode }})
+                            </option>
+                        @endforeach
+                    @else
+                        <option value="BRI" selected>Bank Rakyat Indonesia (BRI)</option>
+                        <option value="MANDIRI">Bank Mandiri (MANDIRI)</option>
+                        <option value="BCA">Bank Central Asia (BCA)</option>
+                        <option value="BNI">Bank Negara Indonesia (BNI)</option>
+                        <option value="BSI">Bank Syariah Indonesia (BSI)</option>
+                    @endif
+                </select>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label for="nomor_rekening_utama" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                        Nomor Rekening Bank Utama
+                    </label>
+                    <input
+                        type="text"
+                        id="nomor_rekening_utama"
+                        name="nomor_rekening_utama"
+                        value="{{ old('nomor_rekening_utama') }}"
+                        placeholder="Contoh: 123401000123530"
+                        class="w-full px-3 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 font-medium"
+                    >
+                </div>
+                <div>
+                    <label for="atas_nama_utama" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+                        Atas Nama Rekening
+                    </label>
+                    <input
+                        type="text"
+                        id="atas_nama_utama"
+                        name="atas_nama_utama"
+                        value="{{ old('atas_nama_utama') }}"
+                        placeholder="Contoh: Toko Berkah"
+                        class="w-full px-3 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 font-medium"
+                    >
+                </div>
+            </div>
+        </div>
+
+        <!-- ALAMAT & NO HP -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label for="no_telepon" class="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    No. Telepon / WhatsApp
+                </label>
                 <input
                     type="text"
-                    id="nama_warung"
-                    name="nama_warung"
-                    value="{{ old('nama_warung') }}"
-                    placeholder="Contoh: Cabang Utama"
-                    required
-                    autofocus
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none text-sm sm:text-base text-slate-800 transition font-medium placeholder:text-slate-400"
+                    id="no_telepon"
+                    name="no_telepon"
+                    value="{{ old('no_telepon') }}"
+                    placeholder="Contoh: 08123456789"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none text-sm text-slate-800 transition"
                 >
             </div>
-            <p class="text-sm text-slate-400 mt-2">Gunakan nama yang mudah dikenali oleh Anda dan staf.</p>
+            <div>
+                <label for="alamat" class="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    Alamat Cabang
+                </label>
+                <input
+                    type="text"
+                    id="alamat"
+                    name="alamat"
+                    value="{{ old('alamat') }}"
+                    placeholder="Contoh: Jl. Ahmad Yani No. 10"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none text-sm text-slate-800 transition"
+                >
+            </div>
         </div>
 
         <!-- ACTION BUTTONS -->

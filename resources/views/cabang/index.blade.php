@@ -61,16 +61,21 @@
                                 {{ $warung->nama_warung }}
                             </h3>
 
-                            @if($isActive)
-                                <span class="inline-flex items-center gap-1 mt-1 px-2.5 py-1 rounded-full bg-emerald-50 text-sm font-bold text-emerald-600 border border-emerald-200/60">
-                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    Cabang Aktif
-                                </span>
-                            @else
-                                <span class="text-sm text-slate-400 font-medium block mt-1">
-                                    Cabang Lain
-                                </span>
-                            @endif
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                        Bank Utama: {{ $warung->bank_utama ?? 'BRI' }}
+                                    </span>
+                                    @if($isActive)
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-xs font-bold text-emerald-600 border border-emerald-200/60">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            Cabang Aktif
+                                        </span>
+                                    @else
+                                        <span class="text-xs text-slate-400 font-medium">
+                                            Cabang Lain
+                                        </span>
+                                    @endif
+                                </div>
                         </div>
                     </div>
 

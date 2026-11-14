@@ -210,18 +210,67 @@
                                 </div>
                             </div>
 
-                            @if ($item->rincian_fisik)
-                                <div class="bg-slate-50/70 p-2.5 rounded-xl border border-slate-100 space-y-1">
-                                    <span class="block font-bold text-slate-400 uppercase text-[10px]">Rincian Pecahan Uang:</span>
-                                    <p class="text-slate-600 font-medium">
-                                        @foreach ($denominationsDesc as $pecahan)
-                                            @if (($item->rincian_fisik[$pecahan] ?? 0) > 0)
-                                                <span class="mr-1 inline-block whitespace-nowrap">Rp {{ number_format($pecahan, 0, ',', '.') }} × {{ number_format($item->rincian_fisik[$pecahan]) }}</span>
-                                            @endif
-                                        @endforeach
-                                    </p>
+                            <!-- Rincian Pecahan Uang (Accordion) -->
+                            <div x-data="{ openPecahan: false }" class="rounded-xl border border-slate-200/90 overflow-hidden bg-slate-50/60 shadow-2xs">
+                                <button type="button" 
+                                        @click="openPecahan = !openPecahan" 
+                                        class="w-full flex items-center justify-between p-2.5 text-left hover:bg-slate-100/70 transition-colors select-none cursor-pointer">
+                                    <div class="flex items-center gap-1.5 min-w-0">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <span class="block font-bold text-slate-700 uppercase text-[10px] tracking-wider truncate">Rincian Pecahan Uang</span>
+                                        @php
+                                            $rincian = is_array($item->rincian_fisik) ? $item->rincian_fisik : [];
+                                            $totalLembar = 0;
+                                            $hasPecahan = false;
+                                            foreach ($denominationsDesc as $p) {
+                                                $qty = (int) ($rincian[$p] ?? $rincian[(string)$p] ?? 0);
+                                                if ($qty > 0) {
+                                                    $totalLembar += $qty;
+                                                    $hasPecahan = true;
+                                                }
+                                            }
+                                        @endphp
+                                        <span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded {{ $hasPecahan ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600' }}">
+                                            {{ $totalLembar }} lbr
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center gap-1 shrink-0 ml-2">
+                                        <span class="text-[10px] font-semibold text-slate-500" x-text="openPecahan ? 'Tutup' : 'Lihat'"></span>
+                                        <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="openPecahan ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
+                                        </svg>
+                                    </div>
+                                </button>
+                                <div x-show="openPecahan" x-collapse class="p-3 border-t border-slate-200/80 bg-white space-y-2">
+                                    @if ($hasPecahan)
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                            @foreach ($denominationsDesc as $pecahan)
+                                                @php $qty = (int) ($rincian[$pecahan] ?? $rincian[(string)$pecahan] ?? 0); @endphp
+                                                @if ($qty > 0)
+                                                    <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100 text-xs">
+                                                        <span class="font-bold text-slate-700">Rp {{ number_format($pecahan, 0, ',', '.') }}</span>
+                                                        <div class="text-right">
+                                                            <span class="font-semibold text-slate-500">{{ $qty }} lbr</span>
+                                                            <span class="font-bold text-emerald-700 ml-1.5">= Rp {{ number_format($pecahan * $qty, 0, ',', '.') }}</span>
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                        <div class="pt-2 border-t border-slate-100 flex justify-between items-center text-xs font-black text-slate-800">
+                                            <span>Total Fisik Terhitung:</span>
+                                            <span class="text-emerald-700">Rp {{ number_format($item->saldo_fisik, 0, ',', '.') }}</span>
+                                        </div>
+                                    @else
+                                        <div class="text-center py-2.5 text-xs text-slate-400 font-medium">
+                                            <p>Tidak ada lembar pecahan fisik yang tercatat</p>
+                                            <p class="text-[10px] text-slate-400 mt-0.5">(Saldo fisik kasir: Rp {{ number_format($item->saldo_fisik, 0, ',', '.') }})</p>
+                                        </div>
+                                    @endif
                                 </div>
-                            @endif
+                            </div>
 
                             <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                                 <span class="block font-bold text-slate-400 uppercase text-[10px]">Catatan</span>
@@ -253,16 +302,48 @@
                                     @if ($isOwner)<td class="whitespace-nowrap px-4 py-3.5 font-bold text-slate-900">{{ $item->user->nama }}</td>@endif
                                     <td class="whitespace-nowrap px-4 py-3.5">{{ $item->tanggal->format('d/m/Y') }}</td>
                                     <td class="px-4 py-3.5">
-                                        <span class="whitespace-nowrap font-bold text-slate-900">Rp {{ number_format($item->saldo_fisik, 0, ',', '.') }}</span>
-                                        @if ($item->rincian_fisik)
-                                            <p class="mt-0.5 text-xs text-slate-400 min-w-48">
-                                                @foreach ($denominationsDesc as $pecahan)
-                                                    @if (($item->rincian_fisik[$pecahan] ?? 0) > 0)
-                                                        <span class="mr-1 inline-block whitespace-nowrap">Rp {{ number_format($pecahan, 0, ',', '.') }} × {{ number_format($item->rincian_fisik[$pecahan]) }}</span>
-                                                    @endif
-                                                @endforeach
-                                            </p>
-                                        @endif
+                                        <div x-data="{ openPecahanDesk: false }" class="relative">
+                                            @php
+                                                $rincian = is_array($item->rincian_fisik) ? $item->rincian_fisik : [];
+                                                $totalLembar = 0;
+                                                $hasPecahan = false;
+                                                foreach ($denominationsDesc as $p) {
+                                                    $qty = (int) ($rincian[$p] ?? $rincian[(string)$p] ?? 0);
+                                                    if ($qty > 0) {
+                                                        $totalLembar += $qty;
+                                                        $hasPecahan = true;
+                                                    }
+                                                }
+                                            @endphp
+                                            <div class="flex items-center gap-2">
+                                                <span class="whitespace-nowrap font-bold text-slate-900">Rp {{ number_format($item->saldo_fisik, 0, ',', '.') }}</span>
+                                                <button type="button" @click="openPecahanDesk = !openPecahanDesk"
+                                                        class="text-[10px] font-extrabold px-2 py-0.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition flex items-center gap-1 cursor-pointer shadow-2xs">
+                                                    <span>{{ $totalLembar }} lbr</span>
+                                                    <svg class="w-3 h-3 text-slate-400 transition-transform duration-200" :class="openPecahanDesk ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                                                </button>
+                                            </div>
+                                            <div x-show="openPecahanDesk" x-collapse class="mt-2 p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1.5 min-w-56 shadow-sm">
+                                                @if($hasPecahan)
+                                                    <div class="space-y-1">
+                                                        @foreach ($denominationsDesc as $pecahan)
+                                                            @php $qty = (int) ($rincian[$pecahan] ?? $rincian[(string)$pecahan] ?? 0); @endphp
+                                                            @if ($qty > 0)
+                                                                <div class="flex items-center justify-between text-[11px] py-0.5 border-b border-slate-200/60 last:border-0">
+                                                                    <span class="font-bold text-slate-700">Rp {{ number_format($pecahan, 0, ',', '.') }}</span>
+                                                                    <div>
+                                                                        <span class="text-slate-500 font-medium">{{ $qty }} lbr</span>
+                                                                        <span class="font-bold text-emerald-700 ml-1.5">= {{ number_format($pecahan * $qty, 0, ',', '.') }}</span>
+                                                                    </div>
+                                                                </div>
+                                                            @endif
+                                                        @endforeach
+                                                    </div>
+                                                @else
+                                                    <p class="text-[11px] text-slate-400 italic text-center">Tidak ada lembar fisik (Rp 0)</p>
+                                                @endif
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="whitespace-nowrap px-4 py-3.5">Rp {{ number_format($item->saldo_sistem, 0, ',', '.') }}</td>
                                     <td class="whitespace-nowrap px-4 py-3.5 font-bold {{ $item->selisih === 0 ? 'text-emerald-600' : 'text-rose-600' }}">
@@ -344,6 +425,11 @@
         let total = 0n;
 
         quantityInputs.forEach((input) => {
+            // Bersihkan input berawalan 0 (misal: 010 -> 10, 0000010 -> 10)
+            if (/^0\d+/.test(input.value)) {
+                input.value = input.value.replace(/^0+(?=\d)/, '');
+            }
+
             const count = BigInt(input.value || '0');
             const denomination = BigInt(input.dataset.pecahan);
             const subtotal = count * denomination;
@@ -369,7 +455,17 @@
         });
     });
 
-    quantityInputs.forEach((input) => input.addEventListener('input', updateCashTotal));
+    quantityInputs.forEach((input) => {
+        input.addEventListener('input', () => {
+            if (/^0\d+/.test(input.value)) {
+                input.value = input.value.replace(/^0+(?=\d)/, '');
+            }
+            updateCashTotal();
+        });
+        input.addEventListener('focus', () => {
+            input.select();
+        });
+    });
     updateCashTotal();
     syncProgressiveRowsFromValues();
 

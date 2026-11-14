@@ -13,9 +13,13 @@ class ManajemenKasirController extends Controller
 {
     public function index()
     {
+        $isAdmin = auth()->user()->role === 'admin';
         $warungIds = $this->warungIds();
+
         $kasir = User::where('role', 'kasir')
-            ->whereHas('warungs', fn ($query) => $query->whereIn('kasir.id', $warungIds))
+            ->when(!$isAdmin, function ($q) use ($warungIds) {
+                $q->whereHas('warungs', fn ($query) => $query->whereIn('kasir.id', $warungIds));
+            })
             ->with('warungs')
             ->orderBy('nama')
             ->get();
@@ -32,6 +36,8 @@ class ManajemenKasirController extends Controller
 
     public function store(Request $request)
     {
+        $isAdmin = auth()->user()->role === 'admin';
+
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:user,email',
@@ -39,7 +45,7 @@ class ManajemenKasirController extends Controller
             'id_kasir' => [
                 'required',
                 'integer',
-                Rule::exists('kasir', 'id')->where('id_user', auth()->id()),
+                Rule::exists('kasir', 'id')->when(!$isAdmin, fn ($rule) => $rule->where('id_user', auth()->id())),
             ],
             'password' => 'required|string|min:8|confirmed',
             'status' => 'required|in:aktif,nonaktif',
@@ -73,6 +79,8 @@ class ManajemenKasirController extends Controller
     public function update(Request $request, User $manajemenKasir)
     {
         $manajemenKasir = $this->ownedCashier($manajemenKasir);
+        $isAdmin = auth()->user()->role === 'admin';
+
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
             'email' => ['required', 'email', 'max:255', Rule::unique('user', 'email')->ignore($manajemenKasir->id)],
@@ -80,7 +88,7 @@ class ManajemenKasirController extends Controller
             'id_kasir' => [
                 'required',
                 'integer',
-                Rule::exists('kasir', 'id')->where('id_user', auth()->id()),
+                Rule::exists('kasir', 'id')->when(!$isAdmin, fn ($rule) => $rule->where('id_user', auth()->id())),
             ],
             'password' => 'nullable|string|min:8|confirmed',
             'status' => 'required|in:aktif,nonaktif',
@@ -92,7 +100,7 @@ class ManajemenKasirController extends Controller
             'nomor_hp' => $validated['nomor_hp'] ?? null,
             'status' => $validated['status'],
         ];
-        if (! empty($validated['password'])) {
+        if (!empty($validated['password'])) {
             $updates['password'] = Hash::make($validated['password']);
         }
 
@@ -115,7 +123,9 @@ class ManajemenKasirController extends Controller
 
     private function warungs()
     {
-        return Kasir::where('id_user', auth()->id())->orderBy('nama_warung')->get();
+        return Kasir::when(auth()->user()->role !== 'admin', fn ($q) => $q->where('id_user', auth()->id()))
+            ->orderBy('nama_warung')
+            ->get();
     }
 
     private function warungIds()
@@ -127,7 +137,7 @@ class ManajemenKasirController extends Controller
     {
         abort_unless(
             $user->role === 'kasir'
-                && $user->warungs()->whereIn('kasir.id', $this->warungIds())->exists(),
+                && (auth()->user()->role === 'admin' || $user->warungs()->whereIn('kasir.id', $this->warungIds())->exists()),
             404
         );
 

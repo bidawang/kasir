@@ -19,13 +19,14 @@ public function index()
             ->with('error', 'Silakan pilih cabang terlebih dahulu.');
     }
 
-    // 1. Ambil Kas Utama (Cash) & E-Wallet
+    // 1. Ambil Kas Utama (Cash) & Rekening Bank / E-Wallet
     $kasTunai = Kas::where('id_warung', $idWarung)
         ->where('status', 'cash')
         ->first();
 
     $kasEwallet = Kas::where('id_warung', $idWarung)
-        ->where('status', 'ewallet')
+        ->whereIn('status', ['bank', 'ewallet'])
+        ->orderBy('is_primary', 'desc')
         ->latest()
         ->get();
 
@@ -113,15 +114,26 @@ public function index()
                 ->with('error', 'Silakan pilih cabang terlebih dahulu.');
         }
 
+        if ($request->filled('saldo')) {
+            $cleaned = preg_replace('/[^0-9]/', '', (string) $request->saldo);
+            $request->merge(['saldo' => $cleaned !== '' ? (int) $cleaned : 0]);
+        }
+
         $request->validate([
             'jenis_kas' => 'required|string|max:100',
             'saldo' => 'required|numeric|min:0',
+            'status' => 'nullable|string|in:cash,bank,ewallet',
+            'nomor_rekening' => 'nullable|string|max:50',
+            'atas_nama' => 'nullable|string|max:100',
         ]);
+
         Kas::create([
             'id_warung' => $idWarung,
             'jenis_kas' => $request->jenis_kas,
             'saldo' => $request->saldo,
-            'status' => 'ewallet', // Default status untuk kas baru
+            'status' => $request->status ?? 'ewallet',
+            'nomor_rekening' => $request->nomor_rekening,
+            'atas_nama' => $request->atas_nama,
         ]);
 
         return redirect()
@@ -175,9 +187,16 @@ public function index()
                 ->with('error', 'Silakan pilih cabang terlebih dahulu.');
         }
 
+        if ($request->filled('saldo')) {
+            $cleaned = preg_replace('/[^0-9]/', '', (string) $request->saldo);
+            $request->merge(['saldo' => $cleaned !== '' ? (int) $cleaned : 0]);
+        }
+
         $request->validate([
             'jenis_kas' => 'required|string|max:100',
             'saldo' => 'required|numeric|min:0',
+            'nomor_rekening' => 'nullable|string|max:50',
+            'atas_nama' => 'nullable|string|max:100',
         ]);
 
         $kas = Kas::where('id', $id)
@@ -187,6 +206,8 @@ public function index()
         $kas->update([
             'jenis_kas' => $request->jenis_kas,
             'saldo' => $request->saldo,
+            'nomor_rekening' => $request->nomor_rekening,
+            'atas_nama' => $request->atas_nama,
         ]);
 
         return redirect()

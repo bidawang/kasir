@@ -14,9 +14,12 @@ return new class extends Migration
         Schema::create('user', function (Blueprint $table) {
             $table->id();
             $table->string('nama');
-            $table->string('nomor_hp');
-            $table->string('username')->unique();
+            $table->string('nomor_hp')->nullable();
+            $table->string('username')->nullable()->unique();
             $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('role', 20)->default('kasir'); // 'admin', 'owner', 'kasir'
+            $table->string('status', 20)->default('aktif'); // 'aktif', 'nonaktif'
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
@@ -37,7 +40,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('user');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('user');
     }
 };

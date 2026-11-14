@@ -12,7 +12,7 @@ class DefaultUsersSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'admin@gmail.com'],
             [
-                'nama' => 'Owner BRILink',
+                'nama' => 'Owner Agen',
                 'nomor_hp' => '08123456789',
                 'username' => 'admin',
                 'role' => 'admin',
@@ -24,7 +24,7 @@ class DefaultUsersSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'kasir@gmail.com'],
             [
-                'nama' => 'Kasir BRILink',
+                'nama' => 'Kasir Agen',
                 'nomor_hp' => '08123456789',
                 'username' => 'kasir',
                 'role' => 'kasir',

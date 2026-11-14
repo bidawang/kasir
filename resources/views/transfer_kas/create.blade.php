@@ -24,7 +24,7 @@
 
         get filteredKasAsal() {
             if (this.tipeTujuan === 'sesama') {
-                return this.kasAsalList.filter(k => k.status === 'ewallet');
+                return this.kasAsalList.filter(k => k.status === 'ewallet' || k.status === 'bank');
             }
             return this.kasAsalList;
         },
@@ -63,9 +63,9 @@
             
             if (this.tipeTujuan === 'sesama') {
                 if (this.selectedKasAsal) {
-                    this.kasTujuanList = this.kasAsalList.filter(k => k.id != this.asalId && k.status === 'ewallet');
+                    this.kasTujuanList = this.kasAsalList.filter(k => k.id != this.asalId && (k.status === 'ewallet' || k.status === 'bank'));
                 } else {
-                    this.kasTujuanList = this.kasAsalList.filter(k => k.status === 'ewallet');
+                    this.kasTujuanList = this.kasAsalList.filter(k => k.status === 'ewallet' || k.status === 'bank');
                 }
             } else if (this.tipeTujuan === 'lain' && this.warungTujuanId) {
                 this.loadingKasTujuan = true;
@@ -271,6 +271,7 @@
                                                :name="`pecahan[${item.pecahan}]`"
                                                x-model.number="pecahanInput[item.pecahan]"
                                                @input="calculateTotalPecahan()"
+                                               @focus="$event.target.select()"
                                                min="0"
                                                :max="item.jumlah"
                                                placeholder="0"
@@ -285,14 +286,21 @@
                 </template>
 
                 {{-- Input nominal akun digital atau bank --}}
-                <template x-if="selectedKasAsal && selectedKasAsal.status === 'ewallet'">
+                <template x-if="selectedKasAsal && (selectedKasAsal.status === 'ewallet' || selectedKasAsal.status === 'bank')">
                     <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-xs space-y-4">
-                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">3. Jumlah Transfer ke E-Wallet atau Rekening Bank</h3>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">3. Jumlah Transfer ke E-Wallet atau Rekening Bank</h3>
+                            <span class="text-[11px] font-semibold text-primary-600 bg-primary-50 px-2 py-0.5 rounded">Format Rupiah</span>
+                        </div>
                         <div class="relative">
                             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-extrabold text-slate-400">Rp</span>
-                            <input type="number" name="jumlah" x-model.number="jumlah" min="1" placeholder="0"
-                                   :required="selectedKasAsal && selectedKasAsal.status === 'ewallet'"
+                            <input type="text" inputmode="numeric" placeholder="10.000"
+                                   :value="jumlah ? formatRupiah(jumlah) : ''"
+                                   @focus="$event.target.select()"
+                                   @input="const raw = $event.target.value.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, ''); jumlah = raw ? parseInt(raw, 10) : 0; $event.target.value = jumlah ? formatRupiah(jumlah) : (raw === '0' ? '0' : '');"
+                                   :required="selectedKasAsal && (selectedKasAsal.status === 'ewallet' || selectedKasAsal.status === 'bank')"
                                    class="w-full pl-12 pr-4 py-3 rounded-xl border-slate-200 text-xl sm:text-2xl font-black text-slate-900 focus:border-indigo-500 focus:ring-indigo-500">
+                            <input type="hidden" name="jumlah" :value="jumlah">
                         </div>
                     </div>
                 </template>

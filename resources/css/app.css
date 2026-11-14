@@ -1,33 +1,40 @@
 @import 'tailwindcss';
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
     --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
-    --color-primary-50: #eef6ff;
-    --color-primary-100: #d6e9fe;
-    --color-primary-200: #b5d8fe;
-    --color-primary-300: #84bffd;
-    --color-primary-400: #499efb;
-    --color-primary-500: #1e82f7;
-    --color-primary-600: #0b63ce;
-    --color-primary-700: #084fa6;
-    --color-primary-800: #094287;
-    --color-primary-900: #0d376d;
-    --color-primary-950: #082347;
+    --color-primary-50: #eff6ff;
+    --color-primary-100: #dbeafe;
+    --color-primary-200: #bfdbfe;
+    --color-primary-300: #93c5fd;
+    --color-primary-400: #60a5fa;
+    --color-primary-500: #3b82f6;
+    --color-primary-600: #2563eb;
+    --color-primary-700: #1d4ed8;
+    --color-primary-800: #1e40af;
+    --color-primary-900: #1e3a8a;
+    --color-primary-950: #172554;
     --shadow-soft: 0 2px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -2px rgb(0 0 0 / 0.02);
-    --shadow-mobile-nav: 0 -2px 10px rgb(0 0 0 / 0.05);
+    --shadow-mobile-nav: 0 -2px 10px rgb(0 0 0 / 0.08);
 }
 
 @layer base {
-    html { font-size: 17px; }
-    body { -webkit-tap-highlight-color: transparent; }
-    input, select, textarea { font-size: 1rem; }
-    button, a, input, select, textarea { touch-action: manipulation; }
+    html {
+        font-size: 16px;
+        scroll-behavior: smooth;
+    }
+    body {
+        -webkit-tap-highlight-color: transparent;
+        transition: background-color 0.25s ease, color 0.25s ease;
+    }
+    input, select, textarea {
+        font-size: 0.95rem;
+    }
+    button, a, input, select, textarea {
+        touch-action: manipulation;
+    }
 }
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -35,28 +42,131 @@
 .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
 [x-cloak] { display: none !important; }
 
-@media (prefers-color-scheme: dark) {
-    body, html { background-color: #0f172a !important; color: #e2e8f0; }
-    [class~="bg-white"], [class~="bg-white/95"] { background-color: #1e293b !important; }
-    [class~="bg-slate-50"], [class~="bg-slate-100"] { background-color: #0f172a !important; }
-    [class~="text-slate-900"], [class~="text-slate-800"] { color: #f1f5f9 !important; }
-    [class~="text-slate-700"], [class~="text-slate-600"] { color: #cbd5e1 !important; }
-    [class~="text-slate-500"], [class~="text-slate-400"] { color: #94a3b8 !important; }
-    [class~="border-slate-100"], [class~="border-slate-200"], [class~="border-slate-300"] { border-color: #334155 !important; }
-    [class~="divide-slate-100"] > :not([hidden]) ~ :not([hidden]) { border-color: #334155 !important; }
-    [class~="bg-primary-50"] { background-color: #172554 !important; }
-    [class~="text-primary-700"], [class~="text-primary-800"] { color: #bfdbfe !important; }
-    [class~="bg-emerald-50"], [class~="bg-emerald-100"] { background-color: #064e3b !important; }
-    [class~="text-emerald-700"], [class~="text-emerald-800"] { color: #a7f3d0 !important; }
-    [class~="bg-rose-50"], [class~="bg-rose-100"] { background-color: #4c0519 !important; }
-    [class~="text-rose-700"], [class~="text-rose-800"] { color: #fecdd3 !important; }
-    [class~="bg-amber-50"], [class~="bg-amber-100"] { background-color: #451a03 !important; }
-    [class~="text-amber-700"], [class~="text-amber-800"] { color: #fde68a !important; }
-    input, select, textarea { color-scheme: dark; }
-    input:not([type="checkbox"]):not([type="radio"]), select, textarea {
-        background-color: #0f172a;
-        color: #f1f5f9;
-        border-color: #475569;
-    }
-    ::placeholder { color: #94a3b8; opacity: 1; }
+/* ==========================================================================
+   TEMA GELAP (DARK MODE) - Deep Navy & Slate with Corporate Blue Accents
+   ========================================================================== */
+html.dark {
+    color-scheme: dark;
+}
+
+html.dark body,
+html.dark {
+    background-color: #0b1120 !important;
+    color: #f1f5f9 !important;
+}
+
+/* Card & Surface Containers */
+html.dark [class~="bg-white"],
+html.dark [class~="bg-white/95"],
+html.dark [class~="bg-white/90"] {
+    background-color: #162032 !important;
+    border-color: #243248 !important;
+}
+
+html.dark [class~="bg-slate-50"],
+html.dark [class~="bg-slate-100"] {
+    background-color: #0d1526 !important;
+}
+
+/* Text Hierarchy */
+html.dark [class~="text-slate-900"],
+html.dark [class~="text-slate-800"] {
+    color: #f8fafc !important;
+}
+
+html.dark [class~="text-slate-700"],
+html.dark [class~="text-slate-600"] {
+    color: #cbd5e1 !important;
+}
+
+html.dark [class~="text-slate-500"],
+html.dark [class~="text-slate-400"] {
+    color: #94a3b8 !important;
+}
+
+/* Borders & Separators */
+html.dark [class~="border-slate-100"],
+html.dark [class~="border-slate-200"],
+html.dark [class~="border-slate-300"],
+html.dark [class~="border-slate-200/80"],
+html.dark [class~="border-slate-200/60"] {
+    border-color: #243248 !important;
+}
+
+html.dark [class~="divide-slate-100"] > :not([hidden]) ~ :not([hidden]),
+html.dark [class~="divide-slate-200"] > :not([hidden]) ~ :not([hidden]) {
+    border-color: #243248 !important;
+}
+
+/* Forms, Inputs, Selects, and Textareas */
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+html.dark select,
+html.dark textarea {
+    background-color: #0d1526 !important;
+    color: #f8fafc !important;
+    border-color: #2a3a52 !important;
+}
+
+html.dark input:focus,
+html.dark select:focus,
+html.dark textarea:focus {
+    background-color: #111c33 !important;
+    border-color: #3b82f6 !important;
+}
+
+html.dark ::placeholder {
+    color: #64748b !important;
+    opacity: 1;
+}
+
+/* Soft Accent Badges in Dark Mode */
+html.dark [class~="bg-primary-50"] {
+    background-color: #172554 !important;
+    border-color: #1e40af !important;
+}
+html.dark [class~="text-primary-700"],
+html.dark [class~="text-primary-800"],
+html.dark [class~="text-primary-600"] {
+    color: #93c5fd !important;
+}
+
+html.dark [class~="bg-emerald-50"] {
+    background-color: #064e3b !important;
+    border-color: #065f46 !important;
+}
+html.dark [class~="text-emerald-700"],
+html.dark [class~="text-emerald-800"],
+html.dark [class~="text-emerald-600"] {
+    color: #6ee7b7 !important;
+}
+
+html.dark [class~="bg-rose-50"] {
+    background-color: #4c0519 !important;
+    border-color: #881337 !important;
+}
+html.dark [class~="text-rose-700"],
+html.dark [class~="text-rose-800"],
+html.dark [class~="text-rose-600"] {
+    color: #fca5a5 !important;
+}
+
+html.dark [class~="bg-amber-50"] {
+    background-color: #451a03 !important;
+    border-color: #78350f !important;
+}
+html.dark [class~="text-amber-700"],
+html.dark [class~="text-amber-800"],
+html.dark [class~="text-amber-600"] {
+    color: #fde68a !important;
+}
+
+html.dark [class~="bg-sky-50"] {
+    background-color: #082f49 !important;
+    border-color: #0369a1 !important;
+}
+
+/* Bottom Navigation Bar on Mobile */
+html.dark nav[aria-label="Menu Navigasi Bawah"] {
+    background-color: rgba(22, 32, 50, 0.95) !important;
+    border-color: #243248 !important;
 }

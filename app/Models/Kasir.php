@@ -1,6 +1,5 @@
 <?php
 
-// app/Models/Kasir.php
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,7 +17,12 @@ class Kasir extends Model
     protected $fillable = [
         'id_user',
         'nama_warung',
+        'alamat',
+        'no_telepon',
         'modal',
+        'bank_utama',
+        'nomor_rekening_utama',
+        'atas_nama_utama',
     ];
 
     protected function casts(): array

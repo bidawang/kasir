@@ -58,9 +58,11 @@ class DashboardController extends Controller
             }])
             ->first();
 
-        // Hanya ambil kas E-Wallet (status = ewallet) untuk bagian Saldo Per Jenis Kas
+        // Ambil kas E-Wallet & Rekening Bank (status = bank atau ewallet)
         $saldoEwallet = Kas::where('id_warung', $idWarung)
-            ->where('status', 'ewallet')
+            ->whereIn('status', ['bank', 'ewallet'])
+            ->orderBy('is_primary', 'desc')
+            ->orderBy('jenis_kas')
             ->get();
 
         // Pemasukan hari ini

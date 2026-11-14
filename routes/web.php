@@ -10,6 +10,7 @@ use App\Http\Controllers\CabangController;
 use App\Http\Controllers\TransferKasController;
 use App\Http\Controllers\ItemJualanController;
 use App\Http\Controllers\BiayaAdminController;
+use App\Http\Controllers\KategoriTransaksiController;
 use App\Http\Controllers\ManajemenKasirController;
 use App\Http\Controllers\LaporanHarianController;
 
@@ -71,8 +72,11 @@ Route::get('/', function () {
 })->name('dashboard'); // <-- Berikan name dashboard di sini
 
     // Cashiers can create transactions and review their own transaction history.
-    Route::middleware('role:admin,kasir')->group(function () {
+    Route::middleware('role:admin,owner,kasir')->group(function () {
         Route::get('/transaksi/menu', [TransaksiController::class, 'menu'])->name('transaksi.menu');
+        Route::get('/transaksi/download-pdf', [TransaksiController::class, 'downloadPdf'])->name('transaksi.download-pdf');
+        Route::get('/transaksi/arsip/{id}/download', [TransaksiController::class, 'downloadPdfArsip'])->name('transaksi.arsip.download');
+        Route::delete('/transaksi/arsip/{id}', [TransaksiController::class, 'destroyPdfArsip'])->name('transaksi.arsip.destroy');
         Route::resource('transaksi', TransaksiController::class)->only(['index', 'store']);
         Route::get('/transaksi/penjualan-item/create', [TransaksiController::class, 'createPenjualanItem'])
             ->name('transaksi.penjualan-item.create');
@@ -110,14 +114,15 @@ Route::get('/', function () {
             ->name('kas.updateDetail');
         Route::resource('item-jualan', ItemJualanController::class)->except('show');
         Route::resource('biaya-admin', BiayaAdminController::class)->except('show');
+        Route::resource('kategori-transaksi', KategoriTransaksiController::class)->except('show');
         Route::get('/laporan', [LaporanController::class, 'index'])
             ->name('laporan.index');
     });
     // ==============================
-    // KHUSUS ADMIN
+    // KHUSUS ADMIN & OWNER
     // ==============================
 
-    Route::middleware(['role:admin'])->group(function () {
+    Route::middleware(['role:admin,owner'])->group(function () {
 
         Route::resource('manajemen-kasir', ManajemenKasirController::class)
             ->except(['show']);

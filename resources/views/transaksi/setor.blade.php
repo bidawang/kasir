@@ -1,169 +1,328 @@
 @extends('layouts.app')
 
-@section('title', 'Setor Tunai')
+@section('title', 'Setor Tunai / Transfer')
 
 @section('content')
-{{-- Berikan pb-36 di mobile agar konten bagian bawah tidak tertutup oleh floating bar --}}
-<div class="max-w-xl mx-auto pb-36 md:pb-24 space-y-3 sm:space-y-4 text-slate-800"
-     x-data="setorApp(@js($kasAsal), @js($kasTujuanList), @js($biayaAdminList), @js(old('biaya_admin_manual', 0)), @js(old('biaya_admin_toko', 0)))">
+<div class="max-w-xl mx-auto pb-36 md:pb-24 space-y-4 text-slate-800"
+     x-data="setorApp(
+         @js($kasAsal),
+         @js($kasTujuanList),
+         @js($kategori),
+         @js($biayaAdminList),
+         @js($bankUtama ?? 'BRI')
+     )">
 
     <!-- Header Section -->
     <div class="flex items-center justify-between px-1">
         <div>
-            <h1 class="text-base sm:text-lg font-extrabold text-emerald-700 tracking-tight flex items-center gap-1.5">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m0 0l6-6m-6 6l-6-6"/></svg>
-                Setor Tunai
+            <h1 class="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight flex items-center gap-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m0 0l6-6m-6 6l-6-6"/></svg>
+                Setor Tunai & Transfer
             </h1>
-            <p class="text-sm text-slate-500 font-medium">Catat uang tunai yang diterima dari pelanggan</p>
+            <p class="text-xs text-slate-500 font-medium">Terima uang tunai fisik & kirim saldo ke rekening bank / e-wallet</p>
         </div>
-        <a href="{{ route('transaksi.index') }}"
-           class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1 shadow-xs">
+        <a href="{{ route('transaksi.menu') }}"
+           class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
-            <span>Kembali</span>
+            <span>Pilih Kategori Lain</span>
         </a>
     </div>
 
     <!-- Alert Errors -->
     @if ($errors->any() || session('error'))
-        <div class="bg-rose-50 border border-rose-200 text-rose-800 p-3 rounded-xl text-xs font-medium space-y-1">
+        <div class="bg-rose-50 border border-rose-200 text-rose-800 p-3.5 rounded-2xl text-xs font-semibold space-y-1">
             <p class="font-bold flex items-center gap-1.5 text-rose-700">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
                 Terjadi kesalahan:
             </p>
-            <ul class="list-disc list-inside text-sm opacity-90 pl-1">
+            <ul class="list-disc list-inside opacity-90 pl-1">
                 @if (session('error')) <li>{{ session('error') }}</li> @endif
                 @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach
             </ul>
         </div>
     @endif
 
-    <form action="{{ route('transaksi.store') }}" method="POST" id="transactionForm" class="space-y-3" @submit="handleSubmit($event)">
+    <form action="{{ route('transaksi.store') }}" method="POST" id="transactionForm" class="space-y-3.5" @submit="handleSubmit($event)">
         @csrf
-        <input type="hidden" name="jenis" value="masuk">
         <input type="hidden" name="id_kas" :value="kasAsal ? kasAsal.id : ''">
-
-        <!-- CARD 1: PILIH AKUN TUJUAN -->
-        <div class="bg-white rounded-xl shadow-2xs border border-slate-200/80 p-3 sm:p-4 space-y-3">
-            <div>
-                <label for="id_kas_tujuan" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">E-Wallet atau Rekening Bank Tujuan</label>
-                <select class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all"
-                        name="id_kas_tujuan"
-                        x-model="selectedKasTujuanId"
-                        required>
-                    <option value="">-- Pilih akun tujuan --</option>
-                    <template x-for="kas in kasTujuanList" :key="'tujuan-' + kas.id">
-                        <option :value="kas.id" x-text="kas.nama_kas || kas.jenis_kas"></option>
-                    </template>
-                </select>
-            </div>
-        </div>
-
-        <!-- CARD 2: NOMINAL SETORAN -->
-        <div class="bg-white rounded-xl shadow-2xs border border-slate-200/80 p-3 sm:p-4 space-y-2">
-            <label for="nominal" class="block text-xs font-bold uppercase tracking-wider text-slate-700">Total Setoran</label>
-            <div class="relative">
-                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-base font-bold text-slate-400">Rp</span>
-                <input id="nominal" type="number" name="nominal" min="1" step="1" required
-                       value="{{ old('nominal') }}" x-model.number="nominal"
-                       class="w-full rounded-xl border border-slate-200 bg-slate-50 py-4 pl-12 pr-4 text-2xl font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                       placeholder="0">
-            </div>
-            <p class="text-xs text-slate-500">Masukkan nominal bersih yang disetorkan, tanpa menghitung pecahan uang.</p>
-        </div>
-
-        <!-- CARD 3: BIAYA ADMIN -->
-        <div class="bg-white rounded-xl shadow-2xs border border-slate-200/80 p-3 sm:p-4">
-            <div class="flex items-center justify-between gap-3">
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Admin Bank</label>
-                    <p class="text-xs text-slate-400 font-medium">Dihitung otomatis berdasarkan nominal setoran</p>
-                </div>
-                <div class="relative flex items-center w-36">
-                    <span class="absolute left-2.5 text-xs font-bold text-slate-400">Rp</span>
-                    <input type="text" class="w-full pl-8 pr-2.5 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs font-bold text-slate-900 text-right" :value="biayaAdmin" readonly>
-                </div>
-            </div>
-            <div x-show="!matchedFee" x-cloak class="mt-3 flex items-center justify-between gap-3">
-                <label for="biaya_admin_manual" class="text-xs font-semibold text-slate-700">Tarif belum tersedia, isi manual</label>
-                <input id="biaya_admin_manual" type="number" name="biaya_admin_manual" min="0" step="1" x-model.number="manualBiaya"
-                    class="w-36 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-right text-xs font-bold">
-            </div>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-2xs border border-slate-200/80 p-3 sm:p-4">
-            <label for="biaya_admin_toko" class="block text-xs font-bold uppercase tracking-wider text-slate-700">Admin Toko</label>
-            <p class="text-xs text-slate-400 font-medium mb-2">Biaya layanan yang menjadi pendapatan toko</p>
-            <div class="relative flex items-center w-36">
-                <span class="absolute left-2.5 text-xs font-bold text-slate-400">Rp</span>
-                <input id="biaya_admin_toko" type="number" name="biaya_admin_toko" min="0" step="1" x-model.number="manualBiayaToko"
-                       class="w-full pl-8 pr-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-900 text-right"
-                       placeholder="0">
-            </div>
-        </div>
-
-        <!-- KETERANGAN -->
-        <div class="bg-white rounded-xl shadow-2xs border border-slate-200/80 p-3 sm:p-4 space-y-1">
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Keterangan Catatan (Opsional)</label>
-            <textarea class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all" name="keterangan" rows="1.5" placeholder="Catatan setoran..."></textarea>
-        </div>
-
+        <input type="hidden" name="id_kategori" value="{{ $kategori->id }}">
+        <input type="hidden" name="nominal" :value="nominal">
         <input type="hidden" name="total" :value="grandTotal">
+        <input type="hidden" name="biaya_admin_toko" :value="biayaAdminToko">
+        <input type="hidden" name="biaya_admin_bank" :value="biayaAdminBank">
+        <input type="hidden" name="is_manual_fee" :value="isManualFee ? '1' : '0'">
+
+        <!-- KATEGORI TERPILIH (TIDAK PERLU PILIH KATEGORI LAGI) -->
+        <div class="bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-300 dark:border-emerald-700/60 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-2xs">
+            <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-600 text-white">
+                        KAS MASUK
+                    </span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+                        {{ strtoupper(str_replace('_', ' ', $kategori->metode_transaksi)) }}
+                    </span>
+                </div>
+                <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-tight mt-1 truncate">
+                    {{ $kategori->getNamaDinamis($bankUtama ?? 'BRI') }}
+                </h2>
+                <p class="text-xs text-slate-500 mt-0.5">{{ $kategori->deskripsi ?: 'Kasir menerima uang fisik dari pelanggan dan mengirimkan saldo digital.' }}</p>
+            </div>
+            <a href="{{ route('transaksi.menu') }}" class="text-xs font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-100 hover:bg-emerald-200 px-3 py-1.5 rounded-xl transition shrink-0">
+                Ganti
+            </a>
+        </div>
+
+        <!-- PILIH REKENING / WALLET AGEN SUMBER TRANSFER KE PELANGGAN -->
+        <div class="bg-white rounded-2xl shadow-2xs border border-slate-200/80 p-3.5 sm:p-4 space-y-2">
+            <label for="id_kas_tujuan" class="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                Kirim Saldo Dari Akun Agen <span class="text-rose-500">*</span>
+            </label>
+            <select class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                    id="id_kas_tujuan"
+                    name="id_kas_tujuan"
+                    x-model="selectedKasTujuanId"
+                    required>
+                <option value="">-- Pilih Rekening Bank / E-Wallet Agen --</option>
+                <template x-for="kas in kasTujuanList" :key="'tujuan-' + kas.id">
+                    <option :value="kas.id" x-text="(kas.is_primary ? '★ ' : '') + (kas.nama_kas || kas.jenis_kas) + ' (Saldo: Rp ' + formatIDR(kas.saldo) + ')'"></option>
+                </template>
+            </select>
+            <p class="text-[11px] text-slate-400">Saldo akun agen ini akan terpotong untuk transfer ke nasabah.</p>
+        </div>
+
+        <!-- NOMINAL SETORAN (FORMAT RUPIAH) -->
+        <div class="bg-white rounded-2xl shadow-2xs border border-slate-200/80 p-3.5 sm:p-4 space-y-2">
+            <div class="flex items-center justify-between">
+                <label for="nominal_display" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Nominal Transfer / Setoran <span class="text-rose-500">*</span>
+                </label>
+                <span class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Rupiah Otomatis</span>
+            </div>
+            <div class="relative">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-black text-slate-400">Rp</span>
+                <input id="nominal_display" type="text" inputmode="numeric" required
+                       :value="nominal ? formatIDR(nominal) : ''"
+                       @input="handleNominalInput($event)"
+                       @focus="$event.target.select()"
+                       class="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-12 pr-4 text-xl sm:text-2xl font-black text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+                       placeholder="100.000">
+            </div>
+            <!-- Quick Nominal Chips -->
+            <div class="flex flex-wrap gap-1.5 pt-1">
+                <template x-for="val in [50000, 100000, 200000, 500000, 1000000, 2000000]" :key="val">
+                    <button type="button" @click="setNominal(val)"
+                            class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition">
+                        <span x-text="formatIDR(val)"></span>
+                    </button>
+                </template>
+            </div>
+        </div>
+
+        <!-- RINCIAN BIAYA & LABA BERSIH (OTOMATIS + BISA INPUT MANUAL) -->
+        <div class="bg-white rounded-2xl shadow-2xs border border-slate-200/80 p-3.5 sm:p-4 space-y-3">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Rincian Biaya Admin & Keuntungan</span>
+                
+                <div class="flex items-center gap-1.5">
+                    <template x-if="matchedFee && !isManualOverride">
+                        <span class="text-[10px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                            Tarif Otomatis
+                        </span>
+                    </template>
+                    <template x-if="isManualFee">
+                        <span class="text-[10px] font-black text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                            Input Manual
+                        </span>
+                    </template>
+                    <!-- Tombol Toggle Override Manual -->
+                    <button type="button" @click="toggleManualOverride()"
+                            class="text-[11px] font-bold text-primary-600 hover:text-primary-800 hover:underline">
+                        <span x-text="isManualOverride ? 'Pakai Otomatis' : (matchedFee ? 'Ubah Manual' : 'Mode Manual')"></span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pesan Info Jika Tarif Belum Ada -->
+            <div x-show="!matchedFee && nominal > 0 && !isManualOverride" class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-center gap-2">
+                <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+                <span>Tarif belum diatur di database. <strong>Silakan isi biaya admin secara manual di bawah:</strong></span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pt-1">
+                <!-- Admin Toko / Jasa -->
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">Admin Toko (Jasa)</label>
+                        <span x-show="isManualFee" class="text-[10px] font-bold text-amber-600">Bisa Diedit</span>
+                    </div>
+                    <div class="relative">
+                        <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
+                        <input type="text" inputmode="numeric"
+                               :readonly="!isManualFee"
+                               :class="isManualFee ? 'bg-white border-primary-400 ring-2 ring-primary-100 text-slate-900' : 'bg-transparent border-transparent text-slate-800'"
+                               class="w-full pl-8 pr-2 py-1 text-sm sm:text-base font-black rounded-lg border focus:outline-none transition"
+                               :value="formatIDR(biayaAdminToko)"
+                               @focus="$event.target.select()"
+                               @input="handleAdminTokoManual($event)">
+                    </div>
+                    <span class="text-[10px] text-slate-400 mt-1 block">Ditagihkan ke nasabah</span>
+                </div>
+
+                <!-- Potongan Bank / Modal Server -->
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">Potongan Bank</label>
+                        <span x-show="isManualFee" class="text-[10px] font-bold text-amber-600">Bisa Diedit</span>
+                    </div>
+                    <div class="relative">
+                        <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
+                        <input type="text" inputmode="numeric"
+                               :readonly="!isManualFee"
+                               :class="isManualFee ? 'bg-white border-primary-400 ring-2 ring-primary-100 text-slate-900' : 'bg-transparent border-transparent text-slate-700'"
+                               class="w-full pl-8 pr-2 py-1 text-sm sm:text-base font-bold rounded-lg border focus:outline-none transition"
+                               :value="formatIDR(biayaAdminBank)"
+                               @focus="$event.target.select()"
+                               @input="handleAdminBankManual($event)">
+                    </div>
+                    <span class="text-[10px] text-slate-400 mt-1 block">Modal fee server/bank</span>
+                </div>
+            </div>
+
+            <!-- LABA BERSIH CARD -->
+            <div class="p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-black text-emerald-800 uppercase tracking-wider">Keuntungan Bersih Toko</span>
+                    <span class="block text-[11px] text-emerald-600 font-medium">Admin Toko dikurangi Biaya Bank</span>
+                </div>
+                <div class="text-right">
+                    <span class="text-lg font-black text-emerald-700" x-text="'Rp ' + formatIDR(biayaAdminToko - biayaAdminBank)"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- KETERANGAN / NO TUJUAN -->
+        <div class="bg-white rounded-2xl shadow-2xs border border-slate-200/80 p-3.5 sm:p-4 space-y-1.5">
+            <label for="keterangan" class="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                Keterangan / No. Rekening / No. HP Tujuan (Opsional)
+            </label>
+            <input type="text" id="keterangan" name="keterangan"
+                   class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+                   placeholder="Contoh: No Rek 0123456789 a/n Budi Santoso">
+        </div>
     </form>
 
-    <!-- FLOATING BOTTOM BAR -->
-    {{-- Posisi ditopang: di mobile berada di bottom-[calc(3.5rem+env(safe-area-inset-bottom))] (tepat di atas Bottom Nav), di tablet/desktop kembali ke bottom-4 --}}
+    <!-- FLOATING ACTION BAR -->
     <div class="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:bottom-4 left-3 right-3 max-w-xl mx-auto z-40">
-        <div class="bg-slate-900/95 backdrop-blur-md text-white px-3.5 py-2.5 rounded-xl border border-slate-800 shadow-2xl flex items-center justify-between gap-2">
+        <div class="bg-slate-900/95 backdrop-blur-md text-white px-4 py-3 rounded-2xl border border-slate-800 shadow-2xl flex items-center justify-between gap-3">
             <div>
-                <div class="text-xs text-slate-400 uppercase tracking-wider font-bold">Total Setoran Bersih</div>
-                <div class="text-sm sm:text-base font-black text-emerald-400" x-text="'Rp ' + formatIDR(grandTotal)"></div>
+                <div class="text-[10px] text-slate-400 uppercase tracking-wider font-extrabold">Uang Fisik Diterima Kasir</div>
+                <div class="text-base sm:text-lg font-black text-emerald-400" x-text="'Rp ' + formatIDR(grandTotal)"></div>
             </div>
-            <button type="submit" form="transactionForm" :disabled="isSubmitting" class="bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer">
-                <span x-text="isSubmitting ? 'Menyimpan...' : 'Simpan Setoran'"></span>
+            <button type="submit" form="transactionForm" :disabled="isSubmitting"
+                    class="bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-lg shadow-emerald-500/20">
+                <span x-text="isSubmitting ? 'Memproses...' : 'Simpan Transaksi'"></span>
             </button>
         </div>
     </div>
 </div>
 
 <script>
-    function setorApp(kasAsal, kasTujuanList, feeRanges, oldManualFee, oldShopFee) {
+    function setorApp(kasAsal, kasTujuanList, kategori, feeRanges, bankUtama) {
         return {
             kasAsal: kasAsal || null,
             kasTujuanList: kasTujuanList || [],
+            kategori: kategori || {},
+            kategoriId: kategori ? kategori.id : null,
             feeRanges: feeRanges || [],
+            bankUtama: bankUtama || 'BRI',
             selectedKasTujuanId: '',
             isSubmitting: false,
             nominal: Number(@js(old('nominal', 0))),
-            manualBiaya: Number(oldManualFee || 0),
-            manualBiayaToko: Number(oldShopFee || 0),
 
-            get matchedFee() {
-                const matchesNominal = fee => this.nominal >= Number(fee.range_awal) && this.nominal <= Number(fee.range_akhir);
-                return this.feeRanges.find(fee => String(fee.id_kas) === String(this.selectedKasTujuanId) && matchesNominal(fee))
-                    || this.feeRanges.find(fee => fee.id_kas === null && matchesNominal(fee));
+            // State Biaya Manual
+            biayaAdminTokoManual: 0,
+            biayaAdminBankManual: 0,
+            isManualOverride: false,
+
+            handleNominalInput(e) {
+                const raw = e.target.value.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, '');
+                this.nominal = raw ? parseInt(raw, 10) : 0;
+                e.target.value = this.nominal ? this.formatIDR(this.nominal) : (raw === '0' ? '0' : '');
+                
+                // Jika belum ada fee otomatis, biarkan user edit manual
+                if (!this.matchedFee && !this.isManualOverride) {
+                    // Biarkan nilai manual tetap atau default
+                }
             },
-            get biayaAdmin() {
-                return this.matchedFee ? Number(this.matchedFee.biaya_admin) : Number(this.manualBiaya || 0);
+            setNominal(val) {
+                this.nominal = val;
+                const input = document.getElementById('nominal_display');
+                if (input) input.value = this.formatIDR(val);
+            },
+            get matchedFee() {
+                if (!this.nominal || !this.kategoriId) return null;
+                const matchesNominal = fee => this.nominal >= Number(fee.range_awal) && this.nominal <= Number(fee.range_akhir);
+                return this.feeRanges.find(fee => String(fee.id_kategori) === String(this.kategoriId) && String(fee.id_kas) === String(this.selectedKasTujuanId) && matchesNominal(fee))
+                    || this.feeRanges.find(fee => String(fee.id_kategori) === String(this.kategoriId) && (!fee.id_kas || fee.id_kas === null) && matchesNominal(fee));
+            },
+            get isManualFee() {
+                return this.isManualOverride || !this.matchedFee;
             },
             get biayaAdminToko() {
-                return Number(this.manualBiayaToko || 0);
+                if (this.isManualFee) {
+                    return this.biayaAdminTokoManual;
+                }
+                return this.matchedFee ? Number(this.matchedFee.biaya_admin) : 0;
+            },
+            get biayaAdminBank() {
+                if (this.isManualFee) {
+                    return this.biayaAdminBankManual;
+                }
+                return this.matchedFee ? Number(this.matchedFee.biaya_admin_bank || 0) : 0;
+            },
+            toggleManualOverride() {
+                this.isManualOverride = !this.isManualOverride;
+                if (this.isManualOverride) {
+                    this.biayaAdminTokoManual = this.matchedFee ? Number(this.matchedFee.biaya_admin) : this.biayaAdminTokoManual;
+                    this.biayaAdminBankManual = this.matchedFee ? Number(this.matchedFee.biaya_admin_bank || 0) : this.biayaAdminBankManual;
+                }
+            },
+            handleAdminTokoManual(e) {
+                const raw = e.target.value.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, '');
+                this.biayaAdminTokoManual = raw ? parseInt(raw, 10) : 0;
+                e.target.value = this.formatIDR(this.biayaAdminTokoManual);
+            },
+            handleAdminBankManual(e) {
+                const raw = e.target.value.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, '');
+                this.biayaAdminBankManual = raw ? parseInt(raw, 10) : 0;
+                e.target.value = this.formatIDR(this.biayaAdminBankManual);
             },
             get grandTotal() {
-                return this.nominal
-                    - Math.max(0, parseInt(this.biayaAdmin) || 0)
-                    - Math.max(0, parseInt(this.biayaAdminToko) || 0);
+                return this.nominal + this.biayaAdminToko;
             },
             formatIDR(val) {
                 return new Intl.NumberFormat('id-ID').format(val || 0);
             },
             handleSubmit(e) {
-                if (!this.kasAsal) { alert('Kas tunai tidak ditemukan.'); e.preventDefault(); return false; }
-                if (!this.selectedKasTujuanId) { alert('Silakan pilih e-wallet atau rekening bank tujuan!'); e.preventDefault(); return false; }
-                if (this.nominal <= 0) { alert('Masukkan nominal setoran.'); e.preventDefault(); return false; }
-                if (this.grandTotal <= 0) { alert('Nominal setoran setelah biaya admin harus lebih dari Rp 0.'); e.preventDefault(); return false; }
+                if (!this.kasAsal) { 
+                    alert('Kas fisik tunai tidak ditemukan untuk cabang ini.'); 
+                    e.preventDefault(); 
+                    return false; 
+                }
+                if (!this.selectedKasTujuanId) { 
+                    alert('Silakan pilih rekening atau e-wallet agen pengirim!'); 
+                    e.preventDefault(); 
+                    return false; 
+                }
+                if (this.nominal <= 0) { 
+                    alert('Masukkan nominal transaksi!'); 
+                    e.preventDefault(); 
+                    return false; 
+                }
                 this.isSubmitting = true;
             }
-        }
+        };
     }
 </script>
 @endsection

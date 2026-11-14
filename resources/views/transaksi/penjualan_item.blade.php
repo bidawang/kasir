@@ -72,19 +72,22 @@
             </div>
 
             <div x-show="selectedItem && selectedItem.jenis !== 'fisik'">
-                <label for="harga_item" class="block text-sm sm:text-base font-semibold text-slate-700 mb-2">Jumlah Layanan Virtual atau Bank</label>
+                <label for="harga_item" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Jumlah Layanan Virtual atau Bank</label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 text-sm font-semibold">Rp</span>
-                    <input id="harga_item" type="number" inputmode="numeric" min="1" step="1" x-model.number="virtualAmount"
+                    <input id="harga_item" type="text" inputmode="numeric" placeholder="10.000"
+                        :value="virtualAmount ? formatIDR(virtualAmount) : ''"
+                        @focus="$event.target.select()"
+                        @input="const raw = $event.target.value.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, ''); virtualAmount = raw ? parseInt(raw, 10) : 0; $event.target.value = virtualAmount ? formatIDR(virtualAmount) : (raw === '0' ? '0' : '');"
                         class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm sm:text-base font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                 </div>
-                @error('harga_item')<p class="mt-1.5 text-sm text-rose-500 font-medium">{{ $message }}</p>@enderror
+                @error('harga_item')<p class="mt-1.5 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
             </div>
             <input type="hidden" name="harga_item" :value="salePrice">
             <input type="hidden" name="biaya_admin_manual" :value="manualFee">
 
             <div x-show="selectedItem && selectedItem.jenis !== 'fisik'">
-                <label for="id_kas_sumber" class="block text-sm sm:text-base font-semibold text-slate-700 mb-2">Akun Sumber (E-Wallet atau Rekening Bank)</label>
+                <label for="id_kas_sumber" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Akun Sumber (E-Wallet atau Rekening Bank)</label>
                 <select id="id_kas_sumber" name="id_kas_sumber" x-model="walletId" :required="requiresWallet" :disabled="!requiresWallet || {{ $walletList->isEmpty() ? 'true' : 'false' }}"
                     class="w-full px-4 py-3 bg-slate-50 border @error('id_kas_warung') border-rose-300 @else border-slate-200 @enderror rounded-xl text-sm sm:text-base font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                     <option value="">Pilih akun sumber</option>
@@ -92,17 +95,20 @@
                         <option value="{{ $wallet->id }}">{{ $wallet->jenis_kas }} (saldo Rp {{ number_format($wallet->saldo, 0, ',', '.') }})</option>
                     @endforeach
                 </select>
-                @error('id_kas_sumber')<p class="mt-1.5 text-sm text-rose-500 font-medium">{{ $message }}</p>@enderror
+                @error('id_kas_sumber')<p class="mt-1.5 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
                 @if($walletList->isEmpty())
-                    <p class="mt-1.5 text-sm text-rose-600">Belum ada e-wallet atau rekening bank di cabang ini.</p>
+                    <p class="mt-1.5 text-xs text-rose-600">Belum ada e-wallet atau rekening bank di cabang ini.</p>
                 @endif
             </div>
 
             <div x-show="selectedItem && !matchedFee" x-cloak>
-                <label for="manual_fee" class="block text-sm sm:text-base font-semibold text-slate-700 mb-2">Biaya Admin Manual (tarif belum tersedia)</label>
+                <label for="manual_fee" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Biaya Admin Manual (tarif belum tersedia)</label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 text-sm font-semibold">Rp</span>
-                    <input id="manual_fee" type="number" inputmode="numeric" min="0" step="1" x-model.number="manualFee"
+                    <input id="manual_fee" type="text" inputmode="numeric" placeholder="5.000"
+                        :value="manualFee ? formatIDR(manualFee) : ''"
+                        @focus="$event.target.select()"
+                        @input="const raw = $event.target.value.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, ''); manualFee = raw ? parseInt(raw, 10) : 0; $event.target.value = manualFee ? formatIDR(manualFee) : (raw === '0' ? '0' : '');"
                         class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm sm:text-base font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                 </div>
             </div>
@@ -130,6 +136,7 @@
                         <label class="flex items-center justify-between gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200">
                             <span class="text-base font-bold text-slate-700" x-text="'Rp ' + formatIDR(item.pecahan)"></span>
                             <input type="number" min="0" step="1" inputmode="numeric" x-model.number="item.jumlah"
+                                @focus="$event.target.select()"
                                 class="w-20 px-2 py-1.5 text-center bg-white border border-slate-200 rounded-lg text-sm font-bold">
                         </label>
                     </template>
@@ -155,6 +162,7 @@
                         <label class="flex items-center justify-between gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200">
                             <span class="text-base font-bold text-slate-700" x-text="'Rp ' + formatIDR(item.pecahan)"></span>
                             <input type="number" min="0" step="1" inputmode="numeric" x-model.number="item.jumlah"
+                                @focus="$event.target.select()"
                                 class="w-20 px-2 py-1.5 text-center bg-white border border-slate-200 rounded-lg text-sm font-bold">
                         </label>
                     </template>
