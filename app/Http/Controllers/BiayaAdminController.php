@@ -67,6 +67,94 @@ class BiayaAdminController extends Controller
             return redirect()->route('dashboard')->with('error', 'Silakan pilih cabang terlebih dahulu.');
         }
 
+        // Cek apakah input berupa Multi-Tier (tiers array / foreach) atau Single Tier
+        if ($request->has('tiers') && is_array($request->tiers)) {
+            $request->validate([
+                'id_kategori' => 'required|integer|exists:kategori_transaksi,id',
+                'id_kas' => 'nullable|integer|exists:kas,id',
+                'tiers' => 'required|array|min:1',
+            ]);
+
+            $idKategori = (int) $request->id_kategori;
+            $idKas = $request->filled('id_kas') ? (int) $request->id_kas : null;
+            if ($idKas) {
+                Kas::where('id_warung', $idWarung)
+                    ->whereIn('status', ['bank', 'ewallet'])
+                    ->findOrFail($idKas);
+            }
+
+            $globalKeterangan = $request->input('keterangan');
+            $cleanedTiers = [];
+            $prevMax = null;
+
+            foreach ($request->tiers as $index => $tier) {
+                $rawAwal = preg_replace('/[^0-9]/', '', (string) ($tier['range_awal'] ?? '0'));
+                $rawAkhir = preg_replace('/[^0-9]/', '', (string) ($tier['range_akhir'] ?? '0'));
+                $rawAdmin = preg_replace('/[^0-9]/', '', (string) ($tier['biaya_admin'] ?? '0'));
+                $rawBank = preg_replace('/[^0-9]/', '', (string) ($tier['biaya_admin_bank'] ?? '0'));
+
+                $rangeAwal = $rawAwal !== '' ? (int) $rawAwal : 0;
+                $rangeAkhir = $rawAkhir !== '' ? (int) $rawAkhir : 0;
+                $biayaAdmin = $rawAdmin !== '' ? (int) $rawAdmin : 0;
+                $biayaAdminBank = $rawBank !== '' ? (int) $rawBank : 0;
+
+                // Handle jika ada nominal minimum dan maksimum yang sama atau di antara keduanya:
+                // di foreach kedua dan seterusnya, nilai minimumnya adalah nilai maksimum sebelumnya + 1
+                if ($prevMax !== null) {
+                    if ($rangeAwal <= $prevMax) {
+                        $rangeAwal = $prevMax + 1;
+                    }
+                }
+
+                if ($rangeAkhir < $rangeAwal) {
+                    $rangeAkhir = $rangeAwal;
+                }
+
+                $prevMax = $rangeAkhir;
+
+                $cleanedTiers[] = [
+                    'id_warung' => $idWarung,
+                    'id_kategori' => $idKategori,
+                    'id_kas' => $idKas,
+                    'range_awal' => $rangeAwal,
+                    'range_akhir' => $rangeAkhir,
+                    'biaya_admin' => $biayaAdmin,
+                    'biaya_admin_bank' => $biayaAdminBank,
+                    'keterangan' => !empty($tier['keterangan']) ? $tier['keterangan'] : $globalKeterangan,
+                ];
+            }
+
+            // Validasi overlap terhadap database yang sudah ada
+            foreach ($cleanedTiers as $idx => $tier) {
+                $overlaps = BiayaAdmin::where('id_warung', $idWarung)
+                    ->where('id_kategori', $idKategori)
+                    ->when(
+                        $idKas,
+                        fn ($query, $k) => $query->where('id_kas', $k),
+                        fn ($query) => $query->whereNull('id_kas')
+                    )
+                    ->where('range_awal', '<=', $tier['range_akhir'])
+                    ->where('range_akhir', '>=', $tier['range_awal'])
+                    ->exists();
+
+                if ($overlaps) {
+                    throw ValidationException::withMessages([
+                        'tiers' => 'Rentang Tingkat #' . ($idx + 1) . ' (Rp ' . number_format($tier['range_awal'], 0, ',', '.') . ' s/d Rp ' . number_format($tier['range_akhir'], 0, ',', '.') . ') bertumpang tindih dengan tarif yang sudah tersimpan di database.',
+                    ]);
+                }
+            }
+
+            // Simpan semua tier dalam DB transaction
+            \Illuminate\Support\Facades\DB::transaction(function () use ($cleanedTiers) {
+                foreach ($cleanedTiers as $tier) {
+                    BiayaAdmin::create($tier);
+                }
+            });
+
+            return redirect()->route('biaya-admin.index')
+                ->with('success', 'Berhasil menambahkan ' . count($cleanedTiers) . ' tingkatan tarif biaya admin.');
+        }
+
         $validated = $this->validateBiayaAdmin($request, $idWarung);
         $this->ensureRangeIsAvailable($validated, $idWarung);
 

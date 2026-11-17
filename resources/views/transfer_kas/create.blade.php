@@ -1,7 +1,10 @@
 @extends('layouts.app')
 
 @section('content')
-
+@php
+    $warungList = $warungList ?? collect([]);
+    $kasListAsal = $kasListAsal ?? collect([]);
+@endphp
 <div class="max-w-4xl mx-auto pb-12"
      x-data="{
         tipeTujuan: 'sesama',
@@ -314,8 +317,12 @@
                         <label class="block text-sm font-semibold text-slate-700 mb-2">Biaya Admin Transfer</label>
                         <div class="relative">
                             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">Rp</span>
-                            <input type="number" name="biaya_transfer" x-model.number="biaya" min="0" placeholder="0"
+                            <input type="text" inputmode="numeric" placeholder="0"
+                                   :value="biaya ? formatRupiah(biaya) : ''"
+                                   @focus="$event.target.select()"
+                                   @input="const raw = $event.target.value.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, ''); biaya = raw ? parseInt(raw, 10) : 0; $event.target.value = biaya ? formatRupiah(biaya) : (raw === '0' ? '0' : '');"
                                    class="w-full pl-10 pr-4 py-3 rounded-xl border-slate-200 text-sm sm:text-base font-bold focus:border-indigo-500 focus:ring-indigo-500 bg-slate-50/50">
+                            <input type="hidden" name="biaya_transfer" :value="biaya">
                         </div>
                     </div>
 

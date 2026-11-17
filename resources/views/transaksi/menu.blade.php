@@ -16,7 +16,7 @@
             <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-0.5">
                 {{ $warung->nama_warung ?? 'Cabang Utama' }}
             </h1>
-            <p class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">
+            <p class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5 sub-explanation">
                 Bank Utama Cabang: <span class="font-black text-primary-700 bg-primary-50 px-2 py-0.5 rounded border border-primary-200">{{ $bankUtama ?? 'BRI' }}</span>
                 &bull; Operator: <span class="font-semibold text-slate-700">{{ auth()->user()->nama ?? auth()->user()->username }}</span>
             </p>
@@ -40,6 +40,7 @@
     </header>
 
     @php
+        $kategoriList = $kategoriList ?? collect([]);
         $kategoriMasuk = $kategoriList->where('jenis_aliran', 'masuk');
         $kategoriKeluar = $kategoriList->where('jenis_aliran', 'keluar');
     @endphp
@@ -76,7 +77,7 @@
     <!-- KONTEN TAB 1: SETOR & TRANSFER -->
     <div x-show="activeTab === 'setor'" x-cloak class="space-y-3">
         <div class="flex items-center justify-between px-1">
-            <span class="text-xs font-bold text-slate-500">Pilih kategori transaksi uang masuk:</span>
+            <span class="text-xs font-bold text-slate-500 sub-explanation">Pilih kategori transaksi uang masuk:</span>
             <span class="text-[11px] font-black text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
                 Uang Fisik Diterima Kasir
             </span>
@@ -100,7 +101,7 @@
                             {{ $namaDinamis }}
                         </h3>
                         @if($kat->deskripsi)
-                            <p class="text-xs text-slate-500 mt-1 line-clamp-2">{{ $kat->deskripsi }}</p>
+                            <p class="text-xs text-slate-500 mt-1 line-clamp-2 sub-explanation">{{ $kat->deskripsi }}</p>
                         @endif
                     </div>
                     <div class="flex items-center justify-between text-xs font-bold text-emerald-600 pt-2 border-t border-slate-100 group-hover:border-emerald-200">
@@ -119,7 +120,7 @@
     <!-- KONTEN TAB 2: TARIK TUNAI -->
     <div x-show="activeTab === 'tarik'" x-cloak class="space-y-3">
         <div class="flex items-center justify-between px-1">
-            <span class="text-xs font-bold text-slate-500">Pilih kategori penarikan tunai:</span>
+            <span class="text-xs font-bold text-slate-500 sub-explanation">Pilih kategori penarikan tunai:</span>
             <span class="text-[11px] font-black text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200">
                 Uang Fisik Diserahkan ke Nasabah
             </span>
@@ -143,7 +144,7 @@
                             {{ $namaDinamis }}
                         </h3>
                         @if($kat->deskripsi)
-                            <p class="text-xs text-slate-500 mt-1 line-clamp-2">{{ $kat->deskripsi }}</p>
+                            <p class="text-xs text-slate-500 mt-1 line-clamp-2 sub-explanation">{{ $kat->deskripsi }}</p>
                         @endif
                     </div>
                     <div class="flex items-center justify-between text-xs font-bold text-rose-600 pt-2 border-t border-slate-100 group-hover:border-rose-200">
@@ -160,55 +161,80 @@
     </div>
 
     <!-- KONTEN TAB 3: KAS OPERASIONAL & BARANG -->
+    <!-- KONTEN TAB 3: KAS OPERASIONAL & BARANG -->
     <div x-show="activeTab === 'operasional'" x-cloak class="space-y-3">
         <div class="flex items-center justify-between px-1">
-            <span class="text-xs font-bold text-slate-500">Pilih jenis kas operasional atau penjualan:</span>
-            <span class="text-[11px] font-bold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
+            <span class="text-xs font-bold text-slate-500 sub-explanation">Pilih jenis kas operasional atau penjualan:</span>
+            <span class="text-[11px] font-black text-primary-700 bg-primary-50 px-2.5 py-0.5 rounded-full border border-primary-200">
                 Operasional Internal
             </span>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <!-- Kas Masuk Operasional -->
-            <a href="{{ route('transaksi.kas.masuk') }}" class="group flex flex-col justify-between gap-3 rounded-2xl border border-sky-200 bg-white p-4.5 shadow-2xs hover:-translate-y-0.5 hover:shadow-md hover:border-sky-400 transition text-left">
+            <a href="{{ route('transaksi.kas.masuk') }}" 
+               class="group bg-white hover:bg-sky-50/40 p-4 rounded-2xl border border-slate-200/90 hover:border-sky-400 transition-all duration-150 shadow-2xs hover:shadow-md flex flex-col justify-between gap-3 text-left">
                 <div>
-                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-800 mb-3 group-hover:scale-105 transition-transform">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6"/></svg>
-                    </span>
-                    <h3 class="font-black text-slate-900 text-sm sm:text-base group-hover:text-sky-700 transition-colors">Kas Masuk Toko</h3>
-                    <p class="text-xs text-slate-500 mt-0.5">Pencatatan penambahan modal, setoran kas pemilik, atau pendapatan operasional lain.</p>
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-sky-100 text-sky-800">
+                            KAS MASUK
+                        </span>
+                        <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-100 text-sky-700">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6"/></svg>
+                        </span>
+                    </div>
+                    <h3 class="font-black text-sm sm:text-base text-slate-900 group-hover:text-sky-700 transition-colors leading-snug">
+                        Kas Masuk Toko
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-1 line-clamp-2 sub-explanation">Pencatatan penambahan modal, setoran kas pemilik, atau pendapatan operasional lain.</p>
                 </div>
-                <div class="flex items-center justify-between text-xs font-bold text-sky-600 pt-2 border-t border-slate-100">
+                <div class="flex items-center justify-between text-xs font-bold text-sky-600 pt-2 border-t border-slate-100 group-hover:border-sky-200">
                     <span>Input Kas Masuk</span>
                     <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
                 </div>
             </a>
 
             <!-- Kas Keluar Operasional -->
-            <a href="{{ route('transaksi.kas.keluar') }}" class="group flex flex-col justify-between gap-3 rounded-2xl border border-amber-200 bg-white p-4.5 shadow-2xs hover:-translate-y-0.5 hover:shadow-md hover:border-amber-400 transition text-left">
+            <a href="{{ route('transaksi.kas.keluar') }}" 
+               class="group bg-white hover:bg-amber-50/40 p-4 rounded-2xl border border-slate-200/90 hover:border-amber-400 transition-all duration-150 shadow-2xs hover:shadow-md flex flex-col justify-between gap-3 text-left">
                 <div>
-                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800 mb-3 group-hover:scale-105 transition-transform">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 12H6"/></svg>
-                    </span>
-                    <h3 class="font-black text-slate-900 text-sm sm:text-base group-hover:text-amber-700 transition-colors">Kas Keluar Toko</h3>
-                    <p class="text-xs text-slate-500 mt-0.5">Biaya operasional toko, listrik, air, konsumsi, transportasi, atau beban usaha.</p>
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-800">
+                            KAS KELUAR
+                        </span>
+                        <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 12H6"/></svg>
+                        </span>
+                    </div>
+                    <h3 class="font-black text-sm sm:text-base text-slate-900 group-hover:text-amber-700 transition-colors leading-snug">
+                        Kas Keluar Toko
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-1 line-clamp-2 sub-explanation">Biaya operasional toko, listrik, air, konsumsi, transportasi, atau beban usaha.</p>
                 </div>
-                <div class="flex items-center justify-between text-xs font-bold text-amber-600 pt-2 border-t border-slate-100">
+                <div class="flex items-center justify-between text-xs font-bold text-amber-600 pt-2 border-t border-slate-100 group-hover:border-amber-200">
                     <span>Input Kas Keluar</span>
                     <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
                 </div>
             </a>
 
             <!-- Jual Barang / Jasa -->
-            <a href="{{ route('transaksi.penjualan-item.create') }}" class="group flex flex-col justify-between gap-3 rounded-2xl border border-purple-200 bg-white p-4.5 shadow-2xs hover:-translate-y-0.5 hover:shadow-md hover:border-purple-400 transition text-left">
+            <a href="{{ route('transaksi.penjualan-item.create') }}" 
+               class="group bg-white hover:bg-purple-50/40 p-4 rounded-2xl border border-slate-200/90 hover:border-purple-400 transition-all duration-150 shadow-2xs hover:shadow-md flex flex-col justify-between gap-3 text-left">
                 <div>
-                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-purple-100 text-purple-800 mb-3 group-hover:scale-105 transition-transform">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z"/></svg>
-                    </span>
-                    <h3 class="font-black text-slate-900 text-sm sm:text-base group-hover:text-purple-700 transition-colors">Jual Barang / Jasa</h3>
-                    <p class="text-xs text-slate-500 mt-0.5">Penjualan inventaris fisik seperti materai, kartu perdana, amplop, atau aksesoris.</p>
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-purple-100 text-purple-800">
+                            PENJUALAN
+                        </span>
+                        <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-100 text-purple-700">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z"/></svg>
+                        </span>
+                    </div>
+                    <h3 class="font-black text-sm sm:text-base text-slate-900 group-hover:text-purple-700 transition-colors leading-snug">
+                        Jual Barang / Jasa
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-1 line-clamp-2 sub-explanation">Penjualan inventaris fisik seperti materai, kartu perdana, amplop, atau aksesoris.</p>
                 </div>
-                <div class="flex items-center justify-between text-xs font-bold text-purple-600 pt-2 border-t border-slate-100">
+                <div class="flex items-center justify-between text-xs font-bold text-purple-600 pt-2 border-t border-slate-100 group-hover:border-purple-200">
                     <span>Kasir Penjualan</span>
                     <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
                 </div>

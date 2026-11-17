@@ -32,5 +32,17 @@ class DefaultUsersSeeder extends Seeder
                 'password' => 'password',
             ]
         );
+
+        User::firstOrCreate(
+            ['email' => 'developer@gmail.com'],
+            [
+                'nama' => 'Master Developer',
+                'nomor_hp' => '081122334455',
+                'username' => 'developer',
+                'role' => 'developer',
+                'status' => 'aktif',
+                'password' => 'password',
+            ]
+        );
     }
 }

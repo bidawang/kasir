@@ -13,6 +13,8 @@ use App\Http\Controllers\BiayaAdminController;
 use App\Http\Controllers\KategoriTransaksiController;
 use App\Http\Controllers\ManajemenKasirController;
 use App\Http\Controllers\LaporanHarianController;
+use App\Http\Controllers\OwnerMonitoringController;
+use App\Http\Controllers\Developer\DeveloperController;
 
 /*
 |--------------------------------------------------------------------------
@@ -57,9 +59,13 @@ Route::get('/', function () {
             return redirect()->route('login')->withErrors(['email' => 'Akun Anda tidak aktif.']);
         }
 
-        // Cek role menggunakan helper/method yang sesuai di model Anda
-        // (Contoh menggunakan in_array atau method bawaan package role Anda)
-        if (in_array($user->role, ['admin', 'owner'], true)) {
+        // Khusus akun developer, arahkan ke developer console
+        if ($user->role === 'developer') {
+            return redirect()->route('developer.dashboard');
+        }
+
+        // Izinkan admin, owner, dan kasir mengakses dashboard
+        if (in_array($user->role, ['admin', 'owner', 'kasir'], true)) {
             return app(DashboardController::class)->index();
         }
         
@@ -159,6 +165,16 @@ Route::get('/', function () {
         Route::delete('/cabang/{id}', [CabangController::class, 'destroy'])
             ->name('cabang.destroy');
 
+        // --------------------------
+        // Monitoring Konsolidasi Semua Cabang (Owner / Admin)
+        // --------------------------
+        Route::get('/owner/monitoring', [OwnerMonitoringController::class, 'index'])
+            ->name('owner.monitoring');
+        Route::post('/owner/monitoring/switch/{id}', [OwnerMonitoringController::class, 'switchBranch'])
+            ->name('owner.monitoring.switch');
+        Route::get('/owner/monitoring/export-pdf', [OwnerMonitoringController::class, 'exportPdf'])
+            ->name('owner.monitoring.pdf');
+
 
         
     });
@@ -170,4 +186,52 @@ Route::get('/', function () {
 
     Route::post('/logout', [AuthController::class, 'logout'])
         ->name('logout');
+});
+
+// =========================================================================
+// DEVELOPER PORTAL (Kelola Owner, Cabang, Kasir & Platform Provisioning)
+// =========================================================================
+Route::prefix('developer')->name('developer.')->group(function () {
+    // Guest Developer Login
+    Route::get('/login', [DeveloperController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [DeveloperController::class, 'login']);
+
+    // Authenticated Developer
+    Route::middleware(['auth', 'role:developer'])->group(function () {
+        Route::post('/logout', [DeveloperController::class, 'logout'])->name('logout');
+        Route::get('/', [DeveloperController::class, 'dashboard'])->name('dashboard');
+        Route::get('/dashboard', [DeveloperController::class, 'dashboard']);
+
+        // Kelola Owner
+        Route::get('/owner', [DeveloperController::class, 'ownerIndex'])->name('owner.index');
+        Route::get('/owner/create', [DeveloperController::class, 'ownerCreate'])->name('owner.create');
+        Route::post('/owner', [DeveloperController::class, 'ownerStore'])->name('owner.store');
+        Route::get('/owner/{id}', [DeveloperController::class, 'ownerShow'])->name('owner.show');
+        Route::get('/owner/{id}/edit', [DeveloperController::class, 'ownerEdit'])->name('owner.edit');
+        Route::put('/owner/{id}', [DeveloperController::class, 'ownerUpdate'])->name('owner.update');
+        Route::delete('/owner/{id}', [DeveloperController::class, 'ownerDestroy'])->name('owner.destroy');
+        Route::patch('/owner/{id}/toggle-status', [DeveloperController::class, 'ownerToggleStatus'])->name('owner.toggle-status');
+
+        // Kelola Cabang
+        Route::get('/cabang', [DeveloperController::class, 'cabangIndex'])->name('cabang.index');
+        Route::get('/cabang/create', [DeveloperController::class, 'cabangCreate'])->name('cabang.create');
+        Route::post('/cabang', [DeveloperController::class, 'cabangStore'])->name('cabang.store');
+        Route::get('/cabang/{id}', [DeveloperController::class, 'cabangShow'])->name('cabang.show');
+        Route::get('/cabang/{id}/edit', [DeveloperController::class, 'cabangEdit'])->name('cabang.edit');
+        Route::put('/cabang/{id}', [DeveloperController::class, 'cabangUpdate'])->name('cabang.update');
+        Route::delete('/cabang/{id}', [DeveloperController::class, 'cabangDestroy'])->name('cabang.destroy');
+
+        // Kelola Kasir
+        Route::get('/kasir', [DeveloperController::class, 'kasirIndex'])->name('kasir.index');
+        Route::get('/kasir/create', [DeveloperController::class, 'kasirCreate'])->name('kasir.create');
+        Route::post('/kasir', [DeveloperController::class, 'kasirStore'])->name('kasir.store');
+        Route::get('/kasir/{id}/edit', [DeveloperController::class, 'kasirEdit'])->name('kasir.edit');
+        Route::put('/kasir/{id}', [DeveloperController::class, 'kasirUpdate'])->name('kasir.update');
+        Route::delete('/kasir/{id}', [DeveloperController::class, 'kasirDestroy'])->name('kasir.destroy');
+        Route::patch('/kasir/{id}/toggle-status', [DeveloperController::class, 'kasirToggleStatus'])->name('kasir.toggle-status');
+
+        // Developer Profile
+        Route::get('/profile', [DeveloperController::class, 'profile'])->name('profile');
+        Route::put('/profile', [DeveloperController::class, 'profileUpdate'])->name('profile.update');
+    });
 });

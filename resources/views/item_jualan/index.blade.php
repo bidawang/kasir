@@ -46,26 +46,50 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
                     <thead class="bg-slate-50 border-b border-slate-200">
-                        <tr class="text-sm uppercase tracking-wider text-slate-500">
-                            <th class="px-4 py-3.5 font-bold">Nama Barang atau Layanan</th>
-                            <th class="px-4 py-3.5 font-bold">Jenis dan Stok</th>
+                        <tr class="text-xs sm:text-sm uppercase tracking-wider text-slate-500">
+                            <th class="px-4 py-3.5 font-bold">Barang / Layanan</th>
+                            <th class="px-4 py-3.5 font-bold">Jenis & Stok</th>
+                            <th class="px-4 py-3.5 font-bold">Harga Modal</th>
                             <th class="px-4 py-3.5 font-bold">Harga Jual</th>
+                            <th class="px-4 py-3.5 font-bold">Laba Bersih</th>
                             <th class="px-4 py-3.5 font-bold text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @foreach($itemJualan as $item)
-                            <tr class="text-sm">
+                            @php
+                                $modal = (int) ($item->harga_beli ?? 0);
+                                $jual = (int) ($item->harga_jual ?? 0);
+                                $margin = $jual - $modal;
+                            @endphp
+                            <tr class="text-xs sm:text-sm hover:bg-slate-50/50 transition">
                                 <td class="px-4 py-3.5 font-bold text-slate-800">{{ $item->nama_item }}</td>
-                                <td class="px-4 py-3.5 font-semibold text-slate-700">{{ ['fisik' => 'Barang fisik', 'virtual' => 'Layanan virtual', 'bank' => 'Layanan bank'][$item->jenis] ?? ucfirst($item->jenis) }}{{ $item->jenis === 'fisik' ? ' · Stok: ' . $item->jumlah : '' }}</td>
-                                <td class="px-4 py-3.5 font-semibold text-slate-700">Rp {{ number_format($item->harga_jual, 0, ',', '.') }}</td>
+                                <td class="px-4 py-3.5 font-semibold text-slate-600">
+                                    <span class="inline-block px-2 py-0.5 rounded text-[11px] font-bold {{ $item->jenis === 'fisik' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700' }}">
+                                        {{ ['fisik' => 'Fisik', 'virtual' => 'Virtual', 'bank' => 'Bank'][$item->jenis] ?? ucfirst($item->jenis) }}
+                                    </span>
+                                    @if($item->jenis === 'fisik')
+                                        <span class="block text-xs font-semibold text-slate-500 mt-0.5">Stok: {{ $item->jumlah }} pcs</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3.5 font-semibold text-slate-500">
+                                    Rp {{ number_format($modal, 0, ',', '.') }}
+                                </td>
+                                <td class="px-4 py-3.5 font-bold text-slate-800">
+                                    Rp {{ number_format($jual, 0, ',', '.') }}
+                                </td>
+                                <td class="px-4 py-3.5 font-extrabold">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs {{ $margin >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' }}">
+                                        {{ $margin >= 0 ? '+' : '-' }}Rp {{ number_format(abs($margin), 0, ',', '.') }}
+                                    </span>
+                                </td>
                                 <td class="px-4 py-3.5">
                                     <div class="flex justify-end items-center gap-2">
-                                        <a href="{{ route('item-jualan.edit', $item->id) }}" class="px-3.5 py-2 rounded-lg bg-primary-50 text-primary-700 hover:bg-primary-100 font-bold text-sm">Ubah</a>
+                                        <a href="{{ route('item-jualan.edit', $item->id) }}" class="px-3 py-1.5 rounded-lg bg-primary-50 text-primary-700 hover:bg-primary-100 font-bold text-xs sm:text-sm">Ubah</a>
                                         <form action="{{ route('item-jualan.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Hapus barang atau layanan ini?');">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="px-3.5 py-2 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold text-sm">Hapus</button>
+                                            <button type="submit" class="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold text-xs sm:text-sm">Hapus</button>
                                         </form>
                                     </div>
                                 </td>

@@ -49,11 +49,10 @@ public function index()
 {
     $idWarung = session('id_warung');
 
-    $query = Transaksi::with('kas')
+    $query = Transaksi::with(['kas', 'kasSumber'])
         ->whereHas('kas', function ($q) use ($idWarung) {
             $q->where('id_warung', $idWarung);
-        })
-        ->where('kategori', 'transaksi_brilink');
+        });
 
     // Filter Berdasarkan Periode
     $periode = $request->get('periode', 'today');
@@ -72,6 +71,7 @@ public function index()
         return [
             'id' => $item->id,
             'jenis' => $item->jenis,
+            'kategori' => $item->kategori,
             'is_profit' => $item->is_profit,
             'total' => $item->total,
             'keterangan' => $item->keterangan,
@@ -181,7 +181,6 @@ public function index()
     public function update(Request $request, $id)
     {
         $idWarung = session('id_warung');
-
         if (!$idWarung) {
             return redirect()->route('cabang.index')
                 ->with('error', 'Silakan pilih cabang terlebih dahulu.');
@@ -248,11 +247,24 @@ public function index()
             ->where('id_warung', $idWarung)
             ->firstOrFail();
 
+        // Sanitize leading zeros and non-numeric inputs
+        if ($request->has('jumlah') && is_array($request->jumlah)) {
+            $cleanedJumlah = array_map(function($val) {
+                $cleaned = preg_replace('/[^0-9]/', '', (string)$val);
+                $cleaned = preg_replace('/^0+(?=\d)/', '', $cleaned);
+                return $cleaned !== '' ? (int)$cleaned : 0;
+            }, $request->jumlah);
+            $request->merge(['jumlah' => $cleanedJumlah]);
+        }
+
         $request->validate([
             'pecahan' => 'required|array',
             'pecahan.*' => 'required|integer|in:' . implode(',', DetailKas::DENOMINATIONS),
             'jumlah' => 'required|array',
             'jumlah.*' => 'required|integer|min:0',
+        ], [
+            'pecahan.*.in' => 'Pecahan uang :input tidak valid atau tidak didukung sistem.',
+            'jumlah.*.min' => 'Jumlah lembar/koin tidak boleh bernilai negatif.',
         ]);
 
         foreach ($request->pecahan as $index => $pecahan) {

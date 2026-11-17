@@ -29,7 +29,7 @@
     </div>
 
     {{-- Error Handling --}}
-    @if ($errors->any())
+    @if (isset($errors) && $errors->any())
         <div class="bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-2xl text-sm font-semibold space-y-2">
             @foreach ($errors->all() as $error)
                 <div class="flex items-center gap-2">
@@ -45,7 +45,7 @@
     <form action="{{ route('transaksi.kas.store') }}" method="POST" class="space-y-4" @submit="prepareSubmit">
         @csrf
         <input type="hidden" name="jenis" value="{{ $jenisTransaksi }}">
-        <input type="hidden" name="denominations_json" :value="JSON.stringify(denominations)">
+        <input type="hidden" name="denominations_json" :value="JSON.stringify(denominations.filter(d => (parseInt(d.jumlah) || 0) > 0))">
 
         <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm space-y-5">
 
@@ -91,16 +91,25 @@
 
             {{-- Nominal / Total --}}
             <div>
-                <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-2">
-                    Nominal Transaksi (Rp) <span class="text-rose-500">*</span>
-                </label>
-                <input type="number"
-                       name="total"
-                       x-model.number="totalNominal"
-                       :readonly="isCash"
-                       placeholder="Masukkan nominal"
-                       required
-                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-base sm:text-lg font-black text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-bold text-slate-700 uppercase tracking-wider">
+                        Nominal Transaksi (Rp) <span class="text-rose-500">*</span>
+                    </label>
+                    <span class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Format Rupiah</span>
+                </div>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-base sm:text-lg font-black text-slate-400">Rp</span>
+                    <input type="text"
+                           inputmode="numeric"
+                           :readonly="isCash"
+                           :value="totalNominal ? formatRupiah(totalNominal) : ''"
+                           @input="handleTotalInput($event)"
+                           @focus="$event.target.select()"
+                           placeholder="100.000"
+                           required
+                           class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 text-base sm:text-lg font-black text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all">
+                    <input type="hidden" name="total" :value="totalNominal">
+                </div>
                 <template x-if="isCash">
                     <p class="text-sm text-amber-600 font-semibold mt-2">* Nominal dihitung otomatis dari rincian pecahan uang di bawah.</p>
                 </template>
@@ -153,10 +162,11 @@
 
                             <div class="flex items-center gap-2">
                                 <span class="text-sm font-semibold text-slate-400">Jml:</span>
-                                <input type="number"
-                                       min="0"
-                                       x-model.number="item.jumlah"
-                                       @input="calculateTotalFromCash"
+                                <input type="text"
+                                       inputmode="numeric"
+                                       :value="item.jumlah"
+                                       @input="handleJumlahInput(item, $event)"
+                                       @focus="$event.target.select()"
                                        class="w-20 bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-center text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500/20">
                             </div>
 
@@ -195,7 +205,6 @@ function kasTransactionApp(kasList, jenis) {
         calculatedCashTotal: 0,
         denominations: [
             { pecahan: 100000, jumlah: 0 },
-            { pecahan: 75000,  jumlah: 0 },
             { pecahan: 50000,  jumlah: 0 },
             { pecahan: 20000,  jumlah: 0 },
             { pecahan: 10000,  jumlah: 0 },
@@ -203,6 +212,8 @@ function kasTransactionApp(kasList, jenis) {
             { pecahan: 2000,   jumlah: 0 },
             { pecahan: 1000,   jumlah: 0 },
             { pecahan: 500,    jumlah: 0 },
+            { pecahan: 200,    jumlah: 0 },
+            { pecahan: 100,    jumlah: 0 },
         ],
 
         onKasChange() {
@@ -215,6 +226,20 @@ function kasTransactionApp(kasList, jenis) {
             } else {
                 this.isCash = false;
             }
+        },
+
+        handleTotalInput(e) {
+            if (this.isCash) return;
+            const clean = (e.target.value || '').replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, '');
+            this.totalNominal = clean ? parseInt(clean, 10) : 0;
+            e.target.value = this.totalNominal ? this.formatRupiah(this.totalNominal) : (clean === '0' ? '0' : '');
+        },
+
+        handleJumlahInput(item, e) {
+            const clean = (e.target.value || '').replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, '');
+            item.jumlah = clean ? parseInt(clean, 10) : 0;
+            e.target.value = clean || '0';
+            this.calculateTotalFromCash();
         },
 
         calculateTotalFromCash() {

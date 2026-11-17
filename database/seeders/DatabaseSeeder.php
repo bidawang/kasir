@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             BankSeeder::class,
             KategoriTransaksiSeeder::class,
             CashDenominationSeeder::class,
+            KasBrilinkSampleSeeder::class,
         ]);
     }
 }

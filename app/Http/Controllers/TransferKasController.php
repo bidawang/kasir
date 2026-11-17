@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Kas;
 use App\Models\Kasir; // Pastikan model Warung di-import
 use App\Models\DetailKas;
+use App\Models\DetailTransaksi;
 use App\Models\Transaksi;
 use App\Models\TransferKas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class TransferKasController extends Controller
 {
@@ -66,12 +69,31 @@ class TransferKasController extends Controller
             ->orderBy('jenis_kas')
             ->get();
 
-        // Daftar cabang lain
+        // Daftar cabang lain milik owner yang sedang login
         $warungList = Kasir::where('id', '!=', $idWarung)
+            ->where('id_user', auth()->id())
             ->orderBy('nama_warung')
             ->get();
 
         return view('transfer_kas.create', compact('kasListAsal', 'warungList', 'idWarung'));
+    }
+
+    public function show($id)
+    {
+        $idWarung = session('id_warung');
+        if (!$idWarung) {
+            return redirect()
+                ->route('cabang.index')
+                ->with('error', 'Silakan pilih cabang terlebih dahulu.');
+        }
+
+        $transfer = TransferKas::with(['kasAsal.warung', 'kasTujuan.warung'])->findOrFail($id);
+
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json($transfer);
+        }
+
+        return redirect()->route('transfer-kas.index');
     }
 
     public function getKasByWarung($idWarung)
@@ -127,12 +149,17 @@ class TransferKasController extends Controller
         DB::beginTransaction();
 
         try {
-            $kasAsal = Kas::where('id', $request->id_kas_asal)
+            $kasAsal = Kas::with('warung')
+                ->where('id', $request->id_kas_asal)
                 ->where('id_warung', $idWarung)
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            $kasTujuan = Kas::where('id', $request->id_kas_tujuan)
+            $kasTujuan = Kas::with('warung')
+                ->where('id', $request->id_kas_tujuan)
+                ->whereHas('warung', function($q) {
+                    $q->where('id_user', auth()->id());
+                })
                 ->lockForUpdate()
                 ->firstOrFail();
 
@@ -193,7 +220,7 @@ class TransferKasController extends Controller
                 throw new \Exception('Saldo kas ' . $kasAsal->jenis_kas . ' tidak mencukupi.');
             }
 
-            TransferKas::create([
+            $transferKas = TransferKas::create([
                 'id_kas_asal'    => $kasAsal->id,
                 'id_kas_tujuan'  => $kasTujuan->id,
                 'jumlah'         => $jumlah,
@@ -207,31 +234,85 @@ class TransferKasController extends Controller
             $kasTujuan->saldo += $jumlah;
             $kasTujuan->save();
 
-            Transaksi::create([
-                'id_user'       => auth()->id(),
-                'id_kas_warung' => $kasAsal->id,
-                'id_kas_sumber' => $kasTujuan->id,
-                'total'         => $totalKeluar,
-                'biaya_admin'   => $biayaTransfer,
-                'keterangan'    => 'Transfer ke ' . $kasTujuan->jenis_kas . ($request->keterangan ? ' - ' . $request->keterangan : ''),
-                'jenis'         => 'keluar',
-                'kategori'       => 'transaksi_brilink',
-                'metode_pembayaran' => $kasAsal->status,
-                'tanggal'        => now()->toDateString(),
+            $isAntarCabang = ($kasAsal->id_warung !== $kasTujuan->id_warung);
+            $namaCabangAsal = $kasAsal->warung->nama_warung ?? 'Cabang Asal';
+            $namaCabangTujuan = $kasTujuan->warung->nama_warung ?? 'Cabang Tujuan';
+
+            $kodeOut = 'TRF-' . date('Ymd') . '-' . strtoupper(Str::random(6));
+            $kodeIn  = 'TRF-' . date('Ymd') . '-' . strtoupper(Str::random(6));
+
+            $ketKeluar = $isAntarCabang
+                ? 'Transfer Dana ke Cabang ' . $namaCabangTujuan . ' (' . $kasTujuan->jenis_kas . ')' . ($request->keterangan ? ' - ' . $request->keterangan : '')
+                : 'Pemindahan Dana ke ' . $kasTujuan->jenis_kas . ($request->keterangan ? ' - ' . $request->keterangan : '');
+
+            $ketMasuk = $isAntarCabang
+                ? 'Transfer Dana Masuk dari Cabang ' . $namaCabangAsal . ' (' . $kasAsal->jenis_kas . ')' . ($request->keterangan ? ' - ' . $request->keterangan : '')
+                : 'Pemindahan Dana Masuk dari ' . $kasAsal->jenis_kas . ($request->keterangan ? ' - ' . $request->keterangan : '');
+
+            $trxKeluar = Transaksi::create([
+                'kode_transaksi'   => $kodeOut,
+                'id_user'          => auth()->id(),
+                'id_kas_warung'    => $kasAsal->id,
+                'id_kas_sumber'    => $kasTujuan->id,
+                'nominal'          => $jumlah,
+                'biaya_admin'      => 0,
+                'biaya_admin_bank' => $biayaTransfer,
+                'keuntungan'       => -$biayaTransfer,
+                'kas_masuk'        => 0,
+                'kas_keluar'       => $totalKeluar,
+                'total'            => $totalKeluar,
+                'jenis'            => 'keluar',
+                'kategori'         => 'pemindahan_dana',
+                'sub_kategori'     => $isAntarCabang ? 'antar_cabang' : 'internal_cabang',
+                'metode_transaksi' => 'transfer',
+                'metode_pembayaran'=> $kasAsal->status,
+                'bank_tujuan'      => $kasTujuan->jenis_kas . ($isAntarCabang ? ' (' . $namaCabangTujuan . ')' : ''),
+                'status'           => 'sukses',
+                'keterangan'       => $ketKeluar,
+                'tanggal'          => now()->toDateString(),
             ]);
 
-            Transaksi::create([
-                'id_user'       => auth()->id(),
-                'id_kas_warung' => $kasTujuan->id,
-                'id_kas_sumber' => $kasAsal->id,
-                'total'         => $jumlah,
-                'biaya_admin'   => 0,
-                'keterangan'    => 'Transfer dari ' . $kasAsal->jenis_kas . ($request->keterangan ? ' - ' . $request->keterangan : ''),
-                'jenis'         => 'masuk',
-                'kategori'       => 'transaksi_brilink',
-                'metode_pembayaran' => $kasTujuan->status,
-                'tanggal'        => now()->toDateString(),
+            $trxMasuk = Transaksi::create([
+                'kode_transaksi'   => $kodeIn,
+                'id_user'          => auth()->id(),
+                'id_kas_warung'    => $kasTujuan->id,
+                'id_kas_sumber'    => $kasAsal->id,
+                'nominal'          => $jumlah,
+                'biaya_admin'      => 0,
+                'biaya_admin_bank' => 0,
+                'keuntungan'       => 0,
+                'kas_masuk'        => $jumlah,
+                'kas_keluar'       => 0,
+                'total'            => $jumlah,
+                'jenis'            => 'masuk',
+                'kategori'         => 'pemindahan_dana',
+                'sub_kategori'     => $isAntarCabang ? 'antar_cabang' : 'internal_cabang',
+                'metode_transaksi' => 'transfer',
+                'metode_pembayaran'=> $kasTujuan->status,
+                'bank_tujuan'      => $kasAsal->jenis_kas . ($isAntarCabang ? ' (' . $namaCabangAsal . ')' : ''),
+                'status'           => 'sukses',
+                'keterangan'       => $ketMasuk,
+                'tanggal'          => now()->toDateString(),
             ]);
+
+            // Catat rincian pecahan di kedua transaksi jika pemindahan uang tunai fisik
+            if ($kasAsal->status === 'cash' && !empty($pecahanInput)) {
+                foreach ($pecahanInput as $nilaiPecahan => $lembar) {
+                    $lembar = (int) $lembar;
+                    if ($lembar > 0) {
+                        DetailTransaksi::create([
+                            'id_transaksi_kas' => $trxKeluar->id,
+                            'pecahan'          => (int) $nilaiPecahan,
+                            'jumlah'           => $lembar,
+                        ]);
+                        DetailTransaksi::create([
+                            'id_transaksi_kas' => $trxMasuk->id,
+                            'pecahan'          => (int) $nilaiPecahan,
+                            'jumlah'           => $lembar,
+                        ]);
+                    }
+                }
+            }
 
             DB::commit();
 

@@ -13,7 +13,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
             <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Laporan Kas Harian</h1>
-            <p class="text-xs sm:text-sm text-slate-500 font-medium">Bandingkan uang tunai fisik dengan saldo kas yang tercatat di sistem.</p>
+            <p class="text-xs sm:text-sm text-slate-500 font-medium sub-explanation">Bandingkan uang tunai fisik dengan saldo kas yang tercatat di sistem.</p>
         </div>
         <a href="{{ $isOwner ? route('laporan.index') : route('transaksi.menu') }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-bold text-slate-700 hover:bg-slate-50 shadow-sm transition-all">
             {{ $isOwner ? 'Kembali ke laporan' : 'Kembali ke transaksi' }}
@@ -26,7 +26,7 @@
             {{ session('success') }}
         </div>
     @endif
-    @if ($errors->any())
+    @if (isset($errors) && $errors->any())
         <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3.5 text-sm sm:text-base text-rose-800 shadow-sm">
             <ul class="list-inside list-disc">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
         </div>
@@ -53,7 +53,7 @@
         <div class="lg:col-span-2 bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/85 shadow-sm space-y-4">
             <div>
                 <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">{{ $isOwner ? 'Input atau koreksi laporan' : 'Laporan uang tunai hari ini' }}</h3>
-                <p class="mt-1 text-xs sm:text-sm text-slate-500">
+                <p class="mt-1 text-xs sm:text-sm text-slate-500 sub-explanation">
                     {{ $isOwner ? 'Owner dapat menyimpan ulang laporan karyawan untuk memperbaiki angka yang keliru.' : 'Laporan hanya dapat dikirim satu kali per hari. Hubungi owner bila ada kesalahan.' }}
                 </p>
             </div>
@@ -79,7 +79,7 @@
                     <div class="space-y-2">
                         <div class="flex items-center justify-between gap-2">
                             <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider">Rincian uang tunai fisik</label>
-                            <span class="text-xs text-slate-400">Klik centang atau tekan Enter untuk lanjut</span>
+                            <span class="text-xs text-slate-400 sub-explanation">Klik centang atau tekan Enter untuk lanjut</span>
                         </div>
 
                         <div class="overflow-hidden rounded-xl border border-slate-200/80">

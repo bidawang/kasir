@@ -3,6 +3,10 @@
 @section('title', 'Riwayat Transaksi')
 
 @section('content')
+@php
+    $arsipPdfList = $arsipPdfList ?? new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
+    $kategoriList = $kategoriList ?? collect([]);
+@endphp
 <div class="max-w-6xl mx-auto space-y-6 pb-12" 
      x-data="{ 
          expanded: null, 
@@ -15,6 +19,7 @@
                  start_date: '{{ request('start_date') }}',
                  end_date: '{{ request('end_date') }}',
                  id_kategori: '{{ request('id_kategori') }}',
+                 kategori_filter: '{{ request('kategori_filter') }}',
                  simpan: saveToDb ? '1' : '0',
                  catatan: this.pdfNote || ''
              });
@@ -29,7 +34,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
             <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Riwayat Transaksi & Arus Kas</h1>
-            <p class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">
+            <p class="text-xs sm:text-sm text-slate-500 font-medium mt-0.5 sub-explanation">
                 Monitoring transparan seluruh uang masuk, uang keluar, biaya admin, dan laba bersih cabang.
             </p>
         </div>
@@ -93,7 +98,7 @@
                     <div class="text-xl sm:text-2xl font-black text-slate-900">
                         Rp {{ number_format($summary->total_setor ?? 0, 0, ',', '.') }}
                     </div>
-                    <div class="text-[11px] text-emerald-600 font-semibold mt-1">Uang fisik diterima kasir</div>
+                    <div class="text-[11px] text-emerald-600 font-semibold mt-1 sub-explanation">Uang fisik diterima kasir</div>
                 </div>
             </div>
 
@@ -109,7 +114,7 @@
                     <div class="text-xl sm:text-2xl font-black text-slate-900">
                         Rp {{ number_format($summary->total_tarik ?? 0, 0, ',', '.') }}
                     </div>
-                    <div class="text-[11px] text-rose-600 font-semibold mt-1">Uang fisik diserahkan ke nasabah</div>
+                    <div class="text-[11px] text-rose-600 font-semibold mt-1 sub-explanation">Uang fisik diserahkan ke nasabah</div>
                 </div>
             </div>
 
@@ -125,7 +130,7 @@
                     <div class="text-xl sm:text-2xl font-black text-slate-900">
                         {{ number_format($summary->total_transaksi ?? 0, 0, ',', '.') }} <span class="text-xs text-slate-400 font-normal">transaksi</span>
                     </div>
-                    <div class="text-[11px] text-slate-400 font-medium mt-1">Total catatan aktif</div>
+                    <div class="text-[11px] text-slate-400 font-medium mt-1 sub-explanation">Total catatan aktif</div>
                 </div>
             </div>
         </div>
@@ -136,16 +141,29 @@
             <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-2xs space-y-4">
                 <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">Filter Riwayat</h3>
                 <form id="filterForm" action="{{ route('transaksi.index') }}" method="GET" class="space-y-3">
-                    <!-- Filter Kategori -->
+                    <!-- Filter Kategori & Aktivitas -->
                     <div class="space-y-1">
-                        <label class="block text-xs font-bold text-slate-600">Kategori Transaksi</label>
-                        <select name="id_kategori" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition">
-                            <option value="">Semua Kategori</option>
-                            @foreach($kategoriList as $kat)
-                                <option value="{{ $kat->id }}" @selected(request('id_kategori') == $kat->id)>
-                                    {{ $kat->getNamaDinamis($bankUtama ?? 'BRI') }}
+                        <label class="block text-xs font-bold text-slate-600">Kategori & Aktivitas Transaksi</label>
+                        <select name="kategori_filter" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition">
+                            <option value="">Semua Kategori & Aktivitas</option>
+                            <optgroup label="Aktivitas Dana & Toko">
+                                <option value="pemindahan_dana" @selected(request('kategori_filter') == 'pemindahan_dana')>
+                                    Pemindahan Dana / Transfer Saldo
                                 </option>
-                            @endforeach
+                                <option value="penjualan_item" @selected(request('kategori_filter') == 'penjualan_item')>
+                                    Penjualan Toko / Pulsa
+                                </option>
+                                <option value="transaksi_brilink" @selected(request('kategori_filter') == 'transaksi_brilink')>
+                                    Semua Layanan BRILink
+                                </option>
+                            </optgroup>
+                            <optgroup label="Layanan BRILink Khusus">
+                                @foreach($kategoriList as $kat)
+                                    <option value="{{ $kat->id }}" @selected(request('kategori_filter') == $kat->id || request('id_kategori') == $kat->id)>
+                                        {{ $kat->getNamaDinamis($bankUtama ?? 'BRI') }}
+                                    </option>
+                                @endforeach
+                            </optgroup>
                         </select>
                     </div>
                     <div class="space-y-1">
@@ -160,7 +178,7 @@
                         <button class="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-xl text-xs sm:text-sm font-bold transition shadow-xs cursor-pointer" type="submit">
                             Terapkan Filter
                         </button>
-                        @if(request()->hasAny(['start_date', 'end_date', 'id_kategori']))
+                        @if(request()->hasAny(['start_date', 'end_date', 'id_kategori', 'kategori_filter']))
                             <a href="{{ route('transaksi.index') }}" class="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center">
                                 Reset
                             </a>
@@ -216,7 +234,30 @@
         <div class="flex items-center justify-between px-1">
             <div class="flex items-center gap-2">
                 <h3 class="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider">Daftar Rincian Transaksi</h3>
-                @if(request('id_kategori'))
+                @if(request('kategori_filter'))
+                    @if(request('kategori_filter') === 'pemindahan_dana')
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                            Pemindahan Dana
+                        </span>
+                    @elseif(request('kategori_filter') === 'penjualan_item')
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                            Penjualan Toko
+                        </span>
+                    @elseif(request('kategori_filter') === 'transaksi_brilink')
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-primary-50 text-primary-700 border border-primary-200">
+                            Transaksi BRILink
+                        </span>
+                    @else
+                        @php
+                            $selectedKat = $kategoriList->firstWhere('id', request('kategori_filter'));
+                        @endphp
+                        @if($selectedKat)
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-primary-50 text-primary-700 border border-primary-200">
+                                {{ $selectedKat->getNamaDinamis($bankUtama ?? 'BRI') }}
+                            </span>
+                        @endif
+                    @endif
+                @elseif(request('id_kategori'))
                     @php
                         $selectedKat = $kategoriList->firstWhere('id', request('id_kategori'));
                     @endphp
@@ -227,7 +268,7 @@
                     @endif
                 @endif
             </div>
-            @if(request()->hasAny(['start_date', 'end_date', 'id_kategori']))
+            @if(request()->hasAny(['start_date', 'end_date', 'id_kategori', 'kategori_filter']))
                 <a href="{{ route('transaksi.index') }}" class="text-xs text-slate-500 hover:text-slate-800 font-semibold underline">
                     Lihat Semua
                 </a>
@@ -239,15 +280,21 @@
             @forelse($transaksi as $item)
                 @php
                     $isMasuk = $item->jenis === 'masuk';
+                    $isTransfer = $item->kategori === 'pemindahan_dana';
                     $kategoriModel = $item->kategoriTransaksi;
-                    $namaKategori = $kategoriModel 
-                        ? $kategoriModel->getNamaDinamis($bankUtama ?? 'BRI') 
-                        : match($item->kategori) {
-                            'penjualan_item' => 'Penjualan Toko',
-                            'transaksi_brilink' => 'Kas Operasional',
-                            default => 'Transaksi'
-                        };
-                    $labaItem = $item->keuntungan != 0 ? $item->keuntungan : ($item->biaya_admin - $item->biaya_admin_bank);
+                    $namaKategori = $isTransfer
+                        ? ($item->sub_kategori === 'antar_cabang' ? 'Transfer Antar Cabang' : 'Pemindahan Dana')
+                        : ($kategoriModel 
+                            ? $kategoriModel->getNamaDinamis($bankUtama ?? 'BRI') 
+                            : match($item->kategori) {
+                                'penjualan_item' => 'Penjualan Toko',
+                                'transaksi_brilink' => 'Kas Operasional',
+                                default => 'Transaksi'
+                            });
+                    $itemNominal = $item->nominal > 0 ? $item->nominal : $item->total;
+                    $labaItem = $isTransfer 
+                        ? 0 
+                        : ($item->keuntungan != 0 ? $item->keuntungan : ($item->biaya_admin - $item->biaya_admin_bank));
                 @endphp
 
                 <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden transition-all duration-150 hover:border-slate-300">
@@ -260,13 +307,25 @@
                                 <span class="font-black text-sm sm:text-base text-slate-900 tracking-tight truncate max-w-xs sm:max-w-md">
                                     {{ $namaKategori }}
                                 </span>
-                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider
-                                    {{ $isMasuk ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200' }}">
-                                    {{ $isMasuk ? 'Masuk' : 'Keluar' }}
-                                </span>
+                                @if($isTransfer)
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider
+                                        {{ $isMasuk ? 'bg-cyan-50 text-cyan-700 border border-cyan-200' : 'bg-indigo-50 text-indigo-700 border border-indigo-200' }}">
+                                        {{ $isMasuk ? 'Transfer Masuk' : 'Transfer Keluar' }}
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider
+                                        {{ $isMasuk ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200' }}">
+                                        {{ $isMasuk ? 'Masuk' : 'Keluar' }}
+                                    </span>
+                                @endif
                                 @if($item->kas)
                                     <span class="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
                                         {{ $item->kas->jenis_kas }}
+                                    </span>
+                                @endif
+                                @if($isTransfer && $item->kasSumber)
+                                    <span class="text-[11px] font-semibold text-slate-500 bg-slate-50 border border-slate-200/80 px-2 py-0.5 rounded">
+                                        {{ $isMasuk ? '← Dari: ' : '→ Ke: ' }}{{ $item->kasSumber->jenis_kas }}{{ $item->kasSumber->warung ? ' (' . $item->kasSumber->warung->nama_warung . ')' : '' }}
                                     </span>
                                 @endif
                             </div>
@@ -278,7 +337,7 @@
                                     {{ $item->created_at->format('d/m/Y H:i') }}
                                 </span>
                                 @if($item->user)
-                                    <span>Kasir: <strong class="text-slate-700 font-semibold">{{ $item->user->nama }}</strong></span>
+                                    <span>Petugas: <strong class="text-slate-700 font-semibold">{{ $item->user->nama }}</strong></span>
                                 @endif
                                 @if($item->keterangan)
                                     <span class="text-slate-400 truncate max-w-xs">&bull; {{ $item->keterangan }}</span>
@@ -289,11 +348,11 @@
                         <!-- Right Metric Badges -->
                         <div class="flex items-center gap-3 shrink-0">
                             <div class="text-right">
-                                <div class="text-sm sm:text-base font-black {{ $isMasuk ? 'text-emerald-600' : 'text-slate-900' }}">
-                                    {{ $isMasuk ? '+' : '-' }}Rp {{ number_format($item->nominal, 0, ',', '.') }}
+                                <div class="text-sm sm:text-base font-black {{ $isMasuk ? 'text-emerald-600' : ($isTransfer ? 'text-indigo-600' : 'text-slate-900') }}">
+                                    {{ $isMasuk ? '+' : '-' }}Rp {{ number_format($itemNominal, 0, ',', '.') }}
                                 </div>
-                                <div class="text-[11px] font-extrabold text-emerald-700">
-                                    Laba: Rp {{ number_format($labaItem, 0, ',', '.') }}
+                                <div class="text-[11px] font-extrabold {{ $isTransfer ? 'text-indigo-600' : 'text-emerald-700' }}">
+                                    {{ $isTransfer ? 'Mutasi Saldo' : 'Laba: Rp ' . number_format($labaItem, 0, ',', '.') }}
                                 </div>
                             </div>
                             <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 transition-transform duration-200" :class="expanded === {{ $item->id }} ? 'rotate-180 bg-slate-200 text-slate-700' : ''">
@@ -304,24 +363,60 @@
 
                     <!-- Accordion Content -->
                     <div x-show="expanded === {{ $item->id }}" x-collapse class="border-t border-slate-100 bg-slate-50/70 p-4 sm:p-5 space-y-4">
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                            <div class="bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Nominal Transaksi</span>
-                                <span class="text-sm font-black text-slate-900 mt-0.5 block">Rp {{ number_format($item->nominal, 0, ',', '.') }}</span>
+                        @if($isTransfer)
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                                <div class="bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Nominal Dana</span>
+                                    <span class="text-sm font-black text-slate-900 mt-0.5 block">Rp {{ number_format($itemNominal, 0, ',', '.') }}</span>
+                                </div>
+                                <div class="bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Akun Pengirim</span>
+                                    <span class="text-xs font-black text-slate-800 mt-0.5 block truncate">
+                                        {{ $isMasuk ? ($item->kasSumber?->jenis_kas ?? '-') . ($item->kasSumber?->warung ? ' (' . $item->kasSumber->warung->nama_warung . ')' : '') : ($item->kas?->jenis_kas ?? '-') }}
+                                    </span>
+                                </div>
+                                <div class="bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Akun Penerima</span>
+                                    <span class="text-xs font-black text-slate-800 mt-0.5 block truncate">
+                                        {{ $isMasuk ? ($item->kas?->jenis_kas ?? '-') : ($item->kasSumber?->jenis_kas ?? '-') . ($item->kasSumber?->warung ? ' (' . $item->kasSumber->warung->nama_warung . ')' : '') }}
+                                    </span>
+                                </div>
+                                <div class="bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Biaya Transfer</span>
+                                    <span class="text-sm font-black text-rose-600 mt-0.5 block">
+                                        Rp {{ number_format($item->biaya_admin_bank ?: $item->biaya_admin, 0, ',', '.') }}
+                                    </span>
+                                </div>
                             </div>
-                            <div class="bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Admin Toko (Jasa)</span>
-                                <span class="text-sm font-black text-emerald-700 mt-0.5 block">+Rp {{ number_format($item->biaya_admin, 0, ',', '.') }}</span>
+                        @else
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                                <div class="bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Nominal Transaksi</span>
+                                    <span class="text-sm font-black text-slate-900 mt-0.5 block">Rp {{ number_format($itemNominal, 0, ',', '.') }}</span>
+                                </div>
+                                <div class="bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Admin Toko (Jasa)</span>
+                                    <span class="text-sm font-black text-emerald-700 mt-0.5 block">+Rp {{ number_format($item->biaya_admin, 0, ',', '.') }}</span>
+                                </div>
+                                <div class="bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Potongan Bank (Server)</span>
+                                    <span class="text-sm font-black text-rose-600 mt-0.5 block">-Rp {{ number_format($item->biaya_admin_bank, 0, ',', '.') }}</span>
+                                </div>
+                                <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 shadow-2xs">
+                                    <span class="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block">Keuntungan Bersih Toko</span>
+                                    <span class="text-sm font-black text-emerald-700 mt-0.5 block">Rp {{ number_format($labaItem, 0, ',', '.') }}</span>
+                                </div>
                             </div>
-                            <div class="bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Potongan Bank (Server)</span>
-                                <span class="text-sm font-black text-rose-600 mt-0.5 block">-Rp {{ number_format($item->biaya_admin_bank, 0, ',', '.') }}</span>
+                        @endif
+
+                        @if($item->kode_transaksi)
+                            <div class="text-[11px] text-slate-500 flex items-center gap-2 flex-wrap">
+                                <span>No. Referensi: <code class="font-mono font-bold text-slate-700 bg-white px-1.5 py-0.5 rounded border border-slate-200">{{ $item->kode_transaksi }}</code></span>
+                                @if($item->sub_kategori)
+                                    <span class="text-slate-400">&bull; Tipe: <strong class="text-slate-600 capitalize">{{ str_replace('_', ' ', $item->sub_kategori) }}</strong></span>
+                                @endif
                             </div>
-                            <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 shadow-2xs">
-                                <span class="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block">Keuntungan Bersih Toko</span>
-                                <span class="text-sm font-black text-emerald-700 mt-0.5 block">Rp {{ number_format($labaItem, 0, ',', '.') }}</span>
-                            </div>
-                        </div>
+                        @endif
 
                         <!-- Pecahan Kas Masuk Jika Ada -->
                         @if($item->detailTransaksi->isNotEmpty())
@@ -372,7 +467,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
             <div>
                 <h3 class="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider">Arsip Laporan PDF yang Pernah Disimpan</h3>
-                <p class="text-xs text-slate-500 font-medium">Hanya data parameter tersimpan di database. PDF dibuat seketika saat diunduh (hemat penyimpanan server 0 KB).</p>
+                <p class="text-xs text-slate-500 font-medium sub-explanation">Hanya data parameter tersimpan di database. PDF dibuat seketika saat diunduh (hemat penyimpanan server 0 KB).</p>
             </div>
             <button type="button" 
                     @click="showPdfModal = true; pdfStep = 1;"
@@ -535,8 +630,8 @@
     </div>
 
     <!-- DOUBLE CONFIRMATION MODAL DOWNLOAD PDF (2 LANGKAH) -->
-    <div x-show="showPdfModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-        <div @click.outside="showPdfModal = false" class="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 space-y-4">
+    <div x-show="showPdfModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
+        <div @click.outside="showPdfModal = false" class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 my-auto max-h-[92vh] overflow-y-auto">
             
             <!-- STEP 1: KONFIRMASI PERIODE & DATA LAPORAN -->
             <template x-if="pdfStep === 1">
@@ -552,33 +647,53 @@
                         </div>
                     </div>
 
-                    <!-- Summary Preview Box -->
-                    <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-200 space-y-2 text-xs">
-                        <div class="flex justify-between items-center py-1 border-b border-slate-200/60">
-                            <span class="text-slate-500 font-medium">Periode Tanggal:</span>
-                            <span class="font-bold text-slate-800">
-                                {{ request('start_date') ? date('d/m/Y', strtotime(request('start_date'))) : 'Semua (Awal)' }} 
-                                s/d 
-                                {{ request('end_date') ? date('d/m/Y', strtotime(request('end_date'))) : 'Hari Ini' }}
+                    <!-- Summary Preview Box Sesuai Format Rekap PDF BRILink -->
+                    <div class="bg-slate-50 dark:bg-slate-800/80 rounded-xl p-3.5 border border-slate-200 dark:border-slate-700 space-y-2 text-xs">
+                        <div class="flex justify-between items-center py-1 border-b border-slate-200 dark:border-slate-700">
+                            <span class="text-slate-500 font-medium">Periode Laporan:</span>
+                            <span class="font-bold text-slate-800 dark:text-white">
+                                {{ $rekapPdfPreview['periodeLabel'] ?? (request('start_date') ? date('d/m/Y', strtotime(request('start_date'))) : 'Hari Ini') }}
                             </span>
                         </div>
-                        <div class="flex justify-between items-center py-1 border-b border-slate-200/60">
-                            <span class="text-slate-500 font-medium">Kategori:</span>
-                            <span class="font-bold text-slate-800">
-                                {{ request('id_kategori') && $kategoriList->firstWhere('id', request('id_kategori')) ? $kategoriList->firstWhere('id', request('id_kategori'))->getNamaDinamis($bankUtama ?? 'BRI') : 'Semua Kategori' }}
+
+                        <!-- 1. Saldo E-Wallet & Bank -->
+                        <div class="flex justify-between items-center py-1 border-b border-slate-200/60 dark:border-slate-700/60">
+                            <span class="text-slate-500 font-medium">&gt; Saldo Akun Bank & Digital:</span>
+                            <span class="font-bold text-primary-700 dark:text-primary-400">
+                                Rp {{ number_format($rekapPdfPreview['subtotalBank'] ?? 0, 0, ',', '.') }}
                             </span>
                         </div>
-                        <div class="flex justify-between items-center py-1 border-b border-slate-200/60">
-                            <span class="text-slate-500 font-medium">Total Uang Masuk:</span>
-                            <span class="font-bold text-emerald-700">Rp {{ number_format($summary->total_setor ?? 0, 0, ',', '.') }}</span>
+
+                        <!-- 2. Fisik Uang Tunai Kasir -->
+                        <div class="flex justify-between items-center py-1 border-b border-slate-200/60 dark:border-slate-700/60">
+                            <span class="text-slate-500 font-medium">&gt; Fisik Uang Tunai (Laci Kas):</span>
+                            <span class="font-bold text-slate-800 dark:text-slate-200">
+                                Rp {{ number_format($rekapPdfPreview['totalHitunganFisik'] ?? 0, 0, ',', '.') }}
+                            </span>
                         </div>
-                        <div class="flex justify-between items-center py-1 border-b border-slate-200/60">
-                            <span class="text-slate-500 font-medium">Total Uang Keluar:</span>
-                            <span class="font-bold text-rose-700">Rp {{ number_format($summary->total_tarik ?? 0, 0, ',', '.') }}</span>
+
+                        <!-- 3. Saldo Kas Tunai Sistem -->
+                        <div class="flex justify-between items-center py-1 border-b border-slate-200/60 dark:border-slate-700/60">
+                            <span class="text-slate-500 font-medium">&gt; Saldo Kas Tunai Sistem:</span>
+                            <span class="font-bold text-slate-700 dark:text-slate-300">
+                                Rp {{ number_format($rekapPdfPreview['uangTunai'] ?? 0, 0, ',', '.') }}
+                            </span>
                         </div>
-                        <div class="flex justify-between items-center py-1">
-                            <span class="text-slate-500 font-medium">Laba Bersih Terhitung:</span>
-                            <span class="font-black text-emerald-700 text-sm">Rp {{ number_format($summary->total_keuntungan ?? 0, 0, ',', '.') }}</span>
+
+                        <!-- 4. Penjualan Barang & Item -->
+                        <div class="flex justify-between items-center py-1 border-b border-slate-200/60 dark:border-slate-700/60">
+                            <span class="text-slate-500 font-medium">&gt; Omset Penjualan Item (Laba: Rp {{ number_format($rekapPdfPreview['totalItemLaba'] ?? 0, 0, ',', '.') }}):</span>
+                            <span class="font-bold text-amber-600 dark:text-amber-400">
+                                Rp {{ number_format($rekapPdfPreview['totalItemOmset'] ?? 0, 0, ',', '.') }}
+                            </span>
+                        </div>
+
+                        <!-- 5. TOTAL LIKUIDITAS KAS -->
+                        <div class="flex justify-between items-center pt-1.5 bg-slate-900 text-white p-2.5 rounded-lg mt-2">
+                            <span class="font-black text-[11px] uppercase tracking-wider text-primary-300">*TOTAL LIKUIDITAS KAS*</span>
+                            <span class="font-black text-sm sm:text-base text-white">
+                                Rp {{ number_format($rekapPdfPreview['totalLikuiditas'] ?? 0, 0, ',', '.') }}
+                            </span>
                         </div>
                     </div>
 

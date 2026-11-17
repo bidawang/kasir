@@ -31,7 +31,9 @@ class AuthController extends Controller
             ]);
         }
 
-        $request->session()->regenerate();
+        if ($request->hasSession()) {
+            $request->session()->regenerate();
+        }
 
         $user = Auth::user();
 
@@ -53,11 +55,17 @@ class AuthController extends Controller
                 'id_warung' => $warung->id,
             ]);
 
-            return redirect()->route('transaksi.menu');
+            return redirect()->route('dashboard');
+        }
+
+        // Developer Platform
+        if ($user->role === 'developer') {
+            session()->forget('id_warung');
+            return redirect()->route('developer.dashboard');
         }
 
         // Admin / Owner: pilih cabang terlebih dahulu
-        if ($user->role === 'admin') {
+        if (in_array($user->role, ['admin', 'owner'], true)) {
 
             session()->forget('id_warung');
 

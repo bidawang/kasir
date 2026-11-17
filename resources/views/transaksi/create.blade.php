@@ -136,14 +136,14 @@
                 </div>
                 <div class="relative flex items-center w-44">
                     <span class="absolute left-3 text-sm font-bold text-slate-400">Rp</span>
-                    <input type="number"
+                    <input type="text"
                            inputmode="numeric"
                            class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-base font-bold text-slate-900 text-right focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                           name="biaya_admin"
-                           x-model.number="biayaAdmin"
+                           :value="biayaAdmin ? formatIDR(biayaAdmin) : ''"
+                           @input="const raw = $event.target.value.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, ''); biayaAdmin = raw ? parseInt(raw, 10) : 0; $event.target.value = biayaAdmin ? formatIDR(biayaAdmin) : (raw === '0' ? '0' : '');"
                            placeholder="0"
-                           @focus="$event.target.select()"
-                           min="0">
+                           @focus="$event.target.select()">
+                    <input type="hidden" name="biaya_admin" :value="biayaAdmin">
                 </div>
             </div>
         </div>

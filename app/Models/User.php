@@ -57,4 +57,9 @@ class User extends Authenticatable
         return $this->belongsToMany(Kasir::class, 'kasir_user', 'id_user', 'id_kasir')
             ->withTimestamps();
     }
+
+    public function ownedWarungs()
+    {
+        return $this->hasMany(Kasir::class, 'id_user');
+    }
 }

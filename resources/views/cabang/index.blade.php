@@ -17,13 +17,21 @@
             <p class="text-sm text-slate-500 truncate mt-1">Lihat dan kelola semua cabang usaha Anda</p>
         </div>
 
-        <a href="{{ route('cabang.create') }}"
-           class="shrink-0 bg-primary-600 hover:bg-primary-700 active:scale-95 text-white px-4 py-3 rounded-xl text-sm font-bold transition-all shadow-sm shadow-primary-600/20 flex items-center gap-1.5 min-h-12">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-            </svg>
-            <span>Tambah Cabang</span>
-        </a>
+        <div class="flex flex-wrap items-center gap-2 shrink-0">
+            <a href="{{ route('owner.monitoring') }}"
+               class="bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 px-3.5 py-3 rounded-xl text-xs sm:text-sm font-black transition-all shadow-sm flex items-center gap-1.5 min-h-12 border border-amber-300">
+                <svg class="w-4 h-4 text-slate-950" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6"/></svg>
+                <span>Monitoring Konsolidasi</span>
+            </a>
+
+            <a href="{{ route('cabang.create') }}"
+               class="bg-primary-600 hover:bg-primary-700 active:scale-95 text-white px-4 py-3 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm shadow-primary-600/20 flex items-center gap-1.5 min-h-12">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                </svg>
+                <span>Tambah Cabang</span>
+            </a>
+        </div>
     </div>
 
     <!-- ALERT SUCCESS NOTIFICATION -->

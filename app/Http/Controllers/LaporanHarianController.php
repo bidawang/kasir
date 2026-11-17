@@ -70,6 +70,18 @@ class LaporanHarianController extends Controller
         }
 
         $isOwner = in_array(auth()->user()->role, ['admin', 'owner'], true);
+
+        // Sanitize leading zeros and non-numeric inputs
+        if ($request->has('jumlah') && is_array($request->jumlah)) {
+            $cleanedJumlah = [];
+            foreach ($request->jumlah as $p => $val) {
+                $cleaned = preg_replace('/[^0-9]/', '', (string)$val);
+                $cleaned = preg_replace('/^0+(?=\d)/', '', $cleaned);
+                $cleanedJumlah[$p] = $cleaned !== '' ? (int)$cleaned : 0;
+            }
+            $request->merge(['jumlah' => $cleanedJumlah]);
+        }
+
         $jumlahRules = [
             'jumlah' => 'required|array:' . implode(',', DetailKas::DENOMINATIONS),
             'catatan' => 'nullable|string|max:2000',
@@ -78,7 +90,11 @@ class LaporanHarianController extends Controller
         foreach (DetailKas::DENOMINATIONS as $pecahan) {
             $jumlahRules['jumlah.' . $pecahan] = 'required|integer|min:0';
         }
-        $validated = $request->validate($jumlahRules);
+        $validated = $request->validate($jumlahRules, [
+            'jumlah.array' => 'Rincian jumlah pecahan fisik tidak valid.',
+            'jumlah.*.min' => 'Jumlah lembar/koin tidak boleh bernilai negatif.',
+            'jumlah.*.integer' => 'Jumlah lembar/koin harus berupa angka bulat.',
+        ]);
 
         $rincianFisik = [];
         $saldoFisik = 0;

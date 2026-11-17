@@ -15,6 +15,7 @@ class ItemJualan extends Model
     protected $fillable = [
         'nama_item',
         'harga_jual',
+        'harga_beli',
         'id_warung',
         'jenis',
         'jumlah',
@@ -24,6 +25,7 @@ class ItemJualan extends Model
     {
         return [
             'harga_jual' => 'integer',
+            'harga_beli' => 'integer',
             'jumlah' => 'integer',
         ];
     }

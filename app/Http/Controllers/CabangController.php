@@ -13,15 +13,10 @@ class CabangController extends Controller
     {
         $user = auth()->user();
 
-        // Jika user adalah admin, ambil semua data cabang
-        if ($user->role === 'admin') {
-            $warungs = Kasir::orderBy('id')->get();
-        } else {
-            // Jika bukan admin, hanya ambil cabang milik user yang login
-            $warungs = Kasir::where('id_user', $user->id)
-                ->orderBy('id')
-                ->get();
-        }
+        // Setiap owner hanya mengelola dan melihat cabang miliknya sendiri
+        $warungs = Kasir::where('id_user', $user->id)
+            ->orderBy('id')
+            ->get();
 
         return view('cabang.index', compact('warungs'));
     }
@@ -92,7 +87,18 @@ class CabangController extends Controller
 
     public function pilih($id)
     {
-        $warung = Kasir::findOrFail($id);
+        $user = auth()->user();
+        $warung = Kasir::where('id', $id)
+            ->when($user->role === 'kasir', function ($q) use ($user) {
+                $q->where(function ($q) use ($user) {
+                    $q->where('id_user', $user->id)
+                      ->orWhereHas('users', fn ($u) => $u->where('user.id', $user->id));
+                });
+            })
+            ->when(in_array($user->role, ['admin', 'owner'], true), function ($q) use ($user) {
+                $q->where('id_user', $user->id);
+            })
+            ->firstOrFail();
 
         session([
             'id_warung' => $warung->id,

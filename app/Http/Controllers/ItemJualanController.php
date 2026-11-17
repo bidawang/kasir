@@ -38,13 +38,25 @@ class ItemJualanController extends Controller
             return redirect()->route('dashboard')->with('error', 'Silakan pilih cabang terlebih dahulu.');
         }
 
+        foreach (['harga_jual', 'harga_beli', 'jumlah'] as $field) {
+            if ($request->filled($field)) {
+                $cleaned = preg_replace('/[^0-9]/', '', (string) $request->$field);
+                $cleaned = preg_replace('/^0+(?=\d)/', '', $cleaned);
+                $request->merge([$field => $cleaned !== '' ? (int) $cleaned : ($field === 'harga_beli' ? 0 : null)]);
+            } else if ($field === 'harga_beli') {
+                $request->merge(['harga_beli' => 0]);
+            }
+        }
+
         $validated = $request->validate([
             'nama_item' => 'required|string|max:255',
             'harga_jual' => 'required|integer|min:0',
+            'harga_beli' => 'nullable|integer|min:0',
             'jenis' => 'required|in:fisik,virtual,bank',
             'jumlah' => 'required_if:jenis,fisik|nullable|integer|min:0',
         ]);
 
+        $validated['harga_beli'] = (int) ($validated['harga_beli'] ?? 0);
         $validated['jumlah'] = $validated['jenis'] === 'fisik' ? $validated['jumlah'] : null;
         ItemJualan::create($validated + ['id_warung' => $idWarung]);
 
@@ -71,14 +83,26 @@ class ItemJualanController extends Controller
             return redirect()->route('dashboard')->with('error', 'Silakan pilih cabang terlebih dahulu.');
         }
 
+        foreach (['harga_jual', 'harga_beli', 'jumlah'] as $field) {
+            if ($request->filled($field)) {
+                $cleaned = preg_replace('/[^0-9]/', '', (string) $request->$field);
+                $cleaned = preg_replace('/^0+(?=\d)/', '', $cleaned);
+                $request->merge([$field => $cleaned !== '' ? (int) $cleaned : ($field === 'harga_beli' ? 0 : null)]);
+            } else if ($field === 'harga_beli') {
+                $request->merge(['harga_beli' => 0]);
+            }
+        }
+
         $itemJualan = ItemJualan::where('id_warung', $idWarung)->findOrFail($id);
         $validated = $request->validate([
             'nama_item' => 'required|string|max:255',
             'harga_jual' => 'required|integer|min:0',
+            'harga_beli' => 'nullable|integer|min:0',
             'jenis' => 'required|in:fisik,virtual,bank',
             'jumlah' => 'required_if:jenis,fisik|nullable|integer|min:0',
         ]);
 
+        $validated['harga_beli'] = (int) ($validated['harga_beli'] ?? 0);
         $validated['jumlah'] = $validated['jenis'] === 'fisik' ? $validated['jumlah'] : null;
         $itemJualan->update($validated);
 

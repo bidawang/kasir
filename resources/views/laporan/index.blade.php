@@ -3,6 +3,14 @@
 @section('title', 'Laporan Keuangan')
 
 @section('content')
+@php
+    $labels = $labels ?? [];
+    $pemasukanData = $pemasukanData ?? [];
+    $pengeluaranData = $pengeluaranData ?? [];
+    $totalPemasukan = $totalPemasukan ?? 0;
+    $totalPengeluaran = $totalPengeluaran ?? 0;
+    $saldoAkhir = $saldoAkhir ?? 0;
+@endphp
 <div class="max-w-2xl mx-auto space-y-5">
 
     <!-- Header Section -->

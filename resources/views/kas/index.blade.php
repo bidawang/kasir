@@ -382,8 +382,16 @@
             let html = '';
             data.transaksi.forEach(item => {
                 const isMasuk = item.jenis === 'masuk';
-                const badgeColor = isMasuk ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-rose-400 bg-rose-500/10 border-rose-500/20';
-                const nominalColor = isMasuk ? 'text-emerald-400' : 'text-rose-400';
+                const isTransfer = item.kategori === 'pemindahan_dana';
+                const badgeColor = isTransfer 
+                    ? (isMasuk ? 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20' : 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20')
+                    : (isMasuk ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-rose-400 bg-rose-500/10 border-rose-500/20');
+                const nominalColor = isTransfer 
+                    ? (isMasuk ? 'text-cyan-400' : 'text-indigo-400')
+                    : (isMasuk ? 'text-emerald-400' : 'text-rose-400');
+                const badgeLabel = isTransfer
+                    ? (isMasuk ? 'Transfer Masuk' : 'Transfer Keluar')
+                    : (item.is_profit ? 'Keuntungan' : (isMasuk ? 'Kas Masuk' : 'Kas Keluar'));
                 const prefix = isMasuk ? '+' : '-';
 
                 html += `
@@ -391,7 +399,7 @@
                         <div class="space-y-1">
                             <div class="flex items-center gap-2">
                                 <span class="font-bold text-slate-200">${item.kas ? (item.kas.nama_kas || item.kas.jenis_kas) : 'Kas'}</span>
-                                <span class="text-xs px-2 py-0.5 rounded border ${badgeColor} font-bold uppercase">${item.is_profit ? 'Keuntungan' : item.jenis === 'masuk' ? 'Kas Masuk' : 'Kas Keluar'}</span>
+                                <span class="text-xs px-2 py-0.5 rounded border ${badgeColor} font-bold uppercase">${badgeLabel}</span>
                             </div>
                             <span class="text-xs text-slate-400 block">${item.formatted_date}</span>
                             ${item.keterangan ? `<span class="text-xs text-slate-400 italic block">${item.keterangan}</span>` : ''}

@@ -57,6 +57,8 @@ class RiwayatLaporanPdf extends Model
 
     public function kategoriTransaksi()
     {
-        return $this->belongsTo(KategoriTransaksi::class, 'id_kategori');
+        return $this->belongsTo(KategoriTransaksi::class, 'id_kategori')->withDefault([
+            'nama_kategori' => 'Semua Kategori',
+        ]);
     }
 }
