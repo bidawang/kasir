@@ -3,7 +3,7 @@
 @section('title', 'Tarik Tunai')
 
 @section('content')
-<div class="max-w-xl mx-auto pb-36 md:pb-24 space-y-4 text-slate-800"
+<div class="ak-page max-w-xl pb-44 md:pb-28 space-y-3.5 text-slate-800"
      x-data="tarikApp(
          @js($kasAsal),
          @js($kasSumberList),
@@ -13,32 +13,36 @@
      )">
 
     <!-- Header Section -->
-    <div class="flex items-center justify-between px-1">
-        <div>
-            <h1 class="text-lg sm:text-xl font-black text-rose-600 dark:text-rose-400 tracking-tight flex items-center gap-2">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19.5v-15m0 0l-6 6m6-6l6 6"/></svg>
-                Tarik Tunai
-            </h1>
-            <p class="text-xs text-slate-500 font-medium">Serahkan uang tunai fisik & terima debet/transfer dari nasabah</p>
+    <div class="ak-head !flex-row !items-center !justify-between">
+        <div class="flex items-center gap-2.5 min-w-0">
+            <a href="{{ route('transaksi.menu') }}" class="ak-back" title="Menu Transaksi">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+            </a>
+            <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                    <h1 class="ak-title">Tarik Tunai</h1>
+                    <span class="ak-badge-danger">Keluar (-)</span>
+                </div>
+                <p class="ak-desc sub-explanation">Serahkan uang tunai fisik & terima debet/transfer dari nasabah</p>
+            </div>
         </div>
         <a href="{{ route('transaksi.menu') }}"
-           class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
-            <span>Pilih Kategori Lain</span>
+           class="ak-btn-secondary !text-xs !py-1.5 shrink-0">
+            <span>Pilih Menu Lain</span>
         </a>
     </div>
 
     <!-- Alert Errors -->
     @if ($errors->any() || session('error'))
-        <div class="bg-rose-50 border border-rose-200 text-rose-800 p-3.5 rounded-2xl text-xs font-semibold space-y-1">
-            <p class="font-bold flex items-center gap-1.5 text-rose-700">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
-                Terjadi kesalahan:
-            </p>
-            <ul class="list-disc list-inside opacity-90 pl-1">
-                @if (session('error')) <li>{{ session('error') }}</li> @endif
-                @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach
-            </ul>
+        <div class="ak-alert-error">
+            <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+            <div>
+                <p class="font-bold">Terjadi kesalahan:</p>
+                <ul class="list-disc list-inside mt-0.5 space-y-0.5">
+                    @if (session('error')) <li>{{ session('error') }}</li> @endif
+                    @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach
+                </ul>
+            </div>
         </div>
     @endif
 
@@ -66,7 +70,7 @@
                 <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-tight mt-1 truncate">
                     {{ $kategori->getNamaDinamis($bankUtama ?? 'BRI') }}
                 </h2>
-                <p class="text-xs text-slate-500 mt-0.5">{{ $kategori->deskripsi ?: 'Kasir menyerahkan uang fisik ke pelanggan dan menerima debet digital.' }}</p>
+                <p class="text-xs text-slate-500 mt-0.5 sub-explanation">{{ $kategori->deskripsi ?: 'Kasir menyerahkan uang fisik ke pelanggan dan menerima debet digital.' }}</p>
             </div>
             <a href="{{ route('transaksi.menu') }}" class="text-xs font-bold text-rose-700 hover:text-rose-900 bg-rose-100 hover:bg-rose-200 px-3 py-1.5 rounded-xl transition shrink-0">
                 Ganti
@@ -212,9 +216,9 @@
         </div>
     </form>
 
-    <!-- FLOATING ACTION BAR -->
-    <div class="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:bottom-4 left-3 right-3 max-w-xl mx-auto z-40">
-        <div class="bg-slate-900/95 backdrop-blur-md text-white px-4 py-3 rounded-2xl border border-slate-800 shadow-2xl flex items-center justify-between gap-3">
+    <!-- FLOATING ACTION BAR (Posisinya aman di atas bottom nav mobile dan rapi di desktop) -->
+    <div class="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] md:bottom-6 left-3 right-3 max-w-xl mx-auto z-40">
+        <div class="bg-slate-900/95 dark:bg-slate-800/95 backdrop-blur-md text-white px-4 py-3 rounded-2xl border border-slate-800 dark:border-slate-700 shadow-2xl flex items-center justify-between gap-3">
             <div>
                 <div class="text-[10px] text-slate-400 uppercase tracking-wider font-extrabold">Uang Fisik Keluar Dari Kas</div>
                 <div class="text-base sm:text-lg font-black text-rose-400" x-text="'Rp ' + formatIDR(grandTotal)"></div>

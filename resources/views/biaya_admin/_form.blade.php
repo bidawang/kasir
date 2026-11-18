@@ -1,4 +1,4 @@
-<div class="max-w-2xl mx-auto space-y-5" x-data="{
+<div class="ak-page max-w-2xl space-y-3.5 pb-20" x-data="{
     biayaAdmin: '{{ old('biaya_admin', $biayaAdmin ? number_format($biayaAdmin->biaya_admin, 0, ',', '.') : '') }}',
     biayaAdminBank: '{{ old('biaya_admin_bank', $biayaAdmin ? number_format($biayaAdmin->biaya_admin_bank, 0, ',', '.') : '0') }}',
     get untung() {
@@ -10,18 +10,19 @@
         return new Intl.NumberFormat('id-ID').format(num);
     }
 }">
-    <div class="flex flex-wrap items-start justify-between gap-3">
-        <div>
-            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">{{ $title }}</h1>
-            <p class="mt-1 text-sm font-medium text-slate-500">Tentukan tarif jasa toko dan potongan bank per kategori transaksi.</p>
-        </div>
-        <a href="{{ route('biaya-admin.index') }}" class="flex min-h-11 items-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 text-sm font-bold transition">
-            Kembali
+    <!-- Header -->
+    <div class="ak-head !flex-row !items-center !justify-start">
+        <a href="{{ route('biaya-admin.index') }}" class="ak-back" title="Kembali">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
         </a>
+        <div class="min-w-0">
+            <h1 class="ak-title">{{ $title }}</h1>
+            <p class="ak-desc sub-explanation">Tentukan tarif jasa toko dan potongan bank per kategori transaksi.</p>
+        </div>
     </div>
 
-    <div class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
-        <form action="{{ $action }}" method="POST" class="space-y-5">
+    <div class="ak-card p-3.5 sm:p-4">
+        <form action="{{ $action }}" method="POST" class="space-y-3.5">
             @csrf
             @if ($method !== 'POST')
                 @method($method)
@@ -29,10 +30,10 @@
 
             <!-- Kategori Transaksi -->
             <div>
-                <label for="id_kategori" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-700">
+                <label for="id_kategori" class="ak-label">
                     Kategori Transaksi <span class="text-rose-500">*</span>
                 </label>
-                <select id="id_kategori" name="id_kategori" required class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm sm:text-base font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                <select id="id_kategori" name="id_kategori" required class="ak-input font-bold">
                     <option value="">-- Pilih Kategori Transaksi --</option>
                     @foreach ($kategoriList as $kategori)
                         @php
@@ -43,106 +44,106 @@
                         </option>
                     @endforeach
                 </select>
-                @error('id_kategori')<p class="mt-1.5 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
+                @error('id_kategori')<p class="mt-1 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
             </div>
 
             <!-- Rekening / E-Wallet Tertentu (Opsional) -->
             <div>
-                <label for="id_kas" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-700">
+                <label for="id_kas" class="ak-label">
                     Akun Rekening Bank / E-Wallet Khusus <span class="font-normal text-slate-400 lowercase">(opsional; kosongkan jika berlaku untuk semua)</span>
                 </label>
-                <select id="id_kas" name="id_kas" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm sm:text-base font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                <select id="id_kas" name="id_kas" class="ak-input font-bold">
                     <option value="">Semua Akun Rekening / E-Wallet</option>
                     @foreach ($bankList as $bank)
                         <option value="{{ $bank->id }}" @selected((string) old('id_kas', $biayaAdmin?->id_kas) === (string) $bank->id)>{{ $bank->jenis_kas }}</option>
                     @endforeach
                 </select>
-                @error('id_kas')<p class="mt-1.5 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
+                @error('id_kas')<p class="mt-1 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
             </div>
 
             <!-- Rentang Nominal -->
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                    <label for="range_awal" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-700">
+                    <label for="range_awal" class="ak-label">
                         Nominal Minimum <span class="text-rose-500">*</span>
                     </label>
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-sm font-semibold text-slate-400">Rp</span>
+                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
                         <input id="range_awal" name="range_awal" type="text" inputmode="numeric" required
                                placeholder="10.000"
                                value="{{ old('range_awal', $biayaAdmin ? number_format($biayaAdmin->range_awal, 0, ',', '.') : '') }}"
-                               class="input-rupiah w-full rounded-xl border @error('range_awal') border-rose-300 @else border-slate-200 @enderror bg-slate-50 py-3 pl-11 pr-4 text-sm sm:text-base font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                               class="ak-input pl-9 font-bold">
                     </div>
-                    @error('range_awal')<p class="mt-1.5 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
+                    @error('range_awal')<p class="mt-1 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <label for="range_akhir" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-700">
+                    <label for="range_akhir" class="ak-label">
                         Nominal Maksimum <span class="text-rose-500">*</span>
                     </label>
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-sm font-semibold text-slate-400">Rp</span>
+                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
                         <input id="range_akhir" name="range_akhir" type="text" inputmode="numeric" required
                                placeholder="1.000.000"
                                value="{{ old('range_akhir', $biayaAdmin ? number_format($biayaAdmin->range_akhir, 0, ',', '.') : '') }}"
-                               class="input-rupiah w-full rounded-xl border @error('range_akhir') border-rose-300 @else border-slate-200 @enderror bg-slate-50 py-3 pl-11 pr-4 text-sm sm:text-base font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                               class="ak-input pl-9 font-bold">
                     </div>
-                    @error('range_akhir')<p class="mt-1.5 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
+                    @error('range_akhir')<p class="mt-1 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
                 </div>
             </div>
 
             <!-- Biaya Admin Toko & Bank -->
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                    <label for="biaya_admin" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-700">
-                        Admin Toko (Jasa Ditagih ke Nasabah) <span class="text-rose-500">*</span>
+                    <label for="biaya_admin" class="ak-label">
+                        Admin Toko (Jasa Nasabah) <span class="text-rose-500">*</span>
                     </label>
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-sm font-semibold text-slate-400">Rp</span>
+                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
                         <input id="biaya_admin" name="biaya_admin" type="text" inputmode="numeric" required
                                x-model="biayaAdmin"
                                placeholder="5.000"
-                               class="input-rupiah w-full rounded-xl border @error('biaya_admin') border-rose-300 @else border-slate-200 @enderror bg-slate-50 py-3 pl-11 pr-4 text-sm sm:text-base font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                               class="ak-input pl-9 font-black">
                     </div>
-                    <span class="text-[11px] text-slate-400 mt-1 block">Tarif yang dibebankan kepada nasabah</span>
-                    @error('biaya_admin')<p class="mt-1.5 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
+                    <span class="text-[10px] text-slate-400 mt-1 block sub-explanation">Tarif yang ditagihkan ke nasabah</span>
+                    @error('biaya_admin')<p class="mt-1 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <label for="biaya_admin_bank" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-700">
-                        Admin Bank / Server (Modal Pemotongan)
+                    <label for="biaya_admin_bank" class="ak-label">
+                        Admin Bank / Modal Server
                     </label>
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-sm font-semibold text-slate-400">Rp</span>
+                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
                         <input id="biaya_admin_bank" name="biaya_admin_bank" type="text" inputmode="numeric"
                                x-model="biayaAdminBank"
                                placeholder="2.500"
-                               class="input-rupiah w-full rounded-xl border @error('biaya_admin_bank') border-rose-300 @else border-slate-200 @enderror bg-slate-50 py-3 pl-11 pr-4 text-sm sm:text-base font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                               class="ak-input pl-9 font-bold">
                     </div>
-                    <span class="text-[11px] text-slate-400 mt-1 block">Biaya resmi yang dipotong dari bank/aplikasi (0 jika gratis)</span>
-                    @error('biaya_admin_bank')<p class="mt-1.5 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
+                    <span class="text-[10px] text-slate-400 mt-1 block sub-explanation">Biaya resmi yang dipotong dari bank</span>
+                    @error('biaya_admin_bank')<p class="mt-1 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
                 </div>
             </div>
 
             <!-- Live Keuntungan Preview Card -->
-            <div class="rounded-xl p-4 bg-emerald-50 border border-emerald-200 flex items-center justify-between">
+            <div class="rounded-xl p-3 bg-emerald-50 border border-emerald-200 flex items-center justify-between">
                 <div>
-                    <span class="block text-xs font-bold uppercase tracking-wider text-emerald-800">Estimasi Keuntungan Bersih Toko</span>
-                    <span class="text-xs text-emerald-600">Admin Toko dikurangi Biaya Potongan Bank</span>
+                    <span class="block text-xs font-black uppercase tracking-wider text-emerald-800">Estimasi Laba Bersih</span>
+                    <span class="text-[10px] text-emerald-600 sub-explanation">Admin Toko dikurangi Biaya Bank</span>
                 </div>
                 <div class="text-right">
-                    <span class="text-lg sm:text-xl font-black text-emerald-700" x-text="'Rp ' + formatRupiah(untung)"></span>
+                    <span class="text-base sm:text-lg font-black text-emerald-700" x-text="'Rp ' + formatRupiah(untung)"></span>
                 </div>
             </div>
 
             <!-- Catatan -->
             <div>
-                <label for="keterangan" class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-700">Catatan / Keterangan (opsional)</label>
-                <input id="keterangan" name="keterangan" type="text" maxlength="255" placeholder="Contoh: Khusus transfer antar bank via EDC" value="{{ old('keterangan', $biayaAdmin?->keterangan) }}" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                @error('keterangan')<p class="mt-1.5 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
+                <label for="keterangan" class="ak-label">Catatan / Keterangan <span class="font-normal text-slate-400 lowercase">(opsional)</span></label>
+                <input id="keterangan" name="keterangan" type="text" maxlength="255" placeholder="Contoh: Khusus transfer antar bank via EDC" value="{{ old('keterangan', $biayaAdmin?->keterangan) }}" class="ak-input">
+                @error('keterangan')<p class="mt-1 text-xs text-rose-500 font-medium">{{ $message }}</p>@enderror
             </div>
 
-            <div class="flex justify-end gap-3 pt-3">
-                <a href="{{ route('biaya-admin.index') }}" class="flex min-h-12 items-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50">Batal</a>
-                <button type="submit" class="min-h-12 rounded-xl bg-primary-600 px-6 py-3 text-sm font-bold text-white shadow-sm hover:bg-primary-700 active:scale-95 transition">
+            <div class="ak-actions">
+                <a href="{{ route('biaya-admin.index') }}" class="ak-btn-secondary flex-1">Batal</a>
+                <button type="submit" class="ak-btn-primary flex-1">
                     Simpan Tarif
                 </button>
             </div>

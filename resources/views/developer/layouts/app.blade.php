@@ -39,6 +39,10 @@
 
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
 </head>
 <body class="h-full bg-slate-900 text-slate-100 font-sans antialiased" x-data="{ mobileSidebarOpen: false }">
 

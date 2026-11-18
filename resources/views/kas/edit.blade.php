@@ -3,42 +3,40 @@
 @section('title', 'Ubah Akun Kas / Rekening')
 
 @section('content')
-<div class="max-w-2xl mx-auto space-y-4 sm:space-y-5" x-data="{ saldo: Number(@js(old('saldo', $kas->saldo))), formatIDR(v) { return new Intl.NumberFormat('id-ID').format(v || 0); } }">
+<div class="ak-page max-w-2xl space-y-3.5 pb-20" x-data="{ saldo: Number(@js(old('saldo', $kas->saldo))), formatIDR(v) { return new Intl.NumberFormat('id-ID').format(v || 0); } }">
 
     <!-- Header Section -->
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Ubah Akun Kas / Rekening</h1>
-            <p class="text-xs sm:text-sm text-slate-500 font-medium">Perbarui nama akun, nomor rekening, dan saldo</p>
-        </div>
-        <a href="{{ route('kas.index') }}"
-           class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors flex items-center gap-1.5 shadow-xs">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
-            <span>Kembali</span>
+    <div class="ak-head !flex-row !items-center !justify-start">
+        <a href="{{ route('kas.index') }}" class="ak-back" title="Kembali">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
         </a>
+        <div class="min-w-0">
+            <h1 class="ak-title">Ubah Akun Kas / Rekening</h1>
+            <p class="ak-desc sub-explanation">Perbarui nama akun, nomor rekening, dan saldo pembukuan.</p>
+        </div>
     </div>
 
     <!-- Form Card Container -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 sm:p-6">
-        <form action="{{ route('kas.update', $kas->id) }}" method="POST" class="space-y-4 sm:space-y-5">
+    <div class="ak-card p-3.5 sm:p-4">
+        <form action="{{ route('kas.update', $kas->id) }}" method="POST" class="space-y-3.5">
             @csrf
             @method('PUT')
 
             <!-- Nama Akun -->
             <div>
-                <label for="jenis_kas" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Nama Akun / Kas <span class="text-rose-500">*</span></label>
+                <label for="jenis_kas" class="ak-label">Nama Akun / Kas <span class="text-rose-500">*</span></label>
                 <input type="text" name="jenis_kas" id="jenis_kas"
-                       class="w-full px-4 py-3 bg-slate-50 border @error('jenis_kas') border-rose-300 @else border-slate-200 @enderror rounded-xl text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition"
+                       class="ak-input font-bold"
                        value="{{ old('jenis_kas', $kas->jenis_kas) }}" required>
                 @error('jenis_kas')
-                    <p class="mt-1.5 text-xs text-rose-500 font-medium">{{ $message }}</p>
+                    <p class="mt-1 text-xs text-rose-500 font-medium">{{ $message }}</p>
                 @enderror
             </div>
 
             <!-- Nomor Rekening & Atas Nama -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label for="nomor_rekening" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+                    <label for="nomor_rekening" class="ak-label">
                         Nomor Rekening / No. HP
                     </label>
                     <input
@@ -47,10 +45,10 @@
                         id="nomor_rekening"
                         value="{{ old('nomor_rekening', $kas->nomor_rekening) }}"
                         placeholder="Contoh: 1234567890"
-                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition">
+                        class="ak-input">
                 </div>
                 <div>
-                    <label for="atas_nama" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+                    <label for="atas_nama" class="ak-label">
                         Atas Nama Pemilik
                     </label>
                     <input
@@ -59,40 +57,38 @@
                         id="atas_nama"
                         value="{{ old('atas_nama', $kas->atas_nama) }}"
                         placeholder="Contoh: Toko Berkah"
-                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition">
+                        class="ak-input">
                 </div>
             </div>
 
             <!-- Input Saldo (Format Rupiah) -->
             <div>
-                <div class="flex items-center justify-between mb-2">
-                    <label for="saldo_display" class="block text-xs font-bold uppercase tracking-wider text-slate-700">Saldo <span class="text-rose-500">*</span></label>
-                    <span class="text-[11px] font-semibold text-primary-600 bg-primary-50 px-2 py-0.5 rounded">Format Rupiah</span>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label for="saldo_display" class="ak-label !mb-0">Saldo <span class="text-rose-500">*</span></label>
+                    <span class="text-[10px] font-bold text-primary-700 bg-primary-50 px-2 py-0.5 rounded border border-primary-200">Format Rupiah</span>
                 </div>
                 <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 font-bold text-base">
+                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-black text-slate-400">
                         Rp
                     </span>
                     <input type="text" inputmode="numeric" id="saldo_display" required
                            :value="saldo ? formatIDR(saldo) : ''"
                            @focus="$event.target.select()"
                            @input="const raw = $event.target.value.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, ''); saldo = raw ? parseInt(raw, 10) : 0; $event.target.value = saldo ? formatIDR(saldo) : (raw === '0' ? '0' : '');"
-                           class="w-full pl-12 pr-4 py-3.5 bg-slate-50 border @error('saldo') border-rose-300 @else border-slate-200 @enderror rounded-xl text-xl font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition">
+                           class="ak-input pl-10 pr-3 py-2.5 text-base sm:text-lg font-black text-slate-900">
                     <input type="hidden" name="saldo" :value="saldo">
                 </div>
                 @error('saldo')
-                    <p class="mt-1.5 text-xs text-rose-500 font-medium">{{ $message }}</p>
+                    <p class="mt-1 text-xs text-rose-500 font-medium">{{ $message }}</p>
                 @enderror
             </div>
 
             <!-- Tombol Aksi -->
-            <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
-                <a href="{{ route('kas.index') }}"
-                   class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs sm:text-sm font-bold hover:bg-slate-50 transition">
+            <div class="ak-actions">
+                <a href="{{ route('kas.index') }}" class="ak-btn-secondary flex-1">
                     Batal
                 </a>
-                <button type="submit"
-                        class="bg-primary-600 hover:bg-primary-700 active:scale-95 text-white px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-sm shadow-primary-500/25 transition cursor-pointer">
+                <button type="submit" class="ak-btn-primary flex-1">
                     Simpan Perubahan
                 </button>
             </div>

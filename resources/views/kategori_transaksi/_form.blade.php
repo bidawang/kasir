@@ -1,4 +1,4 @@
-<div class="max-w-2xl mx-auto space-y-5" x-data="{
+<div class="ak-page max-w-2xl space-y-3.5 pb-20" x-data="{
     nama: '{{ old('nama_kategori', $kategori?->nama_kategori ?? '') }}',
     kode: '{{ old('kode', $kategori?->kode ?? '') }}',
     autoSlug: {{ $kategori ? 'false' : 'true' }},
@@ -9,18 +9,25 @@
             .replace(/ +/g, '_');
     }
 }">
-    <div class="flex flex-wrap items-start justify-between gap-3">
-        <div>
-            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">{{ $title }}</h1>
-            <p class="mt-1 text-xs sm:text-sm font-medium text-slate-500">Kelola master jenis transaksi, alur kas masuk/keluar, dan metode transaksi.</p>
+    <!-- Header -->
+    <div class="ak-head">
+        <div class="flex items-center gap-2.5">
+            <a href="{{ route('kategori-transaksi.index') }}" class="ak-back" title="Kembali">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+            </a>
+            <div>
+                <h1 class="ak-title">{{ $title }}</h1>
+                <p class="ak-desc sub-explanation">Kelola jenis transaksi, arus kas masuk/keluar, dan metode transaksi.</p>
+            </div>
         </div>
-        <a href="{{ route('kategori-transaksi.index') }}" class="flex min-h-11 items-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 text-xs sm:text-sm font-bold transition">
-            Kembali
+        <a href="{{ route('kategori-transaksi.index') }}" class="ak-btn-secondary">
+            Batal
         </a>
     </div>
 
-    <div class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
-        <form action="{{ $action }}" method="POST" class="space-y-4">
+    <!-- Form Card -->
+    <div class="ak-card p-4 sm:p-5">
+        <form action="{{ $action }}" method="POST" class="space-y-3.5">
             @csrf
             @if ($method !== 'POST')
                 @method($method)
@@ -28,7 +35,7 @@
 
             <!-- Nama Kategori -->
             <div>
-                <label for="nama_kategori" class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
+                <label for="nama_kategori" class="ak-label">
                     Nama Kategori Transaksi <span class="text-rose-500">*</span>
                 </label>
                 <input id="nama_kategori" name="nama_kategori" type="text" required
@@ -36,15 +43,15 @@
                        @input="generateSlug($event.target.value)"
                        placeholder="Contoh: Transfer Sesama Bank Utama (Kartu/EDC)"
                        value="{{ old('nama_kategori', $kategori?->nama_kategori) }}"
-                       class="w-full rounded-xl border @error('nama_kategori') border-rose-300 @else border-slate-200 @enderror bg-slate-50 px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                <span class="text-[11px] text-slate-400 mt-1 block">Gunakan kata <strong>Bank Utama</strong> agar otomatis menyesuaikan nama bank cabang (misal: Sesama BRI, Sesama Mandiri).</span>
+                       class="ak-input font-bold @error('nama_kategori') border-rose-300 @enderror">
+                <span class="text-[10px] text-slate-400 mt-1 block sub-explanation">Gunakan kata <strong>Bank Utama</strong> agar otomatis menyesuaikan nama bank cabang (misal: Sesama BRI, Sesama Mandiri).</span>
                 @error('nama_kategori')<p class="mt-1 text-xs font-medium text-rose-500">{{ $message }}</p>@enderror
             </div>
 
             <!-- Kode Unik -->
             <div>
-                <div class="flex items-center justify-between mb-1.5">
-                    <label for="kode" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                <div class="flex items-center justify-between mb-1">
+                    <label for="kode" class="ak-label mb-0">
                         Kode Sistem Unik <span class="text-rose-500">*</span>
                     </label>
                     <button type="button" @click="autoSlug = !autoSlug" class="text-[11px] text-primary-600 font-semibold hover:underline">
@@ -55,23 +62,23 @@
                        x-model="kode"
                        placeholder="contoh: tf_sesama_kartu"
                        value="{{ old('kode', $kategori?->kode) }}"
-                       class="w-full rounded-xl border @error('kode') border-rose-300 @else border-slate-200 @enderror bg-slate-50 px-4 py-2.5 text-xs sm:text-sm font-mono font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                       class="ak-input font-mono font-bold @error('kode') border-rose-300 @enderror">
                 @error('kode')<p class="mt-1 text-xs font-medium text-rose-500">{{ $message }}</p>@enderror
             </div>
 
             <!-- Aliran Kas & Jenis Transaksi -->
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <!-- Jenis Aliran Uang Fisik Kasir -->
                 <div>
-                    <label for="jenis_aliran" class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
+                    <label for="jenis_aliran" class="ak-label">
                         Arus Uang Fisik Kasir <span class="text-rose-500">*</span>
                     </label>
-                    <select id="jenis_aliran" name="jenis_aliran" required class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <select id="jenis_aliran" name="jenis_aliran" required class="ak-input font-semibold">
                         <option value="masuk" @selected(old('jenis_aliran', $kategori?->jenis_aliran ?? 'masuk') === 'masuk')>
-                            KAS MASUK (Kasir menerima uang fisik dari pelanggan)
+                            KAS MASUK (Pelanggan bayar uang fisik)
                         </option>
                         <option value="keluar" @selected(old('jenis_aliran', $kategori?->jenis_aliran) === 'keluar')>
-                            KAS KELUAR (Kasir menyerahkan uang fisik ke pelanggan)
+                            KAS KELUAR (Pelanggan tarik uang fisik)
                         </option>
                     </select>
                     @error('jenis_aliran')<p class="mt-1 text-xs font-medium text-rose-500">{{ $message }}</p>@enderror
@@ -79,10 +86,10 @@
 
                 <!-- Jenis Transaksi Global -->
                 <div>
-                    <label for="jenis_transaksi" class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
+                    <label for="jenis_transaksi" class="ak-label">
                         Kelompok Layanan <span class="text-rose-500">*</span>
                     </label>
-                    <select id="jenis_transaksi" name="jenis_transaksi" required class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <select id="jenis_transaksi" name="jenis_transaksi" required class="ak-input font-semibold">
                         @foreach([
                             'transfer' => 'Transfer Bank',
                             'tarik_tunai' => 'Tarik Tunai',
@@ -101,13 +108,13 @@
             </div>
 
             <!-- Metode Transaksi & Warna Badge -->
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <!-- Metode Transaksi -->
                 <div>
-                    <label for="metode_transaksi" class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
+                    <label for="metode_transaksi" class="ak-label">
                         Metode Transaksi <span class="text-rose-500">*</span>
                     </label>
-                    <select id="metode_transaksi" name="metode_transaksi" required class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <select id="metode_transaksi" name="metode_transaksi" required class="ak-input font-semibold">
                         @foreach([
                             'kartu' => 'Kartu ATM / Mesin EDC',
                             'tanpa_kartu' => 'Tanpa Kartu (Aplikasi / Mobile)',
@@ -126,14 +133,14 @@
 
                 <!-- Warna Tema / Badge -->
                 <div>
-                    <label for="badge_color" class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
+                    <label for="badge_color" class="ak-label">
                         Warna Indikator <span class="text-rose-500">*</span>
                     </label>
-                    <select id="badge_color" name="badge_color" required class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <select id="badge_color" name="badge_color" required class="ak-input font-semibold">
                         @foreach([
                             'emerald' => 'Hijau (Emerald)',
                             'rose' => 'Merah (Rose)',
-                            'blue' => 'Biru (Blue)',
+                            'blue' => 'Biru (BRI Blue)',
                             'indigo' => 'Ungu Gelap (Indigo)',
                             'amber' => 'Kuning Amber',
                             'purple' => 'Ungu (Purple)',
@@ -149,24 +156,24 @@
             </div>
 
             <!-- Urutan & Status Aktif -->
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label for="urutan" class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
+                    <label for="urutan" class="ak-label">
                         Urutan Tampilan <span class="text-rose-500">*</span>
                     </label>
                     <input id="urutan" name="urutan" type="number" min="0" required
                            value="{{ old('urutan', $kategori?->urutan ?? ($nextUrutan ?? 1)) }}"
-                           class="w-full rounded-xl border @error('urutan') border-rose-300 @else border-slate-200 @enderror bg-slate-50 px-4 py-2.5 text-xs sm:text-sm font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                    <span class="text-[11px] text-slate-400 mt-0.5 block">Angka lebih kecil tampil lebih awal.</span>
+                           class="ak-input font-bold @error('urutan') border-rose-300 @enderror">
+                    <span class="text-[10px] text-slate-400 mt-0.5 block sub-explanation">Nomor kecil tampil lebih awal di menu kasir.</span>
                     @error('urutan')<p class="mt-1 text-xs font-medium text-rose-500">{{ $message }}</p>@enderror
                 </div>
 
-                <div class="flex items-center pt-6">
-                    <label class="relative flex items-center gap-3 cursor-pointer select-none">
-                        <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $kategori?->is_active ?? true)) class="w-5 h-5 rounded text-primary-600 focus:ring-primary-500 border-slate-300">
+                <div class="flex items-center pt-2 sm:pt-4">
+                    <label class="relative flex items-center gap-2.5 cursor-pointer select-none">
+                        <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $kategori?->is_active ?? true)) class="w-4 h-4 rounded text-primary-600 focus:ring-primary-500 border-slate-300">
                         <div>
-                            <span class="text-xs sm:text-sm font-bold text-slate-800 block">Kategori Aktif</span>
-                            <span class="text-[11px] text-slate-400 block">Kategori ini dapat dipilih di menu transaksi kasir</span>
+                            <span class="text-xs font-bold text-slate-800 block">Kategori Aktif</span>
+                            <span class="text-[10px] text-slate-400 block sub-explanation">Dapat dipilih di transaksi kasir</span>
                         </div>
                     </label>
                 </div>
@@ -174,15 +181,16 @@
 
             <!-- Deskripsi Singkat -->
             <div>
-                <label for="deskripsi" class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">Deskripsi / Panduan Transaksi (opsional)</label>
+                <label for="deskripsi" class="ak-label">Deskripsi / Panduan Transaksi <span class="font-normal text-slate-400 lowercase">(opsional)</span></label>
                 <textarea id="deskripsi" name="deskripsi" rows="2" maxlength="255" placeholder="Panduan singkat bagi kasir untuk kategori ini..."
-                          class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs sm:text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500">{{ old('deskripsi', $kategori?->deskripsi) }}</textarea>
+                          class="ak-input text-xs">{{ old('deskripsi', $kategori?->deskripsi) }}</textarea>
                 @error('deskripsi')<p class="mt-1 text-xs font-medium text-rose-500">{{ $message }}</p>@enderror
             </div>
 
-            <div class="flex justify-end gap-3 pt-3">
-                <a href="{{ route('kategori-transaksi.index') }}" class="flex min-h-11 items-center rounded-xl border border-slate-200 px-5 py-2.5 text-xs sm:text-sm font-semibold text-slate-600 hover:bg-slate-50">Batal</a>
-                <button type="submit" class="min-h-11 rounded-xl bg-primary-600 px-6 py-2.5 text-xs sm:text-sm font-bold text-white shadow-sm hover:bg-primary-700 active:scale-95 transition">
+            <!-- Action Buttons -->
+            <div class="ak-actions pt-2">
+                <a href="{{ route('kategori-transaksi.index') }}" class="ak-btn-secondary">Batal</a>
+                <button type="submit" class="ak-btn-primary">
                     Simpan Kategori
                 </button>
             </div>

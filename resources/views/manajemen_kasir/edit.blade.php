@@ -3,13 +3,21 @@
 @section('title', 'Ubah Akun Kasir')
 
 @section('content')
-<div class="max-w-2xl mx-auto space-y-5">
-    <h1 class="text-2xl font-black text-slate-900">Ubah Akun Kasir</h1>
-    <form method="POST" action="{{ route('manajemen-kasir.update', $manajemenKasir) }}" class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+<div class="ak-page max-w-2xl space-y-3.5 pb-20">
+    <div class="ak-head !flex-row !items-center !justify-start">
+        <a href="{{ route('manajemen-kasir.index') }}" class="ak-back" title="Kembali">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+        </a>
+        <div class="min-w-0">
+            <h1 class="ak-title">Ubah Akun Kasir</h1>
+            <p class="ak-desc sub-explanation">Perbarui informasi profil kasir, penugasan cabang, atau reset sandi.</p>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ route('manajemen-kasir.update', $manajemenKasir) }}">
         @csrf
         @method('PUT')
         @include('manajemen_kasir._form', ['akun' => $manajemenKasir, 'submitLabel' => 'Simpan Perubahan'])
     </form>
-    <a href="{{ route('manajemen-kasir.index') }}" class="text-sm sm:text-base font-semibold text-slate-600 hover:text-slate-900">Kembali ke daftar kasir</a>
 </div>
 @endsection

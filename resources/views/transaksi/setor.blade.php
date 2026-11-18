@@ -3,7 +3,7 @@
 @section('title', 'Setor Tunai / Transfer')
 
 @section('content')
-<div class="max-w-xl mx-auto pb-36 md:pb-24 space-y-4 text-slate-800"
+<div class="ak-page max-w-xl pb-44 md:pb-28 space-y-3.5 text-slate-800"
      x-data="setorApp(
          @js($kasAsal),
          @js($kasTujuanList),
@@ -13,32 +13,36 @@
      )">
 
     <!-- Header Section -->
-    <div class="flex items-center justify-between px-1">
-        <div>
-            <h1 class="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight flex items-center gap-2">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m0 0l6-6m-6 6l-6-6"/></svg>
-                Setor Tunai & Transfer
-            </h1>
-            <p class="text-xs text-slate-500 font-medium">Terima uang tunai fisik & kirim saldo ke rekening bank / e-wallet</p>
+    <div class="ak-head !flex-row !items-center !justify-between">
+        <div class="flex items-center gap-2.5 min-w-0">
+            <a href="{{ route('transaksi.menu') }}" class="ak-back" title="Menu Transaksi">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+            </a>
+            <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                    <h1 class="ak-title">Setor Tunai & Transfer</h1>
+                    <span class="ak-badge-success">Masuk (+)</span>
+                </div>
+                <p class="ak-desc sub-explanation">Terima uang tunai fisik & kirim saldo ke rekening bank / e-wallet</p>
+            </div>
         </div>
         <a href="{{ route('transaksi.menu') }}"
-           class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
-            <span>Pilih Kategori Lain</span>
+           class="ak-btn-secondary !text-xs !py-1.5 shrink-0">
+            <span>Pilih Menu Lain</span>
         </a>
     </div>
 
     <!-- Alert Errors -->
     @if ($errors->any() || session('error'))
-        <div class="bg-rose-50 border border-rose-200 text-rose-800 p-3.5 rounded-2xl text-xs font-semibold space-y-1">
-            <p class="font-bold flex items-center gap-1.5 text-rose-700">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
-                Terjadi kesalahan:
-            </p>
-            <ul class="list-disc list-inside opacity-90 pl-1">
-                @if (session('error')) <li>{{ session('error') }}</li> @endif
-                @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach
-            </ul>
+        <div class="ak-alert-error">
+            <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+            <div>
+                <p class="font-bold">Terjadi kesalahan:</p>
+                <ul class="list-disc list-inside mt-0.5 space-y-0.5">
+                    @if (session('error')) <li>{{ session('error') }}</li> @endif
+                    @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach
+                </ul>
+            </div>
         </div>
     @endif
 
@@ -66,7 +70,7 @@
                 <h2 class="text-base sm:text-lg font-black text-slate-900 tracking-tight mt-1 truncate">
                     {{ $kategori->getNamaDinamis($bankUtama ?? 'BRI') }}
                 </h2>
-                <p class="text-xs text-slate-500 mt-0.5">{{ $kategori->deskripsi ?: 'Kasir menerima uang fisik dari pelanggan dan mengirimkan saldo digital.' }}</p>
+                <p class="text-xs text-slate-500 mt-0.5 sub-explanation">{{ $kategori->deskripsi ?: 'Kasir menerima uang fisik dari pelanggan dan mengirimkan saldo digital.' }}</p>
             </div>
             <a href="{{ route('transaksi.menu') }}" class="text-xs font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-100 hover:bg-emerald-200 px-3 py-1.5 rounded-xl transition shrink-0">
                 Ganti
@@ -88,7 +92,7 @@
                     <option :value="kas.id" x-text="(kas.is_primary ? '★ ' : '') + (kas.nama_kas || kas.jenis_kas) + ' (Saldo: Rp ' + formatIDR(kas.saldo) + ')'"></option>
                 </template>
             </select>
-            <p class="text-[11px] text-slate-400">Saldo akun agen ini akan terpotong untuk transfer ke nasabah.</p>
+            <p class="text-[11px] text-slate-400 sub-explanation">Saldo akun agen ini akan terpotong untuk transfer ke nasabah.</p>
         </div>
 
         <!-- NOMINAL SETORAN (FORMAT RUPIAH) -->
@@ -212,9 +216,9 @@
         </div>
     </form>
 
-    <!-- FLOATING ACTION BAR -->
-    <div class="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:bottom-4 left-3 right-3 max-w-xl mx-auto z-40">
-        <div class="bg-slate-900/95 backdrop-blur-md text-white px-4 py-3 rounded-2xl border border-slate-800 shadow-2xl flex items-center justify-between gap-3">
+    <!-- FLOATING ACTION BAR (Posisinya aman di atas bottom nav mobile dan rapi di desktop) -->
+    <div class="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] md:bottom-6 left-3 right-3 max-w-xl mx-auto z-40">
+        <div class="bg-slate-900/95 dark:bg-slate-800/95 backdrop-blur-md text-white px-4 py-3 rounded-2xl border border-slate-800 dark:border-slate-700 shadow-2xl flex items-center justify-between gap-3">
             <div>
                 <div class="text-[10px] text-slate-400 uppercase tracking-wider font-extrabold">Uang Fisik Diterima Kasir</div>
                 <div class="text-base sm:text-lg font-black text-emerald-400" x-text="'Rp ' + formatIDR(grandTotal)"></div>
